@@ -7,6 +7,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -21,9 +22,19 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import OfferQualityChecks from "@/components/admin/OfferQualityChecks";
 import ProductPreview from "@/components/admin/ProductPreview";
 import PublishConfirmation from "@/components/admin/PublishConfirmation";
+import QuickStartAssistant, {
+  type DuplicateCheckState,
+} from "@/components/admin/QuickStartAssistant";
+
+import {
+  buildSuggestedDescription,
+  getOfferAssistantFields,
+  getRequiredAssistantCompletion,
+} from "@/lib/offer-assistant";
 
 import {
   parseOfferText,
+  type ParsedOffer,
 } from "@/lib/offer-parser";
 
 import {
@@ -32,6 +43,9 @@ import {
 
 const MAX_FILE_SIZE =
   5 * 1024 * 1024;
+
+const DRAFT_KEY =
+  "trend-za-mniej:new-offer-draft:v2";
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -83,6 +97,12 @@ type ValidatedProduct = {
   featured: boolean;
 };
 
+type SavedDraft = {
+  form: FormState;
+  rawOffer: string;
+  updatedAt: string;
+};
+
 const INITIAL_FORM: FormState = {
   name: "",
   shortName: "",
@@ -94,6 +114,23 @@ const INITIAL_FORM: FormState = {
   soldText: "",
   featured: true,
 };
+
+function hasDraftContent(
+  form: FormState,
+  rawOffer: string
+) {
+  return Boolean(
+    rawOffer.trim() ||
+      form.name.trim() ||
+      form.shortName.trim() ||
+      form.description.trim() ||
+      form.price.trim() ||
+      form.oldPrice.trim() ||
+      form.category.trim() ||
+      form.affiliateUrl.trim() ||
+      form.soldText.trim()
+  );
+}
 
 export default function NewProductPage() {
   const router =
@@ -115,6 +152,11 @@ export default function NewProductPage() {
   ] = useState(false);
 
   const [
+    clipboardLoading,
+    setClipboardLoading,
+  ] = useState(false);
+
+  const [
     error,
     setError,
   ] = useState<
@@ -132,6 +174,13 @@ export default function NewProductPage() {
     rawOffer,
     setRawOffer,
   ] = useState("");
+
+  const [
+    analysis,
+    setAnalysis,
+  ] = useState<
+    ParsedOffer | null
+  >(null);
 
   const [
     parserMessage,
@@ -155,6 +204,21 @@ export default function NewProductPage() {
     | "medium"
     | "low"
     | null
+  >(null);
+
+  const [
+    duplicateState,
+    setDuplicateState,
+  ] =
+    useState<DuplicateCheckState>(
+      "idle"
+    );
+
+  const [
+    duplicateProductName,
+    setDuplicateProductName,
+  ] = useState<
+    string | null
   >(null);
 
   const [
@@ -188,6 +252,164 @@ export default function NewProductPage() {
   ] = useState<
     string | null
   >(null);
+
+  const [
+    draftReady,
+    setDraftReady,
+  ] = useState(false);
+
+  const [
+    draftRestored,
+    setDraftRestored,
+  ] = useState(false);
+
+  const [
+    draftSavedAt,
+    setDraftSavedAt,
+  ] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    try {
+      const saved =
+        window.localStorage.getItem(
+          DRAFT_KEY
+        );
+
+      if (!saved) {
+        return;
+      }
+
+      const draft =
+        JSON.parse(
+          saved
+        ) as Partial<SavedDraft>;
+
+      if (
+        !draft.form &&
+        !draft.rawOffer
+      ) {
+        return;
+      }
+
+      const restoredForm: FormState = {
+        ...INITIAL_FORM,
+        ...(draft.form ??
+          {}),
+      };
+
+      const restoredRawOffer =
+        draft.rawOffer ??
+        "";
+
+      if (
+        hasDraftContent(
+          restoredForm,
+          restoredRawOffer
+        )
+      ) {
+        setForm(
+          restoredForm
+        );
+
+        setRawOffer(
+          restoredRawOffer
+        );
+
+        setDraftSavedAt(
+          draft.updatedAt ??
+            null
+        );
+
+        setDraftRestored(
+          true
+        );
+      }
+    } catch (
+      draftError
+    ) {
+      console.error(
+        "Nie udało się przywrócić szkicu:",
+        draftError
+      );
+
+      window.localStorage.removeItem(
+        DRAFT_KEY
+      );
+    } finally {
+      setDraftReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) {
+      return;
+    }
+
+    const timeout =
+      window.setTimeout(
+        () => {
+          if (
+            !hasDraftContent(
+              form,
+              rawOffer
+            )
+          ) {
+            window.localStorage.removeItem(
+              DRAFT_KEY
+            );
+
+            setDraftSavedAt(
+              null
+            );
+
+            return;
+          }
+
+          const updatedAt =
+            new Date().toISOString();
+
+          const draft: SavedDraft =
+            {
+              form,
+              rawOffer,
+              updatedAt,
+            };
+
+          try {
+            window.localStorage.setItem(
+              DRAFT_KEY,
+              JSON.stringify(
+                draft
+              )
+            );
+
+            setDraftSavedAt(
+              updatedAt
+            );
+          } catch (
+            draftError
+          ) {
+            console.error(
+              "Nie udało się zapisać szkicu:",
+              draftError
+            );
+          }
+        },
+        450
+      );
+
+    return () => {
+      window.clearTimeout(
+        timeout
+      );
+    };
+  }, [
+    draftReady,
+    form,
+    rawOffer,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -358,9 +580,23 @@ export default function NewProductPage() {
     setForm(
       (current) => ({
         ...current,
-        [key]: value,
+        [key]:
+          value,
       })
     );
+
+    if (
+      key ===
+      "affiliateUrl"
+    ) {
+      setDuplicateState(
+        "idle"
+      );
+
+      setDuplicateProductName(
+        null
+      );
+    }
 
     setError(null);
     setSuccessSlug(null);
@@ -402,6 +638,580 @@ export default function NewProductPage() {
 
       counter += 1;
     }
+  }
+
+  async function checkDuplicateAffiliateUrl(
+    affiliateUrl: string
+  ) {
+    const {
+      data,
+      error:
+        duplicateError,
+    } =
+      await supabase
+        .from("products")
+        .select(
+          "id, short_name"
+        )
+        .eq(
+          "affiliate_url",
+          affiliateUrl.trim()
+        )
+        .limit(1);
+
+    if (duplicateError) {
+      throw duplicateError;
+    }
+
+    if (
+      data &&
+      data.length > 0
+    ) {
+      return {
+        duplicate:
+          true,
+
+        productName:
+          data[0]
+            .short_name,
+      };
+    }
+
+    return {
+      duplicate:
+        false,
+
+      productName:
+        null,
+    };
+  }
+
+  async function refreshDuplicateCheck(
+    affiliateUrl: string
+  ) {
+    const clean =
+      affiliateUrl.trim();
+
+    if (
+      !clean ||
+      !isValidHttpsUrl(
+        clean
+      )
+    ) {
+      setDuplicateState(
+        "idle"
+      );
+
+      setDuplicateProductName(
+        null
+      );
+
+      return;
+    }
+
+    setDuplicateState(
+      "checking"
+    );
+
+    setDuplicateProductName(
+      null
+    );
+
+    try {
+      const result =
+        await checkDuplicateAffiliateUrl(
+          clean
+        );
+
+      if (
+        result.duplicate
+      ) {
+        setDuplicateState(
+          "duplicate"
+        );
+
+        setDuplicateProductName(
+          result.productName
+        );
+      } else {
+        setDuplicateState(
+          "unique"
+        );
+      }
+    } catch (
+      duplicateError
+    ) {
+      console.error(
+        "Błąd kontroli duplikatu:",
+        duplicateError
+      );
+
+      setDuplicateState(
+        "error"
+      );
+    }
+  }
+
+  function shouldReplaceParsedValue(
+    currentValue: string,
+    previousParsedValue: string
+  ) {
+    const current =
+      currentValue.trim();
+
+    const previous =
+      previousParsedValue.trim();
+
+    return (
+      !current ||
+      Boolean(
+        previous &&
+          current ===
+            previous
+      )
+    );
+  }
+
+  async function analyzeOffer(
+    sourceText: string
+  ) {
+    const cleanText =
+      sourceText.trim();
+
+    setError(null);
+    setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
+
+    if (!cleanText) {
+      setParserMessage(
+        "Najpierw wklej treść oferty SHEIN."
+      );
+
+      return;
+    }
+
+    const parsed =
+      parseOfferText(
+        cleanText
+      );
+
+    const previous =
+      analysis;
+
+    const previousDescription =
+      previous
+        ? buildSuggestedDescription(
+            previous
+          )
+        : "";
+
+    const suggestedDescription =
+      buildSuggestedDescription(
+        parsed
+      );
+
+    setForm(
+      (current) => {
+        const next = {
+          ...current,
+        };
+
+        function applyParsed(
+          key:
+            | "name"
+            | "shortName"
+            | "price"
+            | "oldPrice"
+            | "category"
+            | "affiliateUrl"
+            | "soldText",
+          newValue: string,
+          previousValue: string
+        ) {
+          const currentValue =
+            String(
+              current[key]
+            );
+
+          const parserOwned =
+            shouldReplaceParsedValue(
+              currentValue,
+              previousValue
+            );
+
+          if (
+            newValue &&
+            parserOwned
+          ) {
+            next[key] =
+              newValue;
+
+            return;
+          }
+
+          if (
+            !newValue &&
+            previousValue &&
+            currentValue.trim() ===
+              previousValue.trim()
+          ) {
+            next[key] =
+              "";
+          }
+        }
+
+        applyParsed(
+          "name",
+          parsed.name,
+          previous?.name ??
+            ""
+        );
+
+        applyParsed(
+          "shortName",
+          parsed.shortName,
+          previous?.shortName ??
+            ""
+        );
+
+        applyParsed(
+          "price",
+          parsed.price,
+          previous?.price ??
+            ""
+        );
+
+        applyParsed(
+          "oldPrice",
+          parsed.oldPrice,
+          previous?.oldPrice ??
+            ""
+        );
+
+        applyParsed(
+          "category",
+          parsed.category,
+          previous?.category ??
+            ""
+        );
+
+        applyParsed(
+          "affiliateUrl",
+          parsed.affiliateUrl,
+          previous?.affiliateUrl ??
+            ""
+        );
+
+        applyParsed(
+          "soldText",
+          parsed.soldText,
+          previous?.soldText ??
+            ""
+        );
+
+        if (
+          suggestedDescription &&
+          (
+            !current.description.trim() ||
+            (
+              previousDescription &&
+              current.description.trim() ===
+                previousDescription.trim()
+            )
+          )
+        ) {
+          next.description =
+            suggestedDescription;
+        }
+
+        return next;
+      }
+    );
+
+    setAnalysis(
+      parsed
+    );
+
+    setParserConfidence(
+      parsed.confidence
+    );
+
+    setParserWarnings(
+      parsed.warnings
+    );
+
+    const fields =
+      getOfferAssistantFields(
+        parsed
+      );
+
+    const completion =
+      getRequiredAssistantCompletion(
+        fields
+      );
+
+    setParserMessage(
+      completion.detected ===
+        completion.total
+        ? "Najważniejsze dane zostały rozpoznane i wpisane do formularza."
+        : `Rozpoznano ${completion.detected} z ${completion.total} kluczowych danych. Brakujące informacje uzupełnij niżej.`
+    );
+
+    if (
+      parsed.affiliateUrl
+    ) {
+      await refreshDuplicateCheck(
+        parsed.affiliateUrl
+      );
+    } else {
+      setDuplicateState(
+        "idle"
+      );
+
+      setDuplicateProductName(
+        null
+      );
+    }
+  }
+
+  function handleRawOfferChange(
+    value: string
+  ) {
+    setRawOffer(
+      value
+    );
+
+    setParserMessage(null);
+
+    setError(null);
+  }
+
+  async function handlePasteAndAnalyze() {
+    setClipboardLoading(
+      true
+    );
+
+    setError(null);
+
+    try {
+      if (
+        !navigator.clipboard ||
+        !navigator.clipboard
+          .readText
+      ) {
+        setParserMessage(
+          "Ta przeglądarka nie pozwala automatycznie odczytać schowka. Wklej tekst ręcznie w pole poniżej."
+        );
+
+        return;
+      }
+
+      const text =
+        await navigator.clipboard.readText();
+
+      if (
+        !text.trim()
+      ) {
+        setParserMessage(
+          "Schowek jest pusty."
+        );
+
+        return;
+      }
+
+      setRawOffer(
+        text
+      );
+
+      await analyzeOffer(
+        text
+      );
+    } catch (
+      clipboardError
+    ) {
+      console.error(
+        "Błąd schowka:",
+        clipboardError
+      );
+
+      setParserMessage(
+        "Nie udało się odczytać schowka. Przytrzymaj pole tekstowe i wybierz „Wklej”."
+      );
+    } finally {
+      setClipboardLoading(
+        false
+      );
+    }
+  }
+
+  function applySuggestedDescription() {
+    if (!analysis) {
+      return;
+    }
+
+    const description =
+      buildSuggestedDescription(
+        analysis
+      );
+
+    if (!description) {
+      return;
+    }
+
+    updateField(
+      "description",
+      description
+    );
+
+    document
+      .getElementById(
+        "section-basic"
+      )
+      ?.scrollIntoView({
+        behavior:
+          "smooth",
+        block:
+          "start",
+      });
+  }
+
+  function handleImageChange(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    setError(null);
+    setSuccessSlug(null);
+
+    const file =
+      event.target
+        .files?.[0] ??
+      null;
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      !ALLOWED_TYPES.includes(
+        file.type
+      )
+    ) {
+      setError(
+        "Dozwolone są tylko pliki JPG, PNG i WebP."
+      );
+
+      event.target.value =
+        "";
+
+      return;
+    }
+
+    if (
+      file.size >
+      MAX_FILE_SIZE
+    ) {
+      setError(
+        "Zdjęcie może mieć maksymalnie 5 MB."
+      );
+
+      event.target.value =
+        "";
+
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    }
+
+    const localPreview =
+      URL.createObjectURL(
+        file
+      );
+
+    setImageFile(
+      file
+    );
+
+    setPreviewUrl(
+      localPreview
+    );
+  }
+
+  function removeImage() {
+    if (previewUrl) {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    }
+
+    setImageFile(null);
+    setPreviewUrl(null);
+    setError(null);
+  }
+
+  function clearOffer() {
+    if (
+      hasDraftContent(
+        form,
+        rawOffer
+      ) &&
+      !window.confirm(
+        "Wyczyścić obecną ofertę i rozpocząć od nowa?"
+      )
+    ) {
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    }
+
+    setForm(
+      INITIAL_FORM
+    );
+
+    setRawOffer("");
+    setAnalysis(null);
+
+    setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
+
+    setDuplicateState(
+      "idle"
+    );
+
+    setDuplicateProductName(
+      null
+    );
+
+    setImageFile(null);
+    setPreviewUrl(null);
+
+    setError(null);
+    setSuccessSlug(null);
+
+    setDraftRestored(
+      false
+    );
+
+    setDraftSavedAt(
+      null
+    );
+
+    window.localStorage.removeItem(
+      DRAFT_KEY
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function validateProduct():
@@ -545,268 +1355,6 @@ export default function NewProductPage() {
     };
   }
 
-  async function checkDuplicateAffiliateUrl(
-    affiliateUrl: string
-  ) {
-    const {
-      data,
-      error:
-        duplicateError,
-    } =
-      await supabase
-        .from("products")
-        .select(
-          "id, short_name"
-        )
-        .eq(
-          "affiliate_url",
-          affiliateUrl.trim()
-        )
-        .limit(1);
-
-    if (duplicateError) {
-      throw duplicateError;
-    }
-
-    if (
-      data &&
-      data.length > 0
-    ) {
-      return {
-        duplicate:
-          true,
-
-        productName:
-          data[0]
-            .short_name,
-      };
-    }
-
-    return {
-      duplicate:
-        false,
-
-      productName:
-        null,
-    };
-  }
-
-  function handleParseOffer() {
-    setError(null);
-    setParserMessage(null);
-    setParserWarnings([]);
-    setParserConfidence(null);
-
-    if (!rawOffer.trim()) {
-      setParserMessage(
-        "Najpierw wklej treść oferty SHEIN."
-      );
-
-      return;
-    }
-
-    const parsed =
-      parseOfferText(
-        rawOffer
-      );
-
-    const found: string[] =
-      [];
-
-    setForm(
-      (current) => {
-        const next = {
-          ...current,
-        };
-
-        if (parsed.name) {
-          next.name =
-            parsed.name;
-
-          found.push(
-            "pełną nazwę"
-          );
-        }
-
-        if (
-          parsed.shortName
-        ) {
-          next.shortName =
-            parsed.shortName;
-
-          found.push(
-            "krótką nazwę"
-          );
-        }
-
-        if (
-          parsed.price
-        ) {
-          next.price =
-            parsed.price;
-
-          found.push(
-            "cenę"
-          );
-        }
-
-        if (
-          parsed.oldPrice
-        ) {
-          next.oldPrice =
-            parsed.oldPrice;
-
-          found.push(
-            "starą cenę"
-          );
-        }
-
-        if (
-          parsed.affiliateUrl
-        ) {
-          next.affiliateUrl =
-            parsed.affiliateUrl;
-
-          found.push(
-            "link"
-          );
-        }
-
-        if (
-          parsed.category
-        ) {
-          next.category =
-            parsed.category;
-
-          found.push(
-            "kategorię"
-          );
-        }
-
-        if (
-          parsed.soldText &&
-          !current.soldText
-        ) {
-          next.soldText =
-            parsed.soldText;
-
-          found.push(
-            "sprzedaż"
-          );
-        }
-
-        return next;
-      }
-    );
-
-    setParserConfidence(
-      parsed.confidence
-    );
-
-    setParserWarnings(
-      parsed.warnings
-    );
-
-    if (
-      found.length === 0
-    ) {
-      setParserMessage(
-        "Nie udało się automatycznie rozpoznać danych produktu."
-      );
-
-      return;
-    }
-
-    const confidenceLabel =
-      parsed.confidence ===
-      "high"
-        ? "wysoka"
-        : parsed.confidence ===
-            "medium"
-          ? "średnia"
-          : "niska";
-
-    setParserMessage(
-      `Rozpoznano: ${found.join(
-        ", "
-      )}. Pewność: ${confidenceLabel}.`
-    );
-  }
-
-  function handleImageChange(
-    event: ChangeEvent<HTMLInputElement>
-  ) {
-    setError(null);
-    setSuccessSlug(null);
-
-    const file =
-      event.target
-        .files?.[0] ??
-      null;
-
-    if (!file) {
-      return;
-    }
-
-    if (
-      !ALLOWED_TYPES.includes(
-        file.type
-      )
-    ) {
-      setError(
-        "Dozwolone są tylko pliki JPG, PNG i WebP."
-      );
-
-      event.target.value =
-        "";
-
-      return;
-    }
-
-    if (
-      file.size >
-      MAX_FILE_SIZE
-    ) {
-      setError(
-        "Zdjęcie może mieć maksymalnie 5 MB."
-      );
-
-      event.target.value =
-        "";
-
-      return;
-    }
-
-    if (previewUrl) {
-      URL.revokeObjectURL(
-        previewUrl
-      );
-    }
-
-    const localPreview =
-      URL.createObjectURL(
-        file
-      );
-
-    setImageFile(file);
-
-    setPreviewUrl(
-      localPreview
-    );
-  }
-
-  function removeImage() {
-    if (previewUrl) {
-      URL.revokeObjectURL(
-        previewUrl
-      );
-    }
-
-    setImageFile(null);
-    setPreviewUrl(null);
-    setError(null);
-  }
-
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -841,6 +1389,14 @@ export default function NewProductPage() {
       if (
         duplicate.duplicate
       ) {
+        setDuplicateState(
+          "duplicate"
+        );
+
+        setDuplicateProductName(
+          duplicate.productName
+        );
+
         setError(
           `Ten link afiliacyjny jest już używany przez produkt „${duplicate.productName ?? "bez nazwy"}”.`
         );
@@ -849,7 +1405,15 @@ export default function NewProductPage() {
 
         return;
       }
+
+      setDuplicateState(
+        "unique"
+      );
     } catch {
+      setDuplicateState(
+        "error"
+      );
+
       setError(
         "Nie udało się sprawdzić duplikatu linku."
       );
@@ -860,6 +1424,7 @@ export default function NewProductPage() {
     }
 
     setChecking(false);
+
     setConfirmOpen(true);
   }
 
@@ -909,6 +1474,14 @@ export default function NewProductPage() {
       ) {
         setConfirmOpen(
           false
+        );
+
+        setDuplicateState(
+          "duplicate"
+        );
+
+        setDuplicateProductName(
+          duplicate.productName
         );
 
         setError(
@@ -1105,16 +1678,42 @@ export default function NewProductPage() {
       );
     }
 
+    window.localStorage.removeItem(
+      DRAFT_KEY
+    );
+
     setConfirmOpen(false);
     setMobilePreviewOpen(false);
-    setForm(INITIAL_FORM);
+
+    setForm(
+      INITIAL_FORM
+    );
+
     setRawOffer("");
+    setAnalysis(null);
+
     setParserMessage(null);
     setParserWarnings([]);
     setParserConfidence(null);
+
+    setDuplicateState(
+      "idle"
+    );
+
+    setDuplicateProductName(
+      null
+    );
+
     setImageFile(null);
     setPreviewUrl(null);
-    setSuccessSlug(slug);
+
+    setDraftRestored(false);
+    setDraftSavedAt(null);
+
+    setSuccessSlug(
+      slug
+    );
+
     setLoading(false);
 
     router.refresh();
@@ -1170,7 +1769,76 @@ export default function NewProductPage() {
     ].filter(Boolean).length;
 
   const completionPercent =
-    completedSections * 25;
+    completedSections *
+    25;
+
+  const assistantFields =
+    useMemo(
+      () =>
+        analysis
+          ? getOfferAssistantFields(
+              analysis
+            )
+          : [],
+      [analysis]
+    );
+
+  const assistantCompletion =
+    useMemo(
+      () =>
+        getRequiredAssistantCompletion(
+          assistantFields
+        ),
+      [assistantFields]
+    );
+
+  const nextMissing =
+    !basicComplete
+      ? {
+          id:
+            "section-basic",
+          label:
+            "nazwę i opis",
+        }
+      : !priceComplete
+        ? {
+            id:
+              "section-price",
+            label:
+              "cenę i kategorię",
+          }
+        : !imageComplete
+          ? {
+              id:
+                "section-image",
+              label:
+                "zdjęcie",
+            }
+          : !linkComplete
+            ? {
+                id:
+                  "section-link",
+                label:
+                  "link",
+              }
+            : null;
+
+  function goToMissing() {
+    if (!nextMissing) {
+      return;
+    }
+
+    document
+      .getElementById(
+        nextMissing.id
+      )
+      ?.scrollIntoView({
+        behavior:
+          "smooth",
+        block:
+          "start",
+      });
+  }
 
   return (
     <main className="min-h-screen bg-stone-50 pb-28 text-stone-900 lg:pb-0">
@@ -1235,7 +1903,7 @@ export default function NewProductPage() {
       <AdminFormShell
         eyebrow="Nowa oferta"
         title="Dodaj produkt"
-        description="Wklej ofertę SHEIN, sprawdź rozpoznane dane, dodaj zdjęcie i opublikuj produkt."
+        description="Szybki start przygotuje większość danych. Ty tylko sprawdzasz wynik, dodajesz zdjęcie i publikujesz."
       >
         {successSlug && (
           <div className="mb-5 rounded-[20px] border border-green-200 bg-green-50 p-4 sm:p-5">
@@ -1300,120 +1968,74 @@ export default function NewProductPage() {
 
         <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px] xl:gap-7">
           <div className="min-w-0">
-            <section className="rounded-[20px] border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-lg">
-                  ✨
-                </div>
-
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.13em] text-violet-600">
-                    Szybki start
-                  </p>
-
-                  <h2 className="mt-0.5 text-lg font-black">
-                    Wklej ofertę
-                    SHEIN
-                  </h2>
-
-                  <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6">
-                    Wklej nawet cały
-                    tekst produktu.
-                    Parser spróbuje
-                    znaleźć nazwę,
-                    cenę, kategorię
-                    i link.
-                  </p>
-                </div>
-              </div>
-
-              <textarea
-                value={
+            <QuickStartAssistant
+              rawOffer={
+                rawOffer
+              }
+              onRawOfferChange={
+                handleRawOfferChange
+              }
+              onAnalyze={() =>
+                analyzeOffer(
                   rawOffer
-                }
-                onChange={(
-                  event
-                ) => {
-                  setRawOffer(
-                    event.target
-                      .value
-                  );
-
-                  setParserMessage(
-                    null
-                  );
-
-                  setParserWarnings(
-                    []
-                  );
-
-                  setParserConfidence(
-                    null
-                  );
-                }}
-                rows={7}
-                placeholder="Wklej tutaj tekst skopiowany z produktu SHEIN..."
-                className="mt-4 w-full resize-y rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3 text-base leading-6 outline-none transition placeholder:text-stone-400 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100 sm:text-sm"
-              />
-
-              <button
-                type="button"
-                onClick={
-                  handleParseOffer
-                }
-                className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl bg-violet-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-violet-700"
-              >
-                ✨ Rozpoznaj i uzupełnij
-              </button>
-
-              {parserMessage && (
-                <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 p-3.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-bold leading-5 text-stone-700 sm:text-sm">
-                      {
-                        parserMessage
-                      }
-                    </p>
-
-                    {parserConfidence && (
-                      <ParserConfidenceBadge
-                        confidence={
-                          parserConfidence
-                        }
-                      />
-                    )}
-                  </div>
-
-                  {parserWarnings.length >
-                    0 && (
-                    <div className="mt-3 space-y-1.5 border-t border-stone-200 pt-3">
-                      {parserWarnings.map(
-                        (
-                          warning
-                        ) => (
-                          <p
-                            key={
-                              warning
-                            }
-                            className="flex gap-2 text-xs leading-5 text-amber-700"
-                          >
-                            <span>
-                              ⚠
-                            </span>
-
-                            <span>
-                              {
-                                warning
-                              }
-                            </span>
-                          </p>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
+                )
+              }
+              onPasteAndAnalyze={
+                handlePasteAndAnalyze
+              }
+              clipboardLoading={
+                clipboardLoading
+              }
+              analysis={
+                analysis
+              }
+              fields={
+                assistantFields
+              }
+              detectedFields={
+                assistantCompletion.detected
+              }
+              totalFields={
+                assistantCompletion.total
+              }
+              analysisPercent={
+                assistantCompletion.percent
+              }
+              parserMessage={
+                parserMessage
+              }
+              parserWarnings={
+                parserWarnings
+              }
+              parserConfidence={
+                parserConfidence
+              }
+              duplicateState={
+                duplicateState
+              }
+              duplicateProductName={
+                duplicateProductName
+              }
+              onGenerateDescription={
+                applySuggestedDescription
+              }
+              onGoToMissing={
+                goToMissing
+              }
+              nextMissingLabel={
+                nextMissing?.label ??
+                null
+              }
+              onClear={
+                clearOffer
+              }
+              draftRestored={
+                draftRestored
+              }
+              draftSavedAt={
+                draftSavedAt
+              }
+            />
 
             <form
               id="new-product-form"
@@ -1423,9 +2045,10 @@ export default function NewProductPage() {
               className="mt-4 space-y-3"
             >
               <FormSection
+                id="section-basic"
                 number="1"
                 title="Nazwa i opis"
-                description="Sprawdź dane rozpoznane z oferty."
+                description="Sprawdź dane przygotowane przez Szybki start."
                 complete={
                   basicComplete
                 }
@@ -1480,9 +2103,24 @@ export default function NewProductPage() {
                 </div>
 
                 <div>
-                  <FieldLabel>
-                    Opis
-                  </FieldLabel>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <FieldLabel>
+                      Opis
+                    </FieldLabel>
+
+                    {analysis && (
+                      <button
+                        type="button"
+                        onClick={
+                          applySuggestedDescription
+                        }
+                        className="shrink-0 text-[10px] font-black text-violet-600 hover:text-violet-700"
+                      >
+                        ✨ Przygotuj
+                        ponownie
+                      </button>
+                    )}
+                  </div>
 
                   <textarea
                     required
@@ -1499,16 +2137,28 @@ export default function NewProductPage() {
                           .value
                       )
                     }
-                    placeholder="Opisz krótko styl, fason i najważniejsze cechy..."
+                    placeholder="Krótki, rzeczowy opis produktu..."
                     className="w-full resize-y rounded-xl border border-stone-200 bg-white px-3.5 py-3 text-base leading-6 outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
                   />
+
+                  <p className="mt-1.5 px-1 text-[10px] leading-5 text-stone-400">
+                    Automatyczny opis
+                    jest celowo
+                    ostrożny i nie
+                    dopisuje
+                    właściwości,
+                    których parser
+                    nie potrafi
+                    potwierdzić.
+                  </p>
                 </div>
               </FormSection>
 
               <FormSection
+                id="section-price"
                 number="2"
                 title="Cena i kategoria"
-                description="Najważniejsze dane widoczne na karcie produktu."
+                description="Najważniejsze dane widoczne przy produkcie."
                 complete={
                   priceComplete
                 }
@@ -1606,6 +2256,7 @@ export default function NewProductPage() {
               </FormSection>
 
               <FormSection
+                id="section-image"
                 number="3"
                 title="Zdjęcie"
                 description="Dodaj główne zdjęcie produktu."
@@ -1706,6 +2357,7 @@ export default function NewProductPage() {
               </FormSection>
 
               <FormSection
+                id="section-link"
                 number="4"
                 title="Link i publikacja"
                 description="Sprawdź link i zdecyduj, czy wyróżnić ofertę."
@@ -1729,9 +2381,43 @@ export default function NewProductPage() {
                         .value
                     )
                   }
+                  onBlur={() =>
+                    refreshDuplicateCheck(
+                      form.affiliateUrl
+                    )
+                  }
                   placeholder="https://onelink.shein.com/..."
                   required
                 />
+
+                {duplicateState ===
+                  "checking" && (
+                  <p className="text-xs font-semibold text-blue-600">
+                    Sprawdzam link…
+                  </p>
+                )}
+
+                {duplicateState ===
+                  "unique" && (
+                  <p className="text-xs font-black text-green-700">
+                    ✓ Link nie jest
+                    używany przez inną
+                    ofertę.
+                  </p>
+                )}
+
+                {duplicateState ===
+                  "duplicate" && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-700">
+                    <strong>
+                      Ten link już
+                      istnieje.
+                    </strong>
+                    {duplicateProductName
+                      ? ` Produkt: „${duplicateProductName}”.`
+                      : ""}
+                  </div>
+                )}
 
                 <Input
                   label="Informacja o sprzedaży"
@@ -1879,7 +2565,8 @@ export default function NewProductPage() {
                 form.soldText
               }
               imageSelected={
-                imageFile !== null
+                imageFile !==
+                null
               }
             />
 
@@ -1987,12 +2674,12 @@ function ProgressCard({
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-black text-stone-900">
-            Postęp oferty
+            Gotowość oferty
           </p>
 
           <p className="mt-0.5 text-[10px] text-stone-400 sm:text-xs">
             {completedSections} z 4
-            sekcji gotowe
+            etapów gotowe
           </p>
         </div>
 
@@ -2071,12 +2758,14 @@ function ProgressStep({
 }
 
 function FormSection({
+  id,
   number,
   title,
   description,
   complete,
   children,
 }: {
+  id: string;
   number: string;
   title: string;
   description: string;
@@ -2084,7 +2773,10 @@ function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+    <section
+      id={id}
+      className="scroll-mt-36 rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5"
+    >
       <div className="mb-4 flex items-start gap-3">
         <span
           className={[
@@ -2164,41 +2856,6 @@ function FieldLabel({
         </span>
       )}
     </label>
-  );
-}
-
-function ParserConfidenceBadge({
-  confidence,
-}: {
-  confidence:
-    | "high"
-    | "medium"
-    | "low";
-}) {
-  if (
-    confidence === "high"
-  ) {
-    return (
-      <span className="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-black text-green-700">
-        ✓ wysoka
-      </span>
-    );
-  }
-
-  if (
-    confidence === "medium"
-  ) {
-    return (
-      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">
-        ~ średnia
-      </span>
-    );
-  }
-
-  return (
-    <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black text-red-700">
-      ! sprawdź
-    </span>
   );
 }
 
