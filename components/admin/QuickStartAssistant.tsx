@@ -95,6 +95,12 @@ export default function QuickStartAssistant({
   draftRestored,
   draftSavedAt,
 }: Props) {
+  const hasCurrentOffer =
+    Boolean(
+      rawOffer.trim() ||
+        analysis
+    );
+
   return (
     <section className="overflow-hidden rounded-[20px] border border-violet-100 bg-white shadow-sm">
       <div className="border-b border-violet-100 bg-gradient-to-br from-violet-50 via-white to-rose-50 p-4 sm:p-5">
@@ -124,36 +130,46 @@ export default function QuickStartAssistant({
             <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6">
               Wklej treść produktu
               SHEIN. Asystent
-              rozpozna dane,
-              sprawdzi produkt pod
-              kątem duplikatów i
-              uzupełni formularz.
+              przygotuje dane,
+              sprawdzi duplikaty i
+              pomoże doprowadzić
+              ofertę do publikacji.
             </p>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold text-stone-400 sm:text-xs">
-            {draftSavedAt
-              ? `Szkic zapisuje się automatycznie • ostatni zapis ${formatDraftTime(
-                  draftSavedAt
-                )}`
-              : "Szkic zapisuje się automatycznie"}
-          </p>
+        <div className="mt-4 rounded-[16px] border border-white/80 bg-white/80 p-2.5 shadow-sm backdrop-blur">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 px-1">
+              <p className="text-[10px] font-bold text-stone-500 sm:text-xs">
+                {draftSavedAt
+                  ? `Szkic zapisany automatycznie • ${formatDraftTime(
+                      draftSavedAt
+                    )}`
+                  : "Szkic zapisuje się automatycznie"}
+              </p>
 
-          {(rawOffer.trim() ||
-            analysis) && (
+              <p className="mt-0.5 text-[9px] leading-4 text-stone-400 sm:text-[10px]">
+                {hasCurrentOffer
+                  ? "Chcesz dodać inny produkt? Rozpocznij nową ofertę jednym kliknięciem."
+                  : "Formularz jest gotowy na nowy produkt."}
+              </p>
+            </div>
+
             <button
               type="button"
               onClick={
                 onClear
               }
-              className="text-[10px] font-black text-stone-400 transition hover:text-red-600 sm:text-xs"
+              className="flex min-h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white px-4 text-xs font-black text-stone-800 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 active:scale-[0.98] sm:w-auto"
             >
-              Wyczyść i zacznij od
-              nowa
+              <span className="text-base leading-none">
+                +
+              </span>
+
+              Nowy produkt
             </button>
-          )}
+          </div>
         </div>
       </div>
 
