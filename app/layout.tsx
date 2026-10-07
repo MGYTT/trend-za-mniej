@@ -10,21 +10,23 @@ import {
 
 const siteUrl = getSiteUrl();
 
+const googleVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+
+const pinterestVerification =
+  process.env.NEXT_PUBLIC_PINTEREST_SITE_VERIFICATION;
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
-    default:
-      "Trend za Mniej | Moda i okazje",
-    template:
-      "%s | Trend za Mniej",
+    default: "Trend za Mniej | Moda i okazje",
+    template: "%s | Trend za Mniej",
   },
 
-  description:
-    SITE_DESCRIPTION,
+  description: SITE_DESCRIPTION,
 
-  applicationName:
-    SITE_NAME,
+  applicationName: SITE_NAME,
 
   authors: [
     {
@@ -32,26 +34,37 @@ export const metadata: Metadata = {
     },
   ],
 
-  creator:
-    SITE_NAME,
-
-  publisher:
-    SITE_NAME,
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
 
   alternates: {
     canonical: "/",
+  },
+
+  verification: {
+    ...(googleVerification
+      ? {
+          google: googleVerification,
+        }
+      : {}),
+
+    ...(pinterestVerification
+      ? {
+          other: {
+            "p:domain_verify":
+              pinterestVerification,
+          },
+        }
+      : {}),
   },
 
   openGraph: {
     type: "website",
     locale: "pl_PL",
     url: "/",
-    siteName:
-      SITE_NAME,
-    title:
-      "Trend za Mniej | Moda i okazje",
-    description:
-      SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    title: "Trend za Mniej | Moda i okazje",
+    description: SITE_DESCRIPTION,
     images: [
       {
         url: "/opengraph-image",
@@ -64,13 +77,9 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title:
-      "Trend za Mniej | Moda i okazje",
-    description:
-      SITE_DESCRIPTION,
-    images: [
-      "/opengraph-image",
-    ],
+    title: "Trend za Mniej | Moda i okazje",
+    description: SITE_DESCRIPTION,
+    images: ["/opengraph-image"],
   },
 
   robots: {
@@ -80,16 +89,13 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      "max-image-preview":
-        "large",
+      "max-image-preview": "large",
       "max-snippet": -1,
-      "max-video-preview":
-        -1,
+      "max-video-preview": -1,
     },
   },
 
-  category:
-    "fashion",
+  category: "fashion",
 };
 
 export default function RootLayout({
