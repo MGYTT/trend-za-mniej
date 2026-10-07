@@ -6,6 +6,7 @@ import {
 
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminProductList from "@/components/admin/AdminProductList";
+import DuplicateProtectionStatus from "@/components/admin/DuplicateProtectionStatus";
 
 import {
   createClient,
@@ -13,10 +14,17 @@ import {
 
 type ProductStatRow = {
   product_id: string;
+
   clicks:
     | number
     | string;
 };
+
+type IdentityStatus =
+  | "pending"
+  | "resolved"
+  | "unresolved"
+  | "conflict";
 
 export default async function AdminPage() {
   const supabase =
@@ -25,7 +33,8 @@ export default async function AdminPage() {
   const {
     data: authData,
   } =
-    await supabase.auth.getClaims();
+    await supabase.auth
+      .getClaims();
 
   if (
     !authData?.claims
@@ -129,6 +138,42 @@ export default async function AdminPage() {
     todayClicksResult.count ??
     0;
 
+  const identitySummary = {
+    pending: 0,
+    resolved: 0,
+    unresolved: 0,
+    conflict: 0,
+  };
+
+  for (
+    const product
+    of products
+  ) {
+    const status =
+      product.shein_identity_status as
+        | IdentityStatus
+        | null
+        | undefined;
+
+    if (
+      status &&
+      status in
+        identitySummary
+    ) {
+      identitySummary[
+        status
+      ] += 1;
+    } else if (
+      product.shein_product_key
+    ) {
+      identitySummary.resolved +=
+        1;
+    } else {
+      identitySummary.pending +=
+        1;
+    }
+  }
+
   const productStats = (
     (
       productStatsResult.data ??
@@ -175,10 +220,10 @@ export default async function AdminPage() {
               <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
                 Publikuj oferty,
                 kontroluj ich
-                widoczność i sprawdzaj,
-                które produkty
-                przyciągają najwięcej
-                uwagi.
+                widoczność i
+                sprawdzaj, które
+                produkty przyciągają
+                najwięcej uwagi.
               </p>
             </div>
 
@@ -203,6 +248,12 @@ export default async function AdminPage() {
             </div>
           </div>
         </section>
+
+        <DuplicateProtectionStatus
+          initialSummary={
+            identitySummary
+          }
+        />
 
         <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           <StatCard
@@ -306,6 +357,7 @@ function StatCard({
     | "hot"
     | "click"
     | "today";
+
   title: string;
   value: number;
   subtitle?: string;
@@ -347,17 +399,21 @@ function QuickAction({
   external = false,
 }: {
   href: string;
+
   icon:
     | "add"
     | "stats"
     | "external";
+
   title: string;
   description: string;
   external?: boolean;
 }) {
   return (
     <Link
-      href={href}
+      href={
+        href
+      }
       target={
         external
           ? "_blank"
@@ -407,7 +463,8 @@ function StatIcon({
     | "today";
 }) {
   if (
-    type === "active"
+    type ===
+    "active"
   ) {
     return (
       <svg
@@ -424,7 +481,8 @@ function StatIcon({
   }
 
   if (
-    type === "hidden"
+    type ===
+    "hidden"
   ) {
     return (
       <svg
@@ -445,7 +503,8 @@ function StatIcon({
   }
 
   if (
-    type === "hot"
+    type ===
+    "hot"
   ) {
     return (
       <span className="text-sm">
@@ -455,7 +514,8 @@ function StatIcon({
   }
 
   if (
-    type === "click"
+    type ===
+    "click"
   ) {
     return (
       <svg
@@ -473,7 +533,8 @@ function StatIcon({
   }
 
   if (
-    type === "today"
+    type ===
+    "today"
   ) {
     return (
       <svg
@@ -525,7 +586,8 @@ function QuickIcon({
     | "external";
 }) {
   if (
-    type === "add"
+    type ===
+    "add"
   ) {
     return (
       <svg
@@ -543,7 +605,8 @@ function QuickIcon({
   }
 
   if (
-    type === "stats"
+    type ===
+    "stats"
   ) {
     return (
       <svg

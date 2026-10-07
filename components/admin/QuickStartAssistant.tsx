@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import type {
   ParserConfidence,
   ParsedOffer,
@@ -9,12 +11,10 @@ import type {
   OfferAssistantField,
 } from "@/lib/offer-assistant";
 
-export type DuplicateCheckState =
-  | "idle"
-  | "checking"
-  | "unique"
-  | "duplicate"
-  | "error";
+import {
+  getSheinIdentityLabel,
+  type ProductDuplicateCheck,
+} from "@/lib/product-duplicate";
 
 type Props = {
   rawOffer: string;
@@ -51,12 +51,8 @@ type Props = {
     | ParserConfidence
     | null;
 
-  duplicateState:
-    DuplicateCheckState;
-
-  duplicateProductName:
-    | string
-    | null;
+  duplicateCheck:
+    ProductDuplicateCheck;
 
   onGenerateDescription:
     () => void;
@@ -91,8 +87,7 @@ export default function QuickStartAssistant({
   parserMessage,
   parserWarnings,
   parserConfidence,
-  duplicateState,
-  duplicateProductName,
+  duplicateCheck,
   onGenerateDescription,
   onGoToMissing,
   nextMissingLabel,
@@ -111,7 +106,7 @@ export default function QuickStartAssistant({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-600">
-                Szybki start 2.0
+                Szybki start
               </p>
 
               {draftRestored && (
@@ -129,9 +124,10 @@ export default function QuickStartAssistant({
             <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6">
               Wklej treść produktu
               SHEIN. Asystent
-              rozpozna najważniejsze
-              dane i wpisze je do
-              formularza.
+              rozpozna dane,
+              sprawdzi produkt pod
+              kątem duplikatów i
+              uzupełni formularz.
             </p>
           </div>
         </div>
@@ -154,7 +150,8 @@ export default function QuickStartAssistant({
               }
               className="text-[10px] font-black text-stone-400 transition hover:text-red-600 sm:text-xs"
             >
-              Wyczyść i zacznij od nowa
+              Wyczyść i zacznij od
+              nowa
             </button>
           )}
         </div>
@@ -286,12 +283,9 @@ export default function QuickStartAssistant({
               )}
             </div>
 
-            <DuplicateStatus
-              state={
-                duplicateState
-              }
-              productName={
-                duplicateProductName
+            <DuplicateGuard
+              check={
+                duplicateCheck
               }
             />
 
@@ -361,18 +355,267 @@ export default function QuickStartAssistant({
             </div>
 
             <p className="mt-3 text-[10px] leading-5 text-stone-400 sm:text-xs">
-              Dane oznaczone jako
-              „sprawdź” nie są
-              blokowane. Asystent ma
-              pomagać, ale przed
-              publikacją nadal masz
-              pełną kontrolę nad
-              ofertą.
+              Twarda blokada
+              pojawia się tylko
+              wtedy, gdy system ma
+              jednoznaczny dowód
+              duplikatu. Podobne
+              nazwy są jedynie
+              ostrzeżeniem.
             </p>
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+function DuplicateGuard({
+  check,
+}: {
+  check:
+    ProductDuplicateCheck;
+}) {
+  if (
+    check.status ===
+    "idle"
+  ) {
+    return null;
+  }
+
+  if (
+    check.status ===
+    "checking"
+  ) {
+    return (
+      <div className="mt-3 rounded-[16px] border border-blue-100 bg-blue-50 p-3.5">
+        <p className="text-xs font-black text-blue-800">
+          🔎 Sprawdzam duplikaty…
+        </p>
+
+        {check.identity && (
+          <p className="mt-1 text-xs text-blue-700">
+            Rozpoznano{" "}
+            {getSheinIdentityLabel(
+              check.identity
+            )}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (
+    check.status ===
+      "blocked" &&
+    check.exactMatch
+  ) {
+    return (
+      <div className="mt-3 rounded-[18px] border border-red-200 bg-red-50 p-3.5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-red-600 shadow-sm">
+            !
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-black text-red-900">
+              Ten produkt już
+              istnieje
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-red-700">
+              {check.blockingReason ===
+              "shein-key"
+                ? "Rozpoznano ten sam identyfikator produktu SHEIN. Inny link afiliacyjny nie tworzy nowego produktu."
+                : "Dokładnie ten sam link afiliacyjny jest już przypisany do istniejącej oferty."}
+            </p>
+          </div>
+        </div>
+
+        {check.identity && (
+          <div className="mt-3 rounded-xl bg-white/70 px-3 py-2 text-[10px] font-black text-red-700">
+            {
+              getSheinIdentityLabel(
+                check.identity
+              )
+            }
+          </div>
+        )}
+
+        <DuplicateProductCard
+          product={
+            check.exactMatch
+          }
+          blocked
+        />
+      </div>
+    );
+  }
+
+  if (
+    check.status ===
+      "warning" &&
+    check.similarMatches
+      .length > 0
+  ) {
+    return (
+      <div className="mt-3 rounded-[18px] border border-amber-200 bg-amber-50 p-3.5">
+        <p className="text-xs font-black text-amber-900">
+          ⚠ Znaleziono podobne
+          oferty
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-amber-800">
+          To nie jest pewny
+          duplikat, dlatego
+          publikacja nie jest
+          blokowana. Warto tylko
+          szybko sprawdzić poniższe
+          produkty.
+        </p>
+
+        <div className="mt-3 space-y-2">
+          {check.similarMatches.map(
+            (
+              product
+            ) => (
+              <DuplicateProductCard
+                key={
+                  product.id
+                }
+                product={
+                  product
+                }
+              />
+            )
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    check.status ===
+    "clear"
+  ) {
+    return (
+      <div className="mt-3 rounded-[16px] border border-green-200 bg-green-50 p-3.5">
+        <div className="flex gap-3">
+          <span className="font-black text-green-700">
+            ✓
+          </span>
+
+          <div>
+            <p className="text-xs font-black text-green-800">
+              Nie znaleziono
+              duplikatu
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-green-700">
+              {check.identity
+                ? `${getSheinIdentityLabel(
+                    check.identity
+                  )} nie występuje jeszcze w bazie.`
+                : "Nie znaleziono identycznego linku ani wyraźnie podobnej istniejącej oferty."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-[16px] border border-amber-200 bg-amber-50 p-3.5">
+      <p className="text-xs font-black text-amber-900">
+        Kontrola duplikatu
+        chwilowo niedostępna
+      </p>
+
+      <p className="mt-1 text-xs leading-5 text-amber-800">
+        System spróbuje ponownie
+        przed publikacją.
+      </p>
+    </div>
+  );
+}
+
+function DuplicateProductCard({
+  product,
+  blocked = false,
+}: {
+  product:
+    ProductDuplicateCheck["exactMatch"] extends infer T
+      ? Exclude<T, null>
+      : never;
+
+  blocked?: boolean;
+}) {
+  return (
+    <div className="mt-3 grid grid-cols-[58px_minmax(0,1fr)] gap-3 rounded-[14px] border border-white bg-white p-2.5 shadow-sm">
+      <img
+        src={
+          product.imageUrl
+        }
+        alt=""
+        className="h-[72px] w-[58px] rounded-xl object-cover"
+      />
+
+      <div className="min-w-0">
+        <p className="line-clamp-2 text-xs font-black leading-5 text-stone-900">
+          {
+            product.shortName
+          }
+        </p>
+
+        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[10px] text-stone-400">
+          <span>
+            {
+              product.category
+            }
+          </span>
+
+          <span>
+            {Number.isFinite(
+              product.price
+            )
+              ? `${product.price.toFixed(
+                  2
+                )} zł`
+              : ""}
+          </span>
+
+          <span
+            className={
+              product.active
+                ? "font-bold text-green-600"
+                : "font-bold text-stone-400"
+            }
+          >
+            {product.active
+              ? "● aktywna"
+              : "● ukryta"}
+          </span>
+        </div>
+
+        {!blocked && (
+          <p className="mt-1 text-[10px] font-black text-amber-700">
+            {
+              product.similarity
+            }
+            % podobieństwa
+          </p>
+        )}
+
+        <Link
+          href={`/admin/edytuj/${product.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex text-[10px] font-black text-rose-600 hover:text-rose-700"
+        >
+          Otwórz w panelu ↗
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -467,76 +710,6 @@ function FieldStateBadge({
     <span className="shrink-0 rounded-full bg-stone-100 px-2 py-1 text-[9px] font-black text-stone-500">
       opcja
     </span>
-  );
-}
-
-function DuplicateStatus({
-  state,
-  productName,
-}: {
-  state:
-    DuplicateCheckState;
-
-  productName:
-    | string
-    | null;
-}) {
-  if (
-    state === "idle"
-  ) {
-    return null;
-  }
-
-  if (
-    state ===
-    "checking"
-  ) {
-    return (
-      <div className="mt-3 rounded-[14px] border border-blue-100 bg-blue-50 p-3 text-xs font-bold text-blue-700">
-        Sprawdzam, czy ten link
-        nie został już użyty…
-      </div>
-    );
-  }
-
-  if (
-    state === "unique"
-  ) {
-    return (
-      <div className="mt-3 rounded-[14px] border border-green-200 bg-green-50 p-3 text-xs font-bold text-green-700">
-        ✓ Link nie występuje
-        jeszcze w bazie ofert.
-      </div>
-    );
-  }
-
-  if (
-    state ===
-    "duplicate"
-  ) {
-    return (
-      <div className="mt-3 rounded-[14px] border border-red-200 bg-red-50 p-3">
-        <p className="text-xs font-black text-red-800">
-          ⚠ Ten link jest już
-          używany
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-red-700">
-          {productName
-            ? `Znaleziono ofertę: „${productName}”.`
-            : "Produkt z tym linkiem znajduje się już w bazie."}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-3 rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-xs font-bold leading-5 text-amber-800">
-      Nie udało się teraz
-      sprawdzić duplikatu. Link
-      zostanie sprawdzony ponownie
-      przed publikacją.
-    </div>
   );
 }
 

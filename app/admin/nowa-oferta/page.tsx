@@ -22,9 +22,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import OfferQualityChecks from "@/components/admin/OfferQualityChecks";
 import ProductPreview from "@/components/admin/ProductPreview";
 import PublishConfirmation from "@/components/admin/PublishConfirmation";
-import QuickStartAssistant, {
-  type DuplicateCheckState,
-} from "@/components/admin/QuickStartAssistant";
+import QuickStartAssistant from "@/components/admin/QuickStartAssistant";
 
 import {
   buildSuggestedDescription,
@@ -36,6 +34,20 @@ import {
   parseOfferText,
   type ParsedOffer,
 } from "@/lib/offer-parser";
+
+import {
+  createDuplicateCandidate,
+  createEmptyProductDuplicateCheck,
+  extractSheinProductIdentity,
+  findSimilarProducts,
+  type ComparableProduct,
+  type ProductDuplicateCheck,
+  type SheinProductIdentity,
+} from "@/lib/product-duplicate";
+
+import {
+  resolveSheinProductIdentityForAdmin,
+} from "@/lib/resolve-shein-product-client";
 
 import {
   createClient,
@@ -103,6 +115,46 @@ type SavedDraft = {
   updatedAt: string;
 };
 
+type DuplicateProductRow = {
+  id: string;
+  slug: string;
+  name: string;
+  short_name: string;
+  category: string;
+  image_url: string;
+  affiliate_url: string;
+
+  shein_product_key:
+    | string
+    | null;
+
+  price:
+    | number
+    | string;
+
+  active: boolean;
+};
+
+type DuplicateCheckInput = {
+  sourceText: string;
+  affiliateUrl: string;
+  name: string;
+  shortName: string;
+  category: string;
+};
+
+type ParsedFormField =
+  | "name"
+  | "shortName"
+  | "price"
+  | "oldPrice"
+  | "category"
+  | "affiliateUrl"
+  | "soldText";
+
+const DUPLICATE_SELECT =
+  "id, slug, name, short_name, category, image_url, affiliate_url, shein_product_key, price, active";
+
 const INITIAL_FORM: FormState = {
   name: "",
   shortName: "",
@@ -132,13 +184,51 @@ function hasDraftContent(
   );
 }
 
+function toComparableProduct(
+  row:
+    DuplicateProductRow
+): ComparableProduct {
+  return {
+    id:
+      row.id,
+
+    slug:
+      row.slug,
+
+    name:
+      row.name,
+
+    shortName:
+      row.short_name,
+
+    category:
+      row.category,
+
+    imageUrl:
+      row.image_url,
+
+    affiliateUrl:
+      row.affiliate_url,
+
+    sheinProductKey:
+      row.shein_product_key,
+
+    price:
+      row.price,
+
+    active:
+      row.active,
+  };
+}
+
 export default function NewProductPage() {
   const router =
     useRouter();
 
   const [supabase] =
     useState(
-      () => createClient()
+      () =>
+        createClient()
     );
 
   const [
@@ -159,16 +249,18 @@ export default function NewProductPage() {
   const [
     error,
     setError,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<string | null>(
+      null
+    );
 
   const [
     successSlug,
     setSuccessSlug,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<string | null>(
+      null
+    );
 
   const [
     rawOffer,
@@ -178,23 +270,26 @@ export default function NewProductPage() {
   const [
     analysis,
     setAnalysis,
-  ] = useState<
-    ParsedOffer | null
-  >(null);
+  ] =
+    useState<ParsedOffer | null>(
+      null
+    );
 
   const [
     parserMessage,
     setParserMessage,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<string | null>(
+      null
+    );
 
   const [
     parserWarnings,
     setParserWarnings,
-  ] = useState<
-    string[]
-  >([]);
+  ] =
+    useState<string[]>(
+      []
+    );
 
   const [
     parserConfidence,
@@ -207,19 +302,13 @@ export default function NewProductPage() {
   >(null);
 
   const [
-    duplicateState,
-    setDuplicateState,
+    duplicateCheck,
+    setDuplicateCheck,
   ] =
-    useState<DuplicateCheckState>(
-      "idle"
+    useState<ProductDuplicateCheck>(
+      () =>
+        createEmptyProductDuplicateCheck()
     );
-
-  const [
-    duplicateProductName,
-    setDuplicateProductName,
-  ] = useState<
-    string | null
-  >(null);
 
   const [
     confirmOpen,
@@ -242,16 +331,18 @@ export default function NewProductPage() {
   const [
     imageFile,
     setImageFile,
-  ] = useState<File | null>(
-    null
-  );
+  ] =
+    useState<File | null>(
+      null
+    );
 
   const [
     previewUrl,
     setPreviewUrl,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<string | null>(
+      null
+    );
 
   const [
     draftReady,
@@ -266,9 +357,10 @@ export default function NewProductPage() {
   const [
     draftSavedAt,
     setDraftSavedAt,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<string | null>(
+      null
+    );
 
   useEffect(() => {
     try {
@@ -293,7 +385,8 @@ export default function NewProductPage() {
         return;
       }
 
-      const restoredForm: FormState = {
+      const restoredForm:
+        FormState = {
         ...INITIAL_FORM,
         ...(draft.form ??
           {}),
@@ -338,7 +431,9 @@ export default function NewProductPage() {
         DRAFT_KEY
       );
     } finally {
-      setDraftReady(true);
+      setDraftReady(
+        true
+      );
     }
   }, []);
 
@@ -370,12 +465,12 @@ export default function NewProductPage() {
           const updatedAt =
             new Date().toISOString();
 
-          const draft: SavedDraft =
-            {
-              form,
-              rawOffer,
-              updatedAt,
-            };
+          const draft:
+            SavedDraft = {
+            form,
+            rawOffer,
+            updatedAt,
+          };
 
           try {
             window.localStorage.setItem(
@@ -413,7 +508,9 @@ export default function NewProductPage() {
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
+      if (
+        previewUrl
+      ) {
         URL.revokeObjectURL(
           previewUrl
         );
@@ -422,7 +519,9 @@ export default function NewProductPage() {
   }, [previewUrl]);
 
   useEffect(() => {
-    if (!mobilePreviewOpen) {
+    if (
+      !mobilePreviewOpen
+    ) {
       return;
     }
 
@@ -434,7 +533,8 @@ export default function NewProductPage() {
       "hidden";
 
     function handleKeyDown(
-      event: KeyboardEvent
+      event:
+        KeyboardEvent
     ) {
       if (
         event.key ===
@@ -460,7 +560,9 @@ export default function NewProductPage() {
         handleKeyDown
       );
     };
-  }, [mobilePreviewOpen]);
+  }, [
+    mobilePreviewOpen,
+  ]);
 
   useEffect(() => {
     if (!error) {
@@ -477,6 +579,7 @@ export default function NewProductPage() {
             ?.scrollIntoView({
               behavior:
                 "smooth",
+
               block:
                 "center",
             });
@@ -501,7 +604,10 @@ export default function NewProductPage() {
         /[\u0300-\u036f]/g,
         ""
       )
-      .replace(/ł/g, "l")
+      .replace(
+        /ł/g,
+        "l"
+      )
       .replace(
         /[^a-z0-9]+/g,
         "-"
@@ -518,8 +624,14 @@ export default function NewProductPage() {
     const normalized =
       value
         .trim()
-        .replace(/\s/g, "")
-        .replace(",", ".");
+        .replace(
+          /\s/g,
+          ""
+        )
+        .replace(
+          ",",
+          "."
+        );
 
     if (!normalized) {
       return null;
@@ -540,7 +652,9 @@ export default function NewProductPage() {
   function getExtension(
     file: File
   ) {
-    switch (file.type) {
+    switch (
+      file.type
+    ) {
       case "image/jpeg":
         return "jpg";
 
@@ -560,7 +674,9 @@ export default function NewProductPage() {
   ) {
     try {
       const url =
-        new URL(value);
+        new URL(
+          value
+        );
 
       return (
         url.protocol ===
@@ -571,14 +687,24 @@ export default function NewProductPage() {
     }
   }
 
+  function resetDuplicateCheck() {
+    setDuplicateCheck(
+      createEmptyProductDuplicateCheck()
+    );
+  }
+
   function updateField<
-    Key extends keyof FormState,
+    Key extends
+      keyof FormState,
   >(
     key: Key,
-    value: FormState[Key]
+    value:
+      FormState[Key]
   ) {
     setForm(
-      (current) => ({
+      (
+        current
+      ) => ({
         ...current,
         [key]:
           value,
@@ -586,20 +712,24 @@ export default function NewProductPage() {
     );
 
     if (
+      key === "name" ||
       key ===
-      "affiliateUrl"
+        "shortName" ||
+      key ===
+        "category" ||
+      key ===
+        "affiliateUrl"
     ) {
-      setDuplicateState(
-        "idle"
-      );
-
-      setDuplicateProductName(
-        null
-      );
+      resetDuplicateCheck();
     }
 
-    setError(null);
-    setSuccessSlug(null);
+    setError(
+      null
+    );
+
+    setSuccessSlug(
+      null
+    );
   }
 
   async function createUniqueSlug(
@@ -617,15 +747,21 @@ export default function NewProductPage() {
           slugError,
       } =
         await supabase
-          .from("products")
-          .select("id")
+          .from(
+            "products"
+          )
+          .select(
+            "id"
+          )
           .eq(
             "slug",
             candidate
           )
           .maybeSingle();
 
-      if (slugError) {
+      if (
+        slugError
+      ) {
         throw slugError;
       }
 
@@ -640,121 +776,442 @@ export default function NewProductPage() {
     }
   }
 
-  async function checkDuplicateAffiliateUrl(
-    affiliateUrl: string
-  ) {
-    const {
-      data,
-      error:
-        duplicateError,
-    } =
-      await supabase
-        .from("products")
-        .select(
-          "id, short_name"
-        )
-        .eq(
-          "affiliate_url",
-          affiliateUrl.trim()
-        )
-        .limit(1);
-
-    if (duplicateError) {
-      throw duplicateError;
-    }
-
-    if (
-      data &&
-      data.length > 0
+  async function resolveIdentitySafely({
+    sourceText,
+    affiliateUrl,
+  }: {
+    sourceText: string;
+    affiliateUrl: string;
+  }) {
+    try {
+      return await resolveSheinProductIdentityForAdmin({
+        sourceText,
+        affiliateUrl,
+      });
+    } catch (
+      resolveError
     ) {
-      return {
-        duplicate:
-          true,
+      /*
+       * Sam błąd rozwinięcia
+       * OneLinka nie blokuje pracy.
+       *
+       * Nadal wykonamy:
+       * - kontrolę identycznego linku,
+       * - kontrolę podobnych ofert.
+       */
+      console.error(
+        "Nie udało się ustalić ID produktu SHEIN:",
+        resolveError
+      );
 
-        productName:
-          data[0]
-            .short_name,
-      };
+      return null;
     }
-
-    return {
-      duplicate:
-        false,
-
-      productName:
-        null,
-    };
   }
 
-  async function refreshDuplicateCheck(
-    affiliateUrl: string
-  ) {
-    const clean =
-      affiliateUrl.trim();
-
-    if (
-      !clean ||
-      !isValidHttpsUrl(
-        clean
-      )
-    ) {
-      setDuplicateState(
-        "idle"
+  async function runDuplicateCheck({
+    sourceText,
+    affiliateUrl,
+    name,
+    shortName,
+    category,
+  }: DuplicateCheckInput):
+    Promise<ProductDuplicateCheck> {
+    const immediateIdentity =
+      extractSheinProductIdentity(
+        `${affiliateUrl}\n${sourceText}`
       );
 
-      setDuplicateProductName(
-        null
-      );
+    const checkingState:
+      ProductDuplicateCheck =
+      {
+        status:
+          "checking",
 
-      return;
+        identity:
+          immediateIdentity,
+
+        exactMatch:
+          null,
+
+        similarMatches:
+          [],
+
+        blockingReason:
+          null,
+      };
+
+    setDuplicateCheck(
+      checkingState
+    );
+
+    /*
+     * Tutaj dzieje się główna
+     * magia:
+     *
+     * OneLink administratora
+     * może zostać rozwinięty
+     * po stronie naszego serwera
+     * do prawdziwego ID produktu.
+     */
+    const identity =
+      await resolveIdentitySafely({
+        sourceText,
+        affiliateUrl,
+      });
+
+    if (identity) {
+      setDuplicateCheck({
+        ...checkingState,
+        identity,
+      });
     }
 
-    setDuplicateState(
-      "checking"
-    );
-
-    setDuplicateProductName(
-      null
-    );
-
     try {
-      const result =
-        await checkDuplicateAffiliateUrl(
-          clean
-        );
+      /*
+       * 1. Najmocniejsza kontrola:
+       *    stałe ID produktu SHEIN.
+       */
+      if (identity) {
+        const {
+          data,
+          error:
+            identityError,
+        } =
+          await supabase
+            .from(
+              "products"
+            )
+            .select(
+              DUPLICATE_SELECT
+            )
+            .eq(
+              "shein_product_key",
+              identity.key
+            )
+            .limit(1);
+
+        if (
+          identityError
+        ) {
+          throw identityError;
+        }
+
+        const row =
+          (
+            data ??
+            []
+          )[0] as
+            | DuplicateProductRow
+            | undefined;
+
+        if (row) {
+          const product =
+            toComparableProduct(
+              row
+            );
+
+          const result:
+            ProductDuplicateCheck =
+            {
+              status:
+                "blocked",
+
+              identity,
+
+              exactMatch:
+                createDuplicateCandidate(
+                  product
+                ),
+
+              similarMatches:
+                [],
+
+              blockingReason:
+                "shein-key",
+            };
+
+          setDuplicateCheck(
+            result
+          );
+
+          return result;
+        }
+      }
+
+      /*
+       * 2. Ten sam dokładny link
+       *    afiliacyjny.
+       */
+      const cleanAffiliateUrl =
+        affiliateUrl.trim();
 
       if (
-        result.duplicate
+        cleanAffiliateUrl &&
+        isValidHttpsUrl(
+          cleanAffiliateUrl
+        )
       ) {
-        setDuplicateState(
-          "duplicate"
+        const {
+          data,
+          error:
+            affiliateError,
+        } =
+          await supabase
+            .from(
+              "products"
+            )
+            .select(
+              DUPLICATE_SELECT
+            )
+            .eq(
+              "affiliate_url",
+              cleanAffiliateUrl
+            )
+            .limit(1);
+
+        if (
+          affiliateError
+        ) {
+          throw affiliateError;
+        }
+
+        const row =
+          (
+            data ??
+            []
+          )[0] as
+            | DuplicateProductRow
+            | undefined;
+
+        if (row) {
+          const product =
+            toComparableProduct(
+              row
+            );
+
+          const result:
+            ProductDuplicateCheck =
+            {
+              status:
+                "blocked",
+
+              identity,
+
+              exactMatch:
+                createDuplicateCandidate(
+                  product
+                ),
+
+              similarMatches:
+                [],
+
+              blockingReason:
+                "affiliate-url",
+            };
+
+          setDuplicateCheck(
+            result
+          );
+
+          return result;
+        }
+      }
+
+      /*
+       * 3. Pobieramy produkty
+       *    wyłącznie do miękkiego
+       *    sprawdzania podobieństwa.
+       */
+      const {
+        data:
+          candidatesData,
+        error:
+          candidatesError,
+      } =
+        await supabase
+          .from(
+            "products"
+          )
+          .select(
+            DUPLICATE_SELECT
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                false,
+            }
+          )
+          .limit(300);
+
+      if (
+        candidatesError
+      ) {
+        throw candidatesError;
+      }
+
+      const rows =
+        (
+          candidatesData ??
+          []
+        ) as
+          DuplicateProductRow[];
+
+      const comparable =
+        rows.map(
+          toComparableProduct
         );
 
-        setDuplicateProductName(
-          result.productName
-        );
-      } else {
-        setDuplicateState(
-          "unique"
-        );
+      /*
+       * To pomaga również przy
+       * starych produktach, które
+       * mogły mieć wcześniej
+       * bezpośredni URL SHEIN.
+       *
+       * OneLinki uzupełnimy
+       * osobnym backfillem.
+       */
+      if (identity) {
+        const historicalMatch =
+          comparable.find(
+            (
+              product
+            ) => {
+              if (
+                product.sheinProductKey ===
+                identity.key
+              ) {
+                return true;
+              }
+
+              const derived =
+                extractSheinProductIdentity(
+                  product.affiliateUrl
+                );
+
+              return (
+                derived?.key ===
+                identity.key
+              );
+            }
+          );
+
+        if (
+          historicalMatch
+        ) {
+          const result:
+            ProductDuplicateCheck =
+            {
+              status:
+                "blocked",
+
+              identity,
+
+              exactMatch:
+                createDuplicateCandidate(
+                  historicalMatch
+                ),
+
+              similarMatches:
+                [],
+
+              blockingReason:
+                "shein-key",
+            };
+
+          setDuplicateCheck(
+            result
+          );
+
+          return result;
+        }
       }
+
+      /*
+       * 4. Podobieństwo nazw jest
+       *    wyłącznie ostrzeżeniem.
+       *
+       * Nigdy nie blokujemy
+       * publikacji tylko dlatego,
+       * że dwa ubrania mają
+       * podobną nazwę.
+       */
+      const similarMatches =
+        findSimilarProducts({
+          name,
+          shortName,
+          category,
+
+          products:
+            comparable,
+
+          limit: 3,
+        });
+
+      const result:
+        ProductDuplicateCheck =
+        {
+          status:
+            similarMatches.length >
+            0
+              ? "warning"
+              : "clear",
+
+          identity,
+
+          exactMatch:
+            null,
+
+          similarMatches,
+
+          blockingReason:
+            null,
+        };
+
+      setDuplicateCheck(
+        result
+      );
+
+      return result;
     } catch (
       duplicateError
     ) {
       console.error(
-        "Błąd kontroli duplikatu:",
+        "Błąd kontroli duplikatów:",
         duplicateError
       );
 
-      setDuplicateState(
-        "error"
+      const result:
+        ProductDuplicateCheck =
+        {
+          status:
+            "error",
+
+          identity,
+
+          exactMatch:
+            null,
+
+          similarMatches:
+            [],
+
+          blockingReason:
+            null,
+        };
+
+      setDuplicateCheck(
+        result
       );
+
+      return result;
     }
   }
 
   function shouldReplaceParsedValue(
-    currentValue: string,
-    previousParsedValue: string
+    currentValue:
+      string,
+    previousParsedValue:
+      string
   ) {
     const current =
       currentValue.trim();
@@ -781,7 +1238,9 @@ export default function NewProductPage() {
     setError(null);
     setParserMessage(null);
     setParserWarnings([]);
-    setParserConfidence(null);
+    setParserConfidence(
+      null
+    );
 
     if (!cleanText) {
       setParserMessage(
@@ -811,122 +1270,117 @@ export default function NewProductPage() {
         parsed
       );
 
-    setForm(
-      (current) => {
-        const next = {
-          ...current,
-        };
+    const nextForm = {
+      ...form,
+    };
 
-        function applyParsed(
-          key:
-            | "name"
-            | "shortName"
-            | "price"
-            | "oldPrice"
-            | "category"
-            | "affiliateUrl"
-            | "soldText",
-          newValue: string,
-          previousValue: string
-        ) {
-          const currentValue =
-            String(
-              current[key]
-            );
+    function applyParsed(
+      key:
+        ParsedFormField,
+      newValue: string,
+      previousValue: string
+    ) {
+      const currentValue =
+        nextForm[key];
 
-          const parserOwned =
-            shouldReplaceParsedValue(
-              currentValue,
-              previousValue
-            );
-
-          if (
-            newValue &&
-            parserOwned
-          ) {
-            next[key] =
-              newValue;
-
-            return;
-          }
-
-          if (
-            !newValue &&
-            previousValue &&
-            currentValue.trim() ===
-              previousValue.trim()
-          ) {
-            next[key] =
-              "";
-          }
-        }
-
-        applyParsed(
-          "name",
-          parsed.name,
-          previous?.name ??
-            ""
+      const parserOwned =
+        shouldReplaceParsedValue(
+          currentValue,
+          previousValue
         );
 
-        applyParsed(
-          "shortName",
-          parsed.shortName,
-          previous?.shortName ??
-            ""
-        );
+      if (
+        newValue &&
+        parserOwned
+      ) {
+        nextForm[key] =
+          newValue;
 
-        applyParsed(
-          "price",
-          parsed.price,
-          previous?.price ??
-            ""
-        );
-
-        applyParsed(
-          "oldPrice",
-          parsed.oldPrice,
-          previous?.oldPrice ??
-            ""
-        );
-
-        applyParsed(
-          "category",
-          parsed.category,
-          previous?.category ??
-            ""
-        );
-
-        applyParsed(
-          "affiliateUrl",
-          parsed.affiliateUrl,
-          previous?.affiliateUrl ??
-            ""
-        );
-
-        applyParsed(
-          "soldText",
-          parsed.soldText,
-          previous?.soldText ??
-            ""
-        );
-
-        if (
-          suggestedDescription &&
-          (
-            !current.description.trim() ||
-            (
-              previousDescription &&
-              current.description.trim() ===
-                previousDescription.trim()
-            )
-          )
-        ) {
-          next.description =
-            suggestedDescription;
-        }
-
-        return next;
+        return;
       }
+
+      if (
+        !newValue &&
+        previousValue &&
+        currentValue.trim() ===
+          previousValue.trim()
+      ) {
+        nextForm[key] =
+          "";
+      }
+    }
+
+    applyParsed(
+      "name",
+      parsed.name,
+      previous?.name ??
+        ""
+    );
+
+    applyParsed(
+      "shortName",
+      parsed.shortName,
+      previous
+        ?.shortName ??
+        ""
+    );
+
+    applyParsed(
+      "price",
+      parsed.price,
+      previous?.price ??
+        ""
+    );
+
+    applyParsed(
+      "oldPrice",
+      parsed.oldPrice,
+      previous
+        ?.oldPrice ??
+        ""
+    );
+
+    applyParsed(
+      "category",
+      parsed.category,
+      previous
+        ?.category ??
+        ""
+    );
+
+    applyParsed(
+      "affiliateUrl",
+      parsed.affiliateUrl,
+      previous
+        ?.affiliateUrl ??
+        ""
+    );
+
+    applyParsed(
+      "soldText",
+      parsed.soldText,
+      previous
+        ?.soldText ??
+        ""
+    );
+
+    if (
+      suggestedDescription &&
+      (
+        !nextForm.description.trim() ||
+        (
+          previousDescription &&
+          nextForm.description.trim() ===
+            previousDescription.trim()
+        )
+      )
+    ) {
+      nextForm.description =
+        suggestedDescription;
+    }
+
+    setForm(
+      nextForm
     );
 
     setAnalysis(
@@ -958,21 +1412,27 @@ export default function NewProductPage() {
         : `Rozpoznano ${completion.detected} z ${completion.total} kluczowych danych. Brakujące informacje uzupełnij niżej.`
     );
 
-    if (
-      parsed.affiliateUrl
-    ) {
-      await refreshDuplicateCheck(
-        parsed.affiliateUrl
-      );
-    } else {
-      setDuplicateState(
-        "idle"
-      );
+    /*
+     * Kontrola zaczyna się sama.
+     * Administrator niczego nie
+     * klika.
+     */
+    await runDuplicateCheck({
+      sourceText:
+        cleanText,
 
-      setDuplicateProductName(
-        null
-      );
-    }
+      affiliateUrl:
+        nextForm.affiliateUrl,
+
+      name:
+        nextForm.name,
+
+      shortName:
+        nextForm.shortName,
+
+      category:
+        nextForm.category,
+    });
   }
 
   function handleRawOfferChange(
@@ -982,9 +1442,15 @@ export default function NewProductPage() {
       value
     );
 
-    setParserMessage(null);
+    setParserMessage(
+      null
+    );
 
-    setError(null);
+    setError(
+      null
+    );
+
+    resetDuplicateCheck();
   }
 
   async function handlePasteAndAnalyze() {
@@ -992,7 +1458,9 @@ export default function NewProductPage() {
       true
     );
 
-    setError(null);
+    setError(
+      null
+    );
 
     try {
       if (
@@ -1071,16 +1539,23 @@ export default function NewProductPage() {
       ?.scrollIntoView({
         behavior:
           "smooth",
+
         block:
           "start",
       });
   }
 
   function handleImageChange(
-    event: ChangeEvent<HTMLInputElement>
+    event:
+      ChangeEvent<HTMLInputElement>
   ) {
-    setError(null);
-    setSuccessSlug(null);
+    setError(
+      null
+    );
+
+    setSuccessSlug(
+      null
+    );
 
     const file =
       event.target
@@ -1120,7 +1595,9 @@ export default function NewProductPage() {
       return;
     }
 
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
@@ -1141,15 +1618,25 @@ export default function NewProductPage() {
   }
 
   function removeImage() {
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
     }
 
-    setImageFile(null);
-    setPreviewUrl(null);
-    setError(null);
+    setImageFile(
+      null
+    );
+
+    setPreviewUrl(
+      null
+    );
+
+    setError(
+      null
+    );
   }
 
   function clearOffer() {
@@ -1165,7 +1652,9 @@ export default function NewProductPage() {
       return;
     }
 
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
@@ -1182,13 +1671,7 @@ export default function NewProductPage() {
     setParserWarnings([]);
     setParserConfidence(null);
 
-    setDuplicateState(
-      "idle"
-    );
-
-    setDuplicateProductName(
-      null
-    );
+    resetDuplicateCheck();
 
     setImageFile(null);
     setPreviewUrl(null);
@@ -1196,13 +1679,8 @@ export default function NewProductPage() {
     setError(null);
     setSuccessSlug(null);
 
-    setDraftRestored(
-      false
-    );
-
-    setDraftSavedAt(
-      null
-    );
+    setDraftRestored(false);
+    setDraftSavedAt(null);
 
     window.localStorage.removeItem(
       DRAFT_KEY
@@ -1210,22 +1688,27 @@ export default function NewProductPage() {
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior:
+        "smooth",
     });
   }
 
   function validateProduct():
     | {
-        data: ValidatedProduct;
+        data:
+          ValidatedProduct;
         error: null;
       }
     | {
         data: null;
         error: string;
       } {
-    if (!imageFile) {
+    if (
+      !imageFile
+    ) {
       return {
         data: null,
+
         error:
           "Dodaj zdjęcie produktu.",
       };
@@ -1267,33 +1750,42 @@ export default function NewProductPage() {
     ) {
       return {
         data: null,
+
         error:
           "Uzupełnij pełną i krótką nazwę produktu.",
       };
     }
 
-    if (!description) {
+    if (
+      !description
+    ) {
       return {
         data: null,
+
         error:
           "Dodaj opis produktu.",
       };
     }
 
-    if (!category) {
+    if (
+      !category
+    ) {
       return {
         data: null,
+
         error:
           "Wybierz kategorię.",
       };
     }
 
     if (
-      price === null ||
+      price ===
+        null ||
       price <= 0
     ) {
       return {
         data: null,
+
         error:
           "Podaj poprawną cenę większą od 0.",
       };
@@ -1302,23 +1794,28 @@ export default function NewProductPage() {
     if (
       form.oldPrice.trim() &&
       (
-        oldPrice === null ||
+        oldPrice ===
+          null ||
         oldPrice <= 0
       )
     ) {
       return {
         data: null,
+
         error:
           "Stara cena jest niepoprawna.",
       };
     }
 
     if (
-      oldPrice !== null &&
-      oldPrice <= price
+      oldPrice !==
+        null &&
+      oldPrice <=
+        price
     ) {
       return {
         data: null,
+
         error:
           "Stara cena powinna być wyższa od aktualnej ceny.",
       };
@@ -1332,6 +1829,7 @@ export default function NewProductPage() {
     ) {
       return {
         data: null,
+
         error:
           "Podaj poprawny link afiliacyjny rozpoczynający się od https://",
       };
@@ -1347,6 +1845,7 @@ export default function NewProductPage() {
         category,
         affiliateUrl,
         soldText,
+
         featured:
           form.featured,
       },
@@ -1356,12 +1855,18 @@ export default function NewProductPage() {
   }
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    setError(null);
-    setSuccessSlug(null);
+    setError(
+      null
+    );
+
+    setSuccessSlug(
+      null
+    );
 
     const validation =
       validateProduct();
@@ -1377,65 +1882,83 @@ export default function NewProductPage() {
       return;
     }
 
-    setChecking(true);
+    setChecking(
+      true
+    );
 
-    try {
-      const duplicate =
-        await checkDuplicateAffiliateUrl(
-          validation.data
-            .affiliateUrl
-        );
+    const product =
+      validation.data;
 
-      if (
-        duplicate.duplicate
-      ) {
-        setDuplicateState(
-          "duplicate"
-        );
+    const duplicateResult =
+      await runDuplicateCheck({
+        sourceText:
+          rawOffer,
 
-        setDuplicateProductName(
-          duplicate.productName
-        );
+        affiliateUrl:
+          product.affiliateUrl,
 
-        setError(
-          `Ten link afiliacyjny jest już używany przez produkt „${duplicate.productName ?? "bez nazwy"}”.`
-        );
+        name:
+          product.name,
 
-        setChecking(false);
+        shortName:
+          product.shortName,
 
-        return;
-      }
+        category:
+          product.category,
+      });
 
-      setDuplicateState(
-        "unique"
-      );
-    } catch {
-      setDuplicateState(
-        "error"
-      );
-
+    if (
+      duplicateResult.status ===
+      "blocked"
+    ) {
       setError(
-        "Nie udało się sprawdzić duplikatu linku."
+        "Ten produkt znajduje się już w bazie. Nie można opublikować drugiej oferty tego samego produktu."
       );
 
-      setChecking(false);
+      setChecking(
+        false
+      );
 
       return;
     }
 
-    setChecking(false);
+    if (
+      duplicateResult.status ===
+      "error"
+    ) {
+      setError(
+        "Nie udało się bezpiecznie sprawdzić bazy pod kątem duplikatów. Spróbuj ponownie za chwilę."
+      );
 
-    setConfirmOpen(true);
+      setChecking(
+        false
+      );
+
+      return;
+    }
+
+    setChecking(
+      false
+    );
+
+    setConfirmOpen(
+      true
+    );
   }
 
   const closeConfirmation =
-    useCallback(() => {
-      if (!loading) {
-        setConfirmOpen(
-          false
-        );
-      }
-    }, [loading]);
+    useCallback(
+      () => {
+        if (
+          !loading
+        ) {
+          setConfirmOpen(
+            false
+          );
+        }
+      },
+      [loading]
+    );
 
   async function publishProduct() {
     const validation =
@@ -1461,50 +1984,73 @@ export default function NewProductPage() {
     const product =
       validation.data;
 
-    setLoading(true);
+    setLoading(
+      true
+    );
 
-    try {
-      const duplicate =
-        await checkDuplicateAffiliateUrl(
-          product.affiliateUrl
-        );
+    /*
+     * Ponowna kontrola dokładnie
+     * przed publikacją.
+     */
+    const duplicateResult =
+      await runDuplicateCheck({
+        sourceText:
+          rawOffer,
 
-      if (
-        duplicate.duplicate
-      ) {
-        setConfirmOpen(
-          false
-        );
+        affiliateUrl:
+          product.affiliateUrl,
 
-        setDuplicateState(
-          "duplicate"
-        );
+        name:
+          product.name,
 
-        setDuplicateProductName(
-          duplicate.productName
-        );
+        shortName:
+          product.shortName,
 
-        setError(
-          `Ten link afiliacyjny jest już używany przez produkt „${duplicate.productName ?? "bez nazwy"}”.`
-        );
+        category:
+          product.category,
+      });
 
-        setLoading(false);
-
-        return;
-      }
-    } catch {
+    if (
+      duplicateResult.status ===
+      "blocked"
+    ) {
       setConfirmOpen(
         false
       );
 
       setError(
-        "Nie udało się ponownie sprawdzić linku afiliacyjnego."
+        "Publikacja została zatrzymana, ponieważ ten produkt znajduje się już w bazie."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
+
+    if (
+      duplicateResult.status ===
+      "error"
+    ) {
+      setConfirmOpen(
+        false
+      );
+
+      setError(
+        "Nie udało się ponownie sprawdzić duplikatów. Produkt nie został opublikowany — spróbuj ponownie."
+      );
+
+      setLoading(
+        false
+      );
+
+      return;
+    }
+
+    const productIdentity:
+      SheinProductIdentity | null =
+      duplicateResult.identity;
 
     const baseSlug =
       slugify(
@@ -1521,12 +2067,15 @@ export default function NewProductPage() {
         "Nie udało się utworzyć adresu produktu."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
 
-    let slug: string;
+    let slug:
+      string;
 
     try {
       slug =
@@ -1542,7 +2091,9 @@ export default function NewProductPage() {
         "Nie udało się przygotować adresu produktu."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
@@ -1578,7 +2129,9 @@ export default function NewProductPage() {
           }
         );
 
-    if (uploadError) {
+    if (
+      uploadError
+    ) {
       setConfirmOpen(
         false
       );
@@ -1587,7 +2140,9 @@ export default function NewProductPage() {
         "Nie udało się przesłać zdjęcia."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
@@ -1612,7 +2167,9 @@ export default function NewProductPage() {
         insertError,
     } =
       await supabase
-        .from("products")
+        .from(
+          "products"
+        )
         .insert({
           slug,
 
@@ -1640,6 +2197,19 @@ export default function NewProductPage() {
           affiliate_url:
             product.affiliateUrl,
 
+          /*
+           * To jest kluczowe.
+           *
+           * Jeżeli OneLink został
+           * rozwiązany do prawdziwego
+           * produktu, zapisujemy jego
+           * stałe ID.
+           */
+          shein_product_key:
+            productIdentity
+              ?.key ??
+            null,
+
           featured:
             product.featured,
 
@@ -1647,10 +2217,13 @@ export default function NewProductPage() {
             product.soldText ||
             null,
 
-          active: true,
+          active:
+            true,
         });
 
-    if (insertError) {
+    if (
+      insertError
+    ) {
       await supabase.storage
         .from(
           "product-images"
@@ -1658,6 +2231,66 @@ export default function NewProductPage() {
         .remove([
           filePath,
         ]);
+
+      const errorText =
+        [
+          insertError.message,
+          insertError.details,
+          insertError.hint,
+        ]
+          .filter(
+            Boolean
+          )
+          .join(
+            " "
+          );
+
+      const duplicateViolation =
+        insertError.code ===
+          "23505" &&
+        /products_shein_product_key_unique|products_affiliate_url_unique/i.test(
+          errorText
+        );
+
+      if (
+        duplicateViolation
+      ) {
+        await runDuplicateCheck({
+          sourceText:
+            rawOffer,
+
+          affiliateUrl:
+            product.affiliateUrl,
+
+          name:
+            product.name,
+
+          shortName:
+            product.shortName,
+
+          category:
+            product.category,
+        });
+
+        setConfirmOpen(
+          false
+        );
+
+        setError(
+          "Inny administrator opublikował już ten produkt. Publikacja duplikatu została automatycznie zablokowana."
+        );
+
+        setLoading(
+          false
+        );
+
+        return;
+      }
+
+      console.error(
+        "Błąd publikacji produktu:",
+        insertError
+      );
 
       setConfirmOpen(
         false
@@ -1667,12 +2300,16 @@ export default function NewProductPage() {
         "Nie udało się dodać produktu."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
 
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
@@ -1682,8 +2319,13 @@ export default function NewProductPage() {
       DRAFT_KEY
     );
 
-    setConfirmOpen(false);
-    setMobilePreviewOpen(false);
+    setConfirmOpen(
+      false
+    );
+
+    setMobilePreviewOpen(
+      false
+    );
 
     setForm(
       INITIAL_FORM
@@ -1696,13 +2338,7 @@ export default function NewProductPage() {
     setParserWarnings([]);
     setParserConfidence(null);
 
-    setDuplicateState(
-      "idle"
-    );
-
-    setDuplicateProductName(
-      null
-    );
+    resetDuplicateCheck();
 
     setImageFile(null);
     setPreviewUrl(null);
@@ -1714,13 +2350,16 @@ export default function NewProductPage() {
       slug
     );
 
-    setLoading(false);
+    setLoading(
+      false
+    );
 
     router.refresh();
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior:
+        "smooth",
     });
   }
 
@@ -1750,7 +2389,8 @@ export default function NewProductPage() {
     );
 
   const imageComplete =
-    imageFile !== null;
+    imageFile !==
+    null;
 
   const linkComplete =
     Boolean(
@@ -1766,7 +2406,9 @@ export default function NewProductPage() {
       priceComplete,
       imageComplete,
       linkComplete,
-    ].filter(Boolean).length;
+    ].filter(
+      Boolean
+    ).length;
 
   const completionPercent =
     completedSections *
@@ -1789,7 +2431,9 @@ export default function NewProductPage() {
         getRequiredAssistantCompletion(
           assistantFields
         ),
-      [assistantFields]
+      [
+        assistantFields,
+      ]
     );
 
   const nextMissing =
@@ -1797,6 +2441,7 @@ export default function NewProductPage() {
       ? {
           id:
             "section-basic",
+
           label:
             "nazwę i opis",
         }
@@ -1804,6 +2449,7 @@ export default function NewProductPage() {
         ? {
             id:
               "section-price",
+
             label:
               "cenę i kategorię",
           }
@@ -1811,6 +2457,7 @@ export default function NewProductPage() {
           ? {
               id:
                 "section-image",
+
               label:
                 "zdjęcie",
             }
@@ -1818,13 +2465,20 @@ export default function NewProductPage() {
             ? {
                 id:
                   "section-link",
+
                 label:
                   "link",
               }
             : null;
 
+  const publicationBlocked =
+    duplicateCheck.status ===
+    "blocked";
+
   function goToMissing() {
-    if (!nextMissing) {
+    if (
+      !nextMissing
+    ) {
       return;
     }
 
@@ -1835,6 +2489,7 @@ export default function NewProductPage() {
       ?.scrollIntoView({
         behavior:
           "smooth",
+
         block:
           "start",
       });
@@ -1886,7 +2541,9 @@ export default function NewProductPage() {
 
       {mobilePreviewOpen && (
         <MobilePreview
-          form={form}
+          form={
+            form
+          }
           imageUrl={
             previewUrl
           }
@@ -1903,7 +2560,7 @@ export default function NewProductPage() {
       <AdminFormShell
         eyebrow="Nowa oferta"
         title="Dodaj produkt"
-        description="Szybki start przygotuje większość danych. Ty tylko sprawdzasz wynik, dodajesz zdjęcie i publikujesz."
+        description="Szybki start przygotuje dane i automatycznie sprawdzi, czy produkt nie został już dodany przez innego administratora."
       >
         {successSlug && (
           <div className="mb-5 rounded-[20px] border border-green-200 bg-green-50 p-4 sm:p-5">
@@ -2010,11 +2667,8 @@ export default function NewProductPage() {
               parserConfidence={
                 parserConfidence
               }
-              duplicateState={
-                duplicateState
-              }
-              duplicateProductName={
-                duplicateProductName
+              duplicateCheck={
+                duplicateCheck
               }
               onGenerateDescription={
                 applySuggestedDescription
@@ -2116,8 +2770,7 @@ export default function NewProductPage() {
                         }
                         className="shrink-0 text-[10px] font-black text-violet-600 hover:text-violet-700"
                       >
-                        ✨ Przygotuj
-                        ponownie
+                        ✨ Przygotuj ponownie
                       </button>
                     )}
                   </div>
@@ -2275,8 +2928,9 @@ export default function NewProductPage() {
                     </p>
 
                     <p className="mt-1 text-xs leading-5 text-stone-500">
-                      JPG, PNG lub WebP
-                      • maks. 5 MB
+                      JPG, PNG lub
+                      WebP • maks.
+                      5 MB
                     </p>
 
                     <input
@@ -2360,7 +3014,7 @@ export default function NewProductPage() {
                 id="section-link"
                 number="4"
                 title="Link i publikacja"
-                description="Sprawdź link i zdecyduj, czy wyróżnić ofertę."
+                description="Link afiliacyjny może być inny u każdego administratora. System identyfikuje sam produkt SHEIN."
                 complete={
                   linkComplete
                 }
@@ -2382,40 +3036,52 @@ export default function NewProductPage() {
                     )
                   }
                   onBlur={() =>
-                    refreshDuplicateCheck(
-                      form.affiliateUrl
-                    )
+                    runDuplicateCheck({
+                      sourceText:
+                        rawOffer,
+
+                      affiliateUrl:
+                        form.affiliateUrl,
+
+                      name:
+                        form.name,
+
+                      shortName:
+                        form.shortName,
+
+                      category:
+                        form.category,
+                    })
                   }
                   placeholder="https://onelink.shein.com/..."
                   required
                 />
 
-                {duplicateState ===
+                {duplicateCheck.status ===
                   "checking" && (
                   <p className="text-xs font-semibold text-blue-600">
-                    Sprawdzam link…
+                    Rozpoznaję produkt
+                    i sprawdzam bazę…
                   </p>
                 )}
 
-                {duplicateState ===
-                  "unique" && (
+                {duplicateCheck.status ===
+                  "clear" && (
                   <p className="text-xs font-black text-green-700">
-                    ✓ Link nie jest
-                    używany przez inną
-                    ofertę.
+                    ✓ Nie znaleziono
+                    duplikatu.
                   </p>
                 )}
 
-                {duplicateState ===
-                  "duplicate" && (
+                {publicationBlocked && (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-700">
                     <strong>
-                      Ten link już
-                      istnieje.
-                    </strong>
-                    {duplicateProductName
-                      ? ` Produkt: „${duplicateProductName}”.`
-                      : ""}
+                      Publikacja
+                      zablokowana.
+                    </strong>{" "}
+                    Ten produkt
+                    znajduje się już
+                    w bazie.
                   </div>
                 )}
 
@@ -2499,13 +3165,16 @@ export default function NewProductPage() {
                   type="submit"
                   disabled={
                     loading ||
-                    checking
+                    checking ||
+                    publicationBlocked
                   }
                   className="flex min-h-14 w-full items-center justify-center rounded-xl bg-rose-600 px-7 text-base font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {checking
-                    ? "Sprawdzanie..."
-                    : "Sprawdź ofertę przed publikacją →"}
+                  {publicationBlocked
+                    ? "Produkt już istnieje"
+                    : checking
+                      ? "Sprawdzanie..."
+                      : "Sprawdź ofertę przed publikacją →"}
                 </button>
               </div>
             </form>
@@ -2637,16 +3306,19 @@ export default function NewProductPage() {
             form="new-product-form"
             disabled={
               loading ||
-              checking
+              checking ||
+              publicationBlocked
             }
             className="flex min-h-12 min-w-0 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {checking
-              ? "Sprawdzanie..."
-              : completedSections ===
-                  4
-                ? "Sprawdź i publikuj →"
-                : `Sprawdź ofertę (${completedSections}/4)`}
+            {publicationBlocked
+              ? "Produkt już istnieje"
+              : checking
+                ? "Sprawdzanie..."
+                : completedSections ===
+                    4
+                  ? "Sprawdź i publikuj →"
+                  : `Sprawdź ofertę (${completedSections}/4)`}
           </button>
         </div>
       </div>
@@ -2865,8 +3537,13 @@ function MobilePreview({
   onClose,
 }: {
   form: FormState;
-  imageUrl: string | null;
-  onClose: () => void;
+
+  imageUrl:
+    | string
+    | null;
+
+  onClose:
+    () => void;
 }) {
   return (
     <div className="fixed inset-0 z-[90] flex items-end bg-stone-950/45 backdrop-blur-sm xl:hidden">
