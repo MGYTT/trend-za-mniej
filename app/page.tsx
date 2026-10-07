@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import BrandLogo from "@/components/BrandLogo";
 import ProductCard from "@/components/ProductCard";
+import SiteFooter from "@/components/SiteFooter";
 
 import {
   getFeaturedProducts,
@@ -311,17 +312,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-rose-100 bg-white text-stone-500">
-        <div className="mx-auto max-w-7xl px-6 py-10">
-          <div className="flex flex-col items-center justify-between gap-5 md:flex-row">
-            <BrandLogo compact />
-
-            <p className="text-sm">
-              © 2026 Trend za Mniej
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
