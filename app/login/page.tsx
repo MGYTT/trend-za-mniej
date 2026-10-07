@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
@@ -29,15 +30,54 @@ export default function LoginPage() {
 
     const supabase = createClient();
 
-    const { error } =
+    const {
+      data: signInData,
+      error: signInError,
+    } =
       await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-    if (error) {
+    if (signInError) {
       setError(
         "Nieprawidłowy e-mail lub hasło."
+      );
+
+      setLoading(false);
+
+      return;
+    }
+
+    const userId =
+      signInData.user?.id;
+
+    if (!userId) {
+      await supabase.auth.signOut();
+
+      setError(
+        "Nie udało się potwierdzić konta administratora."
+      );
+
+      setLoading(false);
+
+      return;
+    }
+
+    const {
+      data: admin,
+      error: adminError,
+    } = await supabase
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (adminError || !admin) {
+      await supabase.auth.signOut();
+
+      setError(
+        "To konto nie ma uprawnień administratora."
       );
 
       setLoading(false);
