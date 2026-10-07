@@ -13,18 +13,34 @@ import {
 
 import BrandLogo from "@/components/BrandLogo";
 
-const navigation = [
+type NavigationItem = {
+  label: string;
+  shortLabel: string;
+  href: string;
+  type:
+    | "dashboard"
+    | "add"
+    | "stats";
+};
+
+const navigation: NavigationItem[] = [
   {
     label: "Panel",
+    shortLabel: "Panel",
     href: "/admin",
+    type: "dashboard",
   },
   {
     label: "Dodaj ofertę",
+    shortLabel: "Dodaj",
     href: "/admin/nowa-oferta",
+    type: "add",
   },
   {
     label: "Statystyki",
+    shortLabel: "Statystyki",
     href: "/admin/statystyki",
+    type: "stats",
   },
 ];
 
@@ -46,8 +62,9 @@ export default function AdminHeader() {
       return;
     }
 
-    const oldOverflow =
-      document.body.style.overflow;
+    const previousOverflow =
+      document.body.style
+        .overflow;
 
     document.body.style.overflow =
       "hidden";
@@ -59,9 +76,7 @@ export default function AdminHeader() {
         event.key ===
         "Escape"
       ) {
-        setMenuOpen(
-          false
-        );
+        setMenuOpen(false);
       }
     }
 
@@ -72,7 +87,7 @@ export default function AdminHeader() {
 
     return () => {
       document.body.style.overflow =
-        oldOverflow;
+        previousOverflow;
 
       window.removeEventListener(
         "keydown",
@@ -82,10 +97,11 @@ export default function AdminHeader() {
   }, [menuOpen]);
 
   function isActive(
-    href: string
+    item: NavigationItem
   ) {
     if (
-      href === "/admin"
+      item.type ===
+      "dashboard"
     ) {
       return (
         pathname ===
@@ -93,45 +109,84 @@ export default function AdminHeader() {
       );
     }
 
-    return pathname.startsWith(
-      href
-    );
+    if (
+      item.type === "add"
+    ) {
+      return (
+        pathname ===
+        "/admin/nowa-oferta"
+      );
+    }
+
+    if (
+      item.type ===
+      "stats"
+    ) {
+      return pathname.startsWith(
+        "/admin/statystyki"
+      );
+    }
+
+    return false;
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-white/95 shadow-sm backdrop-blur-xl">
-      <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:min-h-[76px] sm:px-6">
-        <div className="min-w-0">
+    <header className="sticky top-0 z-50 border-b border-stone-200 bg-white/95 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-[62px] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           <BrandLogo
             href="/admin"
             compact
           />
+
+          <span className="hidden rounded-full bg-stone-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-stone-500 sm:inline-flex">
+            Admin
+          </span>
         </div>
 
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav
+          aria-label="Nawigacja administratora"
+          className="hidden items-center gap-1 lg:flex"
+        >
           {navigation.map(
-            (item) => (
-              <Link
-                key={
-                  item.href
-                }
-                href={
-                  item.href
-                }
-                className={[
-                  "rounded-full px-4 py-2.5 text-sm font-bold transition",
-                  isActive(
+            (item) => {
+              const active =
+                isActive(
+                  item
+                );
+
+              return (
+                <Link
+                  key={
+                    item.type
+                  }
+                  href={
                     item.href
-                  )
-                    ? "bg-rose-50 text-rose-700"
-                    : "text-stone-600 hover:bg-stone-50 hover:text-rose-600",
-                ].join(" ")}
-              >
-                {
-                  item.label
-                }
-              </Link>
-            )
+                  }
+                  aria-current={
+                    active
+                      ? "page"
+                      : undefined
+                  }
+                  className={[
+                    "relative flex min-h-10 items-center rounded-xl px-4 text-sm font-bold transition",
+                    active
+                      ? "bg-stone-100 text-stone-900"
+                      : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
+                  ].join(
+                    " "
+                  )}
+                >
+                  {
+                    item.label
+                  }
+
+                  {active && (
+                    <span className="absolute inset-x-4 -bottom-[12px] h-0.5 rounded-full bg-rose-600" />
+                  )}
+                </Link>
+              );
+            }
           )}
         </nav>
 
@@ -140,29 +195,31 @@ export default function AdminHeader() {
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden min-h-11 items-center justify-center rounded-full border border-stone-200 bg-white px-4 text-sm font-bold text-stone-700 transition hover:border-rose-200 hover:text-rose-700 sm:inline-flex"
+            className="hidden min-h-10 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-bold text-stone-600 transition hover:border-rose-200 hover:text-rose-700 md:inline-flex"
           >
-            Zobacz stronę
+            Strona ↗
           </Link>
 
           <button
             type="button"
             onClick={() =>
               setMenuOpen(
-                (current) =>
+                (
+                  current
+                ) =>
                   !current
               )
             }
             aria-expanded={
               menuOpen
             }
-            aria-controls="admin-mobile-menu"
+            aria-controls="admin-account-menu"
             aria-label={
               menuOpen
-                ? "Zamknij menu administratora"
-                : "Otwórz menu administratora"
+                ? "Zamknij menu"
+                : "Otwórz menu"
             }
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-700 transition hover:bg-rose-100 lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-700 transition hover:bg-stone-50"
           >
             {menuOpen ? (
               <svg
@@ -181,20 +238,77 @@ export default function AdminHeader() {
               <svg
                 viewBox="0 0 24 24"
                 aria-hidden="true"
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <path d="M4 7h16" />
-                <path d="M4 12h16" />
-                <path d="M4 17h16" />
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="3"
+                />
+
+                <path d="M5 21a7 7 0 0 1 14 0" />
               </svg>
             )}
           </button>
         </div>
       </div>
+
+      <nav
+        aria-label="Szybka nawigacja administratora"
+        className="border-t border-stone-100 bg-white lg:hidden"
+      >
+        <div className="mx-auto grid max-w-xl grid-cols-3 gap-1 px-3 py-1.5">
+          {navigation.map(
+            (item) => {
+              const active =
+                isActive(
+                  item
+                );
+
+              return (
+                <Link
+                  key={
+                    item.type
+                  }
+                  href={
+                    item.href
+                  }
+                  aria-current={
+                    active
+                      ? "page"
+                      : undefined
+                  }
+                  className={[
+                    "flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-[11px] font-black transition sm:text-xs",
+                    active
+                      ? "bg-rose-50 text-rose-700"
+                      : "text-stone-500 active:bg-stone-100",
+                  ].join(
+                    " "
+                  )}
+                >
+                  <AdminNavIcon
+                    type={
+                      item.type
+                    }
+                  />
+
+                  <span>
+                    {
+                      item.shortLabel
+                    }
+                  </span>
+                </Link>
+              );
+            }
+          )}
+        </div>
+      </nav>
 
       {menuOpen && (
         <>
@@ -206,63 +320,56 @@ export default function AdminHeader() {
                 false
               )
             }
-            className="fixed inset-0 top-[68px] z-40 bg-stone-950/25 backdrop-blur-[2px] sm:top-[76px] lg:hidden"
+            className="fixed inset-0 z-40 bg-stone-950/20 backdrop-blur-[2px]"
           />
 
           <div
-            id="admin-mobile-menu"
-            className="absolute left-0 right-0 top-full z-50 border-t border-stone-100 bg-white p-4 shadow-xl lg:hidden"
+            id="admin-account-menu"
+            className="absolute right-3 top-[58px] z-50 w-[min(300px,calc(100vw-24px))] overflow-hidden rounded-[20px] border border-stone-200 bg-white p-2 shadow-xl sm:right-6"
           >
-            <nav className="mx-auto grid max-w-7xl gap-2">
-              {navigation.map(
-                (item) => (
-                  <Link
-                    key={
-                      item.href
-                    }
-                    href={
-                      item.href
-                    }
-                    className={[
-                      "flex min-h-12 items-center justify-between rounded-2xl px-4 py-3 font-bold transition",
-                      isActive(
-                        item.href
-                      )
-                        ? "bg-rose-50 text-rose-700"
-                        : "text-stone-700 hover:bg-stone-50",
-                    ].join(" ")}
-                  >
-                    <span>
-                      {
-                        item.label
-                      }
-                    </span>
+            <div className="px-3 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-stone-400">
+                Administrator
+              </p>
 
-                    <span
-                      aria-hidden="true"
-                      className="text-stone-300"
-                    >
-                      →
-                    </span>
-                  </Link>
-                )
-              )}
+              <p className="mt-1 text-sm font-bold text-stone-700">
+                Zarządzanie Trend za
+                Mniej
+              </p>
+            </div>
 
-              <div className="my-1 border-t border-stone-100" />
-
+            <div className="border-t border-stone-100 pt-2">
               <Link
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-12 items-center justify-between rounded-2xl px-4 py-3 font-semibold text-stone-600 hover:bg-stone-50"
+                onClick={() =>
+                  setMenuOpen(
+                    false
+                  )
+                }
+                className="flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-bold text-stone-600 transition hover:bg-stone-50"
               >
                 <span>
-                  Zobacz stronę
+                  Zobacz publiczną
+                  stronę
                 </span>
 
                 <span>
                   ↗
                 </span>
+              </Link>
+
+              <Link
+                href="/admin"
+                onClick={() =>
+                  setMenuOpen(
+                    false
+                  )
+                }
+                className="flex min-h-11 items-center rounded-xl px-3 text-sm font-bold text-stone-600 transition hover:bg-stone-50 lg:hidden"
+              >
+                Panel główny
               </Link>
 
               <form
@@ -271,15 +378,111 @@ export default function AdminHeader() {
               >
                 <button
                   type="submit"
-                  className="flex min-h-12 w-full items-center rounded-2xl px-4 py-3 text-left font-semibold text-red-600 transition hover:bg-red-50"
+                  className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm font-black text-red-600 transition hover:bg-red-50"
                 >
                   Wyloguj
                 </button>
               </form>
-            </nav>
+            </div>
           </div>
         </>
       )}
     </header>
+  );
+}
+
+function AdminNavIcon({
+  type,
+}: {
+  type:
+    | "dashboard"
+    | "add"
+    | "stats";
+}) {
+  if (
+    type ===
+    "dashboard"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect
+          x="3"
+          y="3"
+          width="7"
+          height="7"
+          rx="2"
+        />
+
+        <rect
+          x="14"
+          y="3"
+          width="7"
+          height="7"
+          rx="2"
+        />
+
+        <rect
+          x="3"
+          y="14"
+          width="7"
+          height="7"
+          rx="2"
+        />
+
+        <rect
+          x="14"
+          y="14"
+          width="7"
+          height="7"
+          rx="2"
+        />
+      </svg>
+    );
+  }
+
+  if (
+    type === "add"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      >
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 19V9" />
+      <path d="M10 19V5" />
+      <path d="M16 19v-7" />
+      <path d="M22 19H2" />
+    </svg>
   );
 }

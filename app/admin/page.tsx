@@ -53,9 +53,7 @@ export default async function AdminPage() {
   ] =
     await Promise.all([
       supabase
-        .from(
-          "products"
-        )
+        .from("products")
         .select("*")
         .order(
           "created_at",
@@ -162,33 +160,34 @@ export default async function AdminPage() {
     <main className="min-h-screen bg-stone-50 text-stone-900">
       <AdminHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10">
-        <section className="overflow-hidden rounded-[30px] border border-rose-100 bg-gradient-to-br from-white via-rose-50/50 to-orange-50 p-5 shadow-sm sm:p-7 lg:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+        <section className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-600 sm:text-sm">
+              <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
                 Centrum zarządzania
               </p>
 
-              <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+              <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
                 Panel administratora
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500 sm:text-base">
-                Dodawaj i edytuj
-                oferty, kontroluj ich
-                widoczność oraz
-                obserwuj
-                zainteresowanie.
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
+                Publikuj oferty,
+                kontroluj ich
+                widoczność i sprawdzaj,
+                które produkty
+                przyciągają najwięcej
+                uwagi.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:flex">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               <Link
                 href="/admin/nowa-oferta"
-                className="flex min-h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 sm:px-6"
               >
-                <span className="mr-2 text-xl">
+                <span className="mr-1.5 text-lg">
                   +
                 </span>
 
@@ -197,7 +196,7 @@ export default async function AdminPage() {
 
               <Link
                 href="/admin/statystyki"
-                className="flex min-h-13 items-center justify-center rounded-2xl border border-rose-200 bg-white px-6 font-black text-rose-700 shadow-sm transition hover:bg-rose-50"
+                className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-700 transition hover:border-rose-200 hover:text-rose-700 sm:px-6"
               >
                 Statystyki
               </Link>
@@ -205,85 +204,78 @@ export default async function AdminPage() {
           </div>
         </section>
 
-        <section className="mt-5">
-          <div className="horizontal-scroll -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3 xl:grid-cols-6">
-            <StatCard
-              icon="🛍️"
-              title="Wszystkie"
-              value={
-                products.length
-              }
-            />
+        <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <StatCard
+            icon="box"
+            title="Wszystkie"
+            value={
+              products.length
+            }
+          />
 
-            <StatCard
-              icon="✅"
-              title="Aktywne"
-              value={
-                activeProducts
-              }
-            />
+          <StatCard
+            icon="active"
+            title="Aktywne"
+            value={
+              activeProducts
+            }
+          />
 
-            <StatCard
-              icon="🙈"
-              title="Ukryte"
-              value={
-                hiddenProducts
-              }
-            />
+          <StatCard
+            icon="hidden"
+            title="Ukryte"
+            value={
+              hiddenProducts
+            }
+          />
 
-            <StatCard
-              icon="🔥"
-              title="Gorące"
-              value={
-                featuredProducts
-              }
-            />
+          <StatCard
+            icon="hot"
+            title="Gorące"
+            value={
+              featuredProducts
+            }
+          />
 
-            <StatCard
-              icon="🖱️"
-              title="Kliknięcia"
-              value={
-                totalClicks
-              }
-              subtitle="łącznie"
-            />
+          <StatCard
+            icon="click"
+            title="Kliknięcia"
+            value={
+              totalClicks
+            }
+            subtitle="łącznie"
+          />
 
-            <StatCard
-              icon="📈"
-              title="Dzisiaj"
-              value={
-                todayClicks
-              }
-              subtitle="kliknięć"
-            />
-          </div>
-
-          <p className="mt-2 text-xs font-semibold text-stone-400 sm:hidden">
-            ← Przesuń, aby zobaczyć
-            wszystkie statystyki →
-          </p>
+          <StatCard
+            icon="today"
+            title="Dzisiaj"
+            value={
+              todayClicks
+            }
+            subtitle="kliknięć"
+          />
         </section>
 
-        <section className="mt-7 grid gap-3 sm:grid-cols-3">
+        <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <QuickAction
             href="/admin/nowa-oferta"
-            icon="＋"
+            icon="add"
             title="Nowa oferta"
-            description="Dodaj kolejny produkt"
+            description="Dodaj produkt"
           />
 
           <QuickAction
             href="/admin/statystyki"
-            icon="↗"
+            icon="stats"
             title="Analityka"
-            description="Sprawdź kliknięcia"
+            description="Sprawdź wyniki"
           />
 
           <QuickAction
             href="/"
-            icon="◎"
+            icon="external"
             title="Publiczna strona"
-            description="Zobacz efekt zmian"
+            description="Zobacz efekt"
             external
           />
         </section>
@@ -307,29 +299,39 @@ function StatCard({
   value,
   subtitle,
 }: {
-  icon: string;
+  icon:
+    | "box"
+    | "active"
+    | "hidden"
+    | "hot"
+    | "click"
+    | "today";
   title: string;
   value: number;
   subtitle?: string;
 }) {
   return (
-    <div className="min-w-[155px] snap-start rounded-[24px] border border-stone-200 bg-white p-4 shadow-sm sm:min-w-0 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-lg">
-          {icon}
-        </div>
+    <div className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-50 text-rose-600">
+          <StatIcon
+            type={
+              icon
+            }
+          />
+        </span>
 
-        <p className="text-2xl font-black tracking-tight text-stone-900">
+        <p className="text-2xl font-black tracking-[-0.04em] text-stone-900">
           {value}
         </p>
       </div>
 
-      <p className="mt-4 text-sm font-black text-stone-700">
+      <p className="mt-3 text-xs font-black text-stone-700 sm:text-sm">
         {title}
       </p>
 
       {subtitle && (
-        <p className="mt-0.5 text-xs text-stone-400">
+        <p className="mt-0.5 text-[10px] text-stone-400">
           {subtitle}
         </p>
       )}
@@ -345,7 +347,10 @@ function QuickAction({
   external = false,
 }: {
   href: string;
-  icon: string;
+  icon:
+    | "add"
+    | "stats"
+    | "external";
   title: string;
   description: string;
   external?: boolean;
@@ -363,28 +368,212 @@ function QuickAction({
           ? "noopener noreferrer"
           : undefined
       }
-      className="group flex min-h-[82px] items-center gap-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-rose-200 hover:shadow-md"
+      className="group flex min-h-[72px] items-center gap-3 rounded-[18px] border border-stone-200 bg-white p-4 transition hover:border-rose-200 hover:shadow-sm"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-xl font-black text-stone-700 transition group-hover:bg-rose-50 group-hover:text-rose-700">
-        {icon}
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-50 text-rose-600 transition group-hover:bg-rose-50">
+        <QuickIcon
+          type={
+            icon
+          }
+        />
       </div>
 
       <div className="min-w-0">
-        <p className="font-black text-stone-900">
+        <p className="text-sm font-black text-stone-900">
           {title}
         </p>
 
-        <p className="mt-0.5 text-xs leading-5 text-stone-500">
+        <p className="mt-0.5 text-xs text-stone-500">
           {description}
         </p>
       </div>
 
-      <span
-        aria-hidden="true"
-        className="ml-auto text-stone-300 transition group-hover:translate-x-1 group-hover:text-rose-500"
-      >
+      <span className="ml-auto text-stone-300 transition group-hover:translate-x-1 group-hover:text-rose-500">
         →
       </span>
     </Link>
+  );
+}
+
+function StatIcon({
+  type,
+}: {
+  type:
+    | "box"
+    | "active"
+    | "hidden"
+    | "hot"
+    | "click"
+    | "today";
+}) {
+  if (
+    type === "active"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <path d="m5 12 4 4 10-10" />
+      </svg>
+    );
+  }
+
+  if (
+    type === "hidden"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="m3 3 18 18" />
+        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+        <path d="M9.9 4.2A10.5 10.5 0 0 1 12 4c5 0 9 4 10 8a12 12 0 0 1-2.2 4.2" />
+        <path d="M6.2 6.2A11.8 11.8 0 0 0 2 12c1 4 5 8 10 8a10.8 10.8 0 0 0 3.8-.7" />
+      </svg>
+    );
+  }
+
+  if (
+    type === "hot"
+  ) {
+    return (
+      <span className="text-sm">
+        🔥
+      </span>
+    );
+  }
+
+  if (
+    type === "click"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="m5 3 7 17 2.5-6.5L21 11Z" />
+      </svg>
+    );
+  }
+
+  if (
+    type === "today"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <rect
+          x="3"
+          y="5"
+          width="18"
+          height="16"
+          rx="2"
+        />
+
+        <path d="M16 3v4" />
+        <path d="M8 3v4" />
+        <path d="M3 10h18" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 7 12 3l8 4-8 4Z" />
+      <path d="M4 7v10l8 4 8-4V7" />
+      <path d="M12 11v10" />
+    </svg>
+  );
+}
+
+function QuickIcon({
+  type,
+}: {
+  type:
+    | "add"
+    | "stats"
+    | "external";
+}) {
+  if (
+    type === "add"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
+      </svg>
+    );
+  }
+
+  if (
+    type === "stats"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <path d="M5 20V10" />
+        <path d="M12 20V4" />
+        <path d="M19 20v-7" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14 5h5v5" />
+      <path d="M10 14 19 5" />
+      <path d="M19 13v6H5V5h6" />
+    </svg>
   );
 }

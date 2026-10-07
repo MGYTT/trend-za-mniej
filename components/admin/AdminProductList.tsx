@@ -15,7 +15,9 @@ type AdminProduct = {
   name: string;
   short_name: string;
   description: string;
-  price: number | string;
+  price:
+    | number
+    | string;
   old_price:
     | number
     | string
@@ -128,9 +130,7 @@ export default function AdminProductList({
               (product) =>
                 product.category
             )
-            .filter(
-              Boolean
-            )
+            .filter(Boolean)
         ),
       ].sort(
         (a, b) =>
@@ -308,20 +308,20 @@ export default function AdminProductList({
   }
 
   return (
-    <section className="mt-10">
-      <div className="mb-5 flex items-end justify-between gap-4">
+    <section className="mt-7">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
-            Zarządzanie
+          <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
+            Zarządzanie ofertami
           </p>
 
-          <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
+          <h2 className="mt-1 text-2xl font-black tracking-[-0.035em] sm:text-3xl">
             Twoje oferty
           </h2>
 
-          <p className="mt-1 text-sm leading-6 text-stone-500">
-            Kliknięcia dotyczą
-            ostatnich 30 dni.
+          <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm">
+            Kliknięcia z ostatnich
+            30 dni.
           </p>
         </div>
 
@@ -333,13 +333,13 @@ export default function AdminProductList({
         </Link>
       </div>
 
-      <div className="rounded-[28px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex gap-3">
+      <div className="mt-4 rounded-[20px] border border-stone-200 bg-white p-3 shadow-sm sm:p-4">
+        <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
             <svg
               viewBox="0 0 24 24"
               aria-hidden="true"
-              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -367,8 +367,8 @@ export default function AdminProductList({
                     .value
                 )
               }
-              placeholder="Szukaj produktu..."
-              className="min-h-12 w-full rounded-2xl border border-stone-200 bg-stone-50 py-3 pl-12 pr-4 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
+              placeholder="Szukaj oferty..."
+              className="min-h-11 w-full rounded-xl border border-stone-200 bg-stone-50 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
             />
           </div>
 
@@ -376,7 +376,9 @@ export default function AdminProductList({
             type="button"
             onClick={() =>
               setFiltersOpen(
-                (current) =>
+                (
+                  current
+                ) =>
                   !current
               )
             }
@@ -384,16 +386,17 @@ export default function AdminProductList({
               filtersOpen
             }
             className={[
-              "flex min-h-12 shrink-0 items-center gap-2 rounded-2xl border px-4 text-sm font-black transition lg:hidden",
+              "flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-black transition lg:hidden",
               filtersOpen ||
               hasFilters
                 ? "border-rose-200 bg-rose-50 text-rose-700"
                 : "border-stone-200 bg-white text-stone-600",
-            ].join(" ")}
+            ].join(
+              " "
+            )}
           >
             <svg
               viewBox="0 0 24 24"
-              aria-hidden="true"
               className="h-4 w-4"
               fill="none"
               stroke="currentColor"
@@ -409,61 +412,78 @@ export default function AdminProductList({
           </button>
         </div>
 
-        <div
-          className={[
-            "mt-4 gap-4 border-t border-stone-100 pt-4",
-            filtersOpen
-              ? "grid"
-              : "hidden",
-            "lg:grid lg:grid-cols-3",
-          ].join(" ")}
-        >
-          <FilterSelect
-            label="Status"
-            value={
-              status
+        <div className="horizontal-scroll -mx-3 mt-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
+          <StatusChip
+            active={
+              status === "all"
             }
-            onChange={(
-              value
-            ) =>
+            onClick={() =>
               setStatus(
-                value as StatusFilter
+                "all"
               )
             }
           >
-            <option value="all">
-              Wszystkie (
-              {
-                products.length
-              }
-              )
-            </option>
+            Wszystkie{" "}
+            {products.length}
+          </StatusChip>
 
-            <option value="active">
-              Opublikowane (
-              {
-                activeCount
-              }
+          <StatusChip
+            active={
+              status ===
+              "active"
+            }
+            onClick={() =>
+              setStatus(
+                "active"
               )
-            </option>
+            }
+          >
+            Aktywne{" "}
+            {activeCount}
+          </StatusChip>
 
-            <option value="hidden">
-              Ukryte (
-              {
-                hiddenCount
-              }
+          <StatusChip
+            active={
+              status ===
+              "hidden"
+            }
+            onClick={() =>
+              setStatus(
+                "hidden"
               )
-            </option>
+            }
+          >
+            Ukryte{" "}
+            {hiddenCount}
+          </StatusChip>
 
-            <option value="featured">
-              Gorące (
-              {
-                featuredCount
-              }
+          <StatusChip
+            active={
+              status ===
+              "featured"
+            }
+            onClick={() =>
+              setStatus(
+                "featured"
               )
-            </option>
-          </FilterSelect>
+            }
+          >
+            🔥{" "}
+            {featuredCount}
+          </StatusChip>
+        </div>
 
+        <div
+          className={[
+            "mt-3 gap-3 border-t border-stone-100 pt-3",
+            filtersOpen
+              ? "grid"
+              : "hidden",
+            "lg:grid lg:grid-cols-2",
+          ].join(
+            " "
+          )}
+        >
           <FilterSelect
             label="Kategoria"
             value={
@@ -474,7 +494,7 @@ export default function AdminProductList({
             }
           >
             <option value="all">
-              Wszystkie
+              Wszystkie kategorie
             </option>
 
             {categories.map(
@@ -528,20 +548,17 @@ export default function AdminProductList({
           </FilterSelect>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-4">
-          <p className="text-sm text-stone-500">
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
+          <p className="text-xs text-stone-500">
             <strong className="font-black text-stone-900">
               {
                 filteredProducts.length
               }
             </strong>{" "}
             z{" "}
-            <strong className="font-black text-stone-900">
-              {
-                products.length
-              }
-            </strong>{" "}
-            ofert
+            {
+              products.length
+            }
           </p>
 
           {hasFilters && (
@@ -550,9 +567,9 @@ export default function AdminProductList({
               onClick={
                 clearFilters
               }
-              className="rounded-full bg-stone-100 px-4 py-2 text-xs font-black text-stone-600 transition hover:bg-rose-50 hover:text-rose-700"
+              className="rounded-full px-3 py-1.5 text-xs font-black text-rose-600 transition hover:bg-rose-50"
             >
-              ✕ Wyczyść
+              Wyczyść
             </button>
           )}
         </div>
@@ -569,7 +586,7 @@ export default function AdminProductList({
           }
         />
       ) : (
-        <div className="mt-5 grid gap-4">
+        <div className="mt-4 grid gap-3">
           {filteredProducts.map(
             (product) => {
               const clicks =
@@ -582,10 +599,10 @@ export default function AdminProductList({
                   key={
                     product.id
                   }
-                  className="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-sm"
+                  className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm"
                 >
-                  <div className="grid sm:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[160px_minmax(0,1fr)_auto]">
-                    <div className="relative aspect-[16/10] overflow-hidden bg-stone-100 sm:aspect-auto sm:min-h-full">
+                  <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_190px]">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-[14px] bg-stone-100">
                       <img
                         src={
                           product.image_url
@@ -596,78 +613,62 @@ export default function AdminProductList({
                         className="h-full w-full object-cover"
                       />
 
-                      <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                        {product.active ? (
-                          <span className="rounded-full bg-green-50/95 px-3 py-1.5 text-[11px] font-black text-green-700 shadow-sm backdrop-blur">
-                            ● Aktywna
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-stone-100/95 px-3 py-1.5 text-[11px] font-black text-stone-600 shadow-sm backdrop-blur">
-                            ● Ukryta
-                          </span>
-                        )}
-                      </div>
+                      {product.featured && (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-white/95 px-2 py-1 text-[9px] font-black text-orange-700 shadow-sm">
+                          🔥
+                        </span>
+                      )}
                     </div>
 
-                    <div className="min-w-0 p-4 sm:p-5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-rose-50 px-3 py-1 text-[11px] font-black text-rose-700">
+                    <div className="min-w-0 py-0.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <StatusBadge
+                          active={
+                            product.active
+                          }
+                        />
+
+                        <span className="max-w-full truncate rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-black text-stone-600 sm:text-[10px]">
                           {
                             product.category
                           }
                         </span>
-
-                        {product.featured && (
-                          <span className="rounded-full bg-orange-50 px-3 py-1 text-[11px] font-black text-orange-700">
-                            🔥 Gorąca
-                          </span>
-                        )}
                       </div>
 
-                      <h3 className="mt-3 text-lg font-black leading-snug tracking-tight text-stone-900 sm:text-xl">
+                      <h3 className="mt-2 line-clamp-2 text-sm font-black leading-5 text-stone-900 sm:text-lg sm:leading-6">
                         {
                           product.short_name
                         }
                       </h3>
 
-                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-stone-500">
-                        {
-                          product.name
-                        }
-                      </p>
-
-                      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                        <p className="text-xl font-black text-rose-600">
+                      <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
+                        <span className="text-base font-black text-stone-900 sm:text-xl">
                           {formatPrice(
                             product.price
                           )}
-                        </p>
+                        </span>
 
                         {product.old_price !==
                           null && (
-                          <p className="text-sm font-semibold text-stone-400 line-through">
+                          <span className="text-[10px] font-semibold text-stone-400 line-through sm:text-xs">
                             {formatPrice(
                               product.old_price
                             )}
-                          </p>
+                          </span>
                         )}
+                      </div>
 
-                        <span className="h-4 w-px bg-stone-200" />
-
-                        <p className="text-sm font-semibold text-stone-600">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-stone-400 sm:text-xs">
+                        <span>
                           🖱️{" "}
-                          <strong className="font-black text-stone-900">
+                          <strong className="text-stone-700">
                             {
                               clicks
                             }
-                          </strong>{" "}
-                          / 30 dni
-                        </p>
-                      </div>
+                          </strong>
+                        </span>
 
-                      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-400">
                         <span>
-                          Dodano{" "}
                           {formatDate(
                             product.created_at
                           )}
@@ -678,7 +679,7 @@ export default function AdminProductList({
                             href={`/produkt/${product.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-bold text-rose-600 hover:text-rose-700"
+                            className="font-black text-rose-600"
                           >
                             Podgląd ↗
                           </Link>
@@ -686,7 +687,7 @@ export default function AdminProductList({
                       </div>
                     </div>
 
-                    <div className="border-t border-stone-100 p-4 sm:col-span-2 lg:col-span-1 lg:flex lg:w-[250px] lg:items-center lg:border-l lg:border-t-0 lg:p-5">
+                    <div className="col-span-2 border-t border-stone-100 pt-3 lg:col-span-1 lg:flex lg:items-center lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
                       <div className="w-full">
                         <AdminProductActions
                           id={
@@ -711,11 +712,57 @@ export default function AdminProductList({
 
       <Link
         href="/admin/statystyki?days=30"
-        className="mt-5 flex min-h-12 items-center justify-center rounded-2xl border border-rose-200 bg-white font-black text-rose-700 sm:hidden"
+        className="mt-4 flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white text-sm font-black text-stone-700 sm:hidden"
       >
-        Zobacz pełną analitykę →
+        Pełna analityka →
       </Link>
     </section>
+  );
+}
+
+function StatusChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children:
+    React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={
+        onClick
+      }
+      className={[
+        "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black transition",
+        active
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : "border-stone-200 bg-white text-stone-500",
+      ].join(
+        " "
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function StatusBadge({
+  active,
+}: {
+  active: boolean;
+}) {
+  return active ? (
+    <span className="rounded-full bg-green-50 px-2.5 py-1 text-[9px] font-black text-green-700 sm:text-[10px]">
+      ● Aktywna
+    </span>
+  ) : (
+    <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-black text-stone-600 sm:text-[10px]">
+      ● Ukryta
+    </span>
   );
 }
 
@@ -735,7 +782,7 @@ function FilterSelect({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-stone-500">
+      <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.12em] text-stone-500">
         {label}
       </label>
 
@@ -751,7 +798,7 @@ function FilterSelect({
               .value
           )
         }
-        className="min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+        className="min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
       >
         {children}
       </select>
@@ -761,25 +808,24 @@ function FilterSelect({
 
 function EmptyProducts() {
   return (
-    <div className="mt-5 rounded-[28px] border border-dashed border-rose-200 bg-white px-6 py-14 text-center">
-      <div className="text-4xl">
+    <div className="mt-4 rounded-[20px] border border-dashed border-stone-200 bg-white px-5 py-12 text-center">
+      <div className="text-3xl">
         🛍️
       </div>
 
-      <h3 className="mt-4 text-xl font-black">
+      <h3 className="mt-3 text-lg font-black">
         Nie masz jeszcze ofert
       </h3>
 
-      <p className="mt-2 text-sm text-stone-500">
-        Dodaj pierwszy produkt do
-        Trend za Mniej.
+      <p className="mt-1 text-sm text-stone-500">
+        Dodaj pierwszy produkt.
       </p>
 
       <Link
         href="/admin/nowa-oferta"
-        className="mt-6 inline-flex min-h-12 items-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 font-black text-white"
+        className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-rose-600 px-5 text-sm font-black text-white"
       >
-        + Dodaj pierwszą ofertę
+        + Dodaj ofertę
       </Link>
     </div>
   );
@@ -791,16 +837,16 @@ function EmptyFilters({
   onClear: () => void;
 }) {
   return (
-    <div className="mt-5 rounded-[28px] border border-dashed border-stone-200 bg-white px-6 py-14 text-center">
-      <div className="text-4xl">
+    <div className="mt-4 rounded-[20px] border border-dashed border-stone-200 bg-white px-5 py-12 text-center">
+      <div className="text-3xl">
         🔎
       </div>
 
-      <h3 className="mt-4 text-xl font-black">
+      <h3 className="mt-3 text-lg font-black">
         Brak pasujących ofert
       </h3>
 
-      <p className="mt-2 text-sm text-stone-500">
+      <p className="mt-1 text-sm text-stone-500">
         Zmień wyszukiwanie albo
         wyczyść filtry.
       </p>
@@ -810,7 +856,7 @@ function EmptyFilters({
         onClick={
           onClear
         }
-        className="mt-6 min-h-12 rounded-2xl bg-rose-50 px-6 font-black text-rose-700"
+        className="mt-5 min-h-11 rounded-xl bg-rose-50 px-5 text-sm font-black text-rose-700"
       >
         Wyczyść filtry
       </button>

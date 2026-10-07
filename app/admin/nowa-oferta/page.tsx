@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   type InputHTMLAttributes,
+  type ReactNode,
   useCallback,
   useEffect,
   useState,
@@ -162,6 +163,11 @@ export default function NewProductPage() {
   ] = useState(false);
 
   const [
+    mobilePreviewOpen,
+    setMobilePreviewOpen,
+  ] = useState(false);
+
+  const [
     form,
     setForm,
   ] =
@@ -192,6 +198,76 @@ export default function NewProductPage() {
       }
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    if (!mobilePreviewOpen) {
+      return;
+    }
+
+    const previousOverflow =
+      document.body.style
+        .overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    function handleKeyDown(
+      event: KeyboardEvent
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setMobilePreviewOpen(
+          false
+        );
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+    };
+  }, [mobilePreviewOpen]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    const timeout =
+      window.setTimeout(
+        () => {
+          document
+            .getElementById(
+              "new-product-error"
+            )
+            ?.scrollIntoView({
+              behavior:
+                "smooth",
+              block:
+                "center",
+            });
+        },
+        100
+      );
+
+    return () => {
+      window.clearTimeout(
+        timeout
+      );
+    };
+  }, [error]);
 
   function slugify(
     value: string
@@ -592,7 +668,7 @@ export default function NewProductPage() {
             parsed.affiliateUrl;
 
           found.push(
-            "link afiliacyjny"
+            "link"
           );
         }
 
@@ -653,7 +729,7 @@ export default function NewProductPage() {
     setParserMessage(
       `Rozpoznano: ${found.join(
         ", "
-      )}. Pewność parsera: ${confidenceLabel}.`
+      )}. Pewność: ${confidenceLabel}.`
     );
   }
 
@@ -669,16 +745,6 @@ export default function NewProductPage() {
       null;
 
     if (!file) {
-      setImageFile(null);
-
-      if (previewUrl) {
-        URL.revokeObjectURL(
-          previewUrl
-        );
-      }
-
-      setPreviewUrl(null);
-
       return;
     }
 
@@ -727,6 +793,18 @@ export default function NewProductPage() {
     setPreviewUrl(
       localPreview
     );
+  }
+
+  function removeImage() {
+    if (previewUrl) {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    }
+
+    setImageFile(null);
+    setPreviewUrl(null);
+    setError(null);
   }
 
   async function handleSubmit(
@@ -782,7 +860,6 @@ export default function NewProductPage() {
     }
 
     setChecking(false);
-
     setConfirmOpen(true);
   }
 
@@ -1029,17 +1106,12 @@ export default function NewProductPage() {
     }
 
     setConfirmOpen(false);
-
-    setForm(
-      INITIAL_FORM
-    );
-
+    setMobilePreviewOpen(false);
+    setForm(INITIAL_FORM);
     setRawOffer("");
-
     setParserMessage(null);
     setParserWarnings([]);
     setParserConfidence(null);
-
     setImageFile(null);
     setPreviewUrl(null);
     setSuccessSlug(slug);
@@ -1057,6 +1129,48 @@ export default function NewProductPage() {
     slugify(
       form.shortName
     );
+
+  const validPrice =
+    (
+      parsePrice(
+        form.price
+      ) ?? 0
+    ) > 0;
+
+  const basicComplete =
+    Boolean(
+      form.name.trim() &&
+        form.shortName.trim() &&
+        form.description.trim()
+    );
+
+  const priceComplete =
+    Boolean(
+      validPrice &&
+        form.category.trim()
+    );
+
+  const imageComplete =
+    imageFile !== null;
+
+  const linkComplete =
+    Boolean(
+      form.affiliateUrl.trim() &&
+        isValidHttpsUrl(
+          form.affiliateUrl.trim()
+        )
+    );
+
+  const completedSections =
+    [
+      basicComplete,
+      priceComplete,
+      imageComplete,
+      linkComplete,
+    ].filter(Boolean).length;
+
+  const completionPercent =
+    completedSections * 25;
 
   return (
     <main className="min-h-screen bg-stone-50 pb-28 text-stone-900 lg:pb-0">
@@ -1102,22 +1216,36 @@ export default function NewProductPage() {
         }
       />
 
+      {mobilePreviewOpen && (
+        <MobilePreview
+          form={form}
+          imageUrl={
+            previewUrl
+          }
+          onClose={() =>
+            setMobilePreviewOpen(
+              false
+            )
+          }
+        />
+      )}
+
       <AdminHeader />
 
       <AdminFormShell
         eyebrow="Nowa oferta"
         title="Dodaj produkt"
-        description="Wklej dane oferty, uzupełnij brakujące informacje i sprawdź podgląd przed publikacją."
+        description="Wklej ofertę SHEIN, sprawdź rozpoznane dane, dodaj zdjęcie i opublikuj produkt."
       >
         {successSlug && (
-          <div className="mb-6 rounded-[28px] border border-green-200 bg-green-50 p-5 sm:p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-sm">
+          <div className="mb-5 rounded-[20px] border border-green-200 bg-green-50 p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white font-black text-green-700 shadow-sm">
                 ✓
               </div>
 
-              <div>
-                <h2 className="text-lg font-black text-green-900">
+              <div className="min-w-0">
+                <h2 className="font-black text-green-900">
                   Oferta została
                   opublikowana
                 </h2>
@@ -1127,18 +1255,19 @@ export default function NewProductPage() {
                   aktywny na stronie.
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-3">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Link
                     href={`/produkt/${successSlug}`}
                     target="_blank"
-                    className="inline-flex min-h-11 items-center rounded-xl bg-green-700 px-5 text-sm font-black text-white"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-10 items-center rounded-xl bg-green-700 px-4 text-xs font-black text-white sm:text-sm"
                   >
                     Zobacz produkt ↗
                   </Link>
 
                   <Link
                     href="/admin"
-                    className="inline-flex min-h-11 items-center rounded-xl border border-green-200 bg-white px-5 text-sm font-black text-green-800"
+                    className="inline-flex min-h-10 items-center rounded-xl border border-green-200 bg-white px-4 text-xs font-black text-green-800 sm:text-sm"
                   >
                     Panel
                   </Link>
@@ -1148,30 +1277,52 @@ export default function NewProductPage() {
           </div>
         )}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px] xl:gap-8">
+        <ProgressCard
+          completedSections={
+            completedSections
+          }
+          completionPercent={
+            completionPercent
+          }
+          basicComplete={
+            basicComplete
+          }
+          priceComplete={
+            priceComplete
+          }
+          imageComplete={
+            imageComplete
+          }
+          linkComplete={
+            linkComplete
+          }
+        />
+
+        <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px] xl:gap-7">
           <div className="min-w-0">
-            <section className="rounded-[28px] border border-violet-100 bg-gradient-to-br from-violet-50 to-rose-50 p-5 sm:p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-sm">
+            <section className="rounded-[20px] border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-lg">
                   ✨
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-black sm:text-xl">
+                  <p className="text-[10px] font-black uppercase tracking-[0.13em] text-violet-600">
+                    Szybki start
+                  </p>
+
+                  <h2 className="mt-0.5 text-lg font-black">
                     Wklej ofertę
                     SHEIN
                   </h2>
 
-                  <p className="mt-1 text-sm leading-6 text-stone-500">
-                    Możesz wkleić nawet
-                    cały tekst
-                    skopiowany ze strony
-                    produktu. Parser
-                    spróbuje odrzucić
-                    menu, reklamy,
-                    rabaty, dostawę i
-                    inne niepotrzebne
-                    elementy.
+                  <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6">
+                    Wklej nawet cały
+                    tekst produktu.
+                    Parser spróbuje
+                    znaleźć nazwę,
+                    cenę, kategorię
+                    i link.
                   </p>
                 </div>
               </div>
@@ -1200,13 +1351,9 @@ export default function NewProductPage() {
                     null
                   );
                 }}
-                rows={9}
-                placeholder={`Wklej tutaj tekst skopiowany z produktu SHEIN.
-
-Możesz wkleić całość, np. nazwę produktu, cenę, informacje ze strony i link afiliacyjny.
-
-Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
-                className="mt-5 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-4 text-sm leading-6 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                rows={7}
+                placeholder="Wklej tutaj tekst skopiowany z produktu SHEIN..."
+                className="mt-4 w-full resize-y rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3 text-base leading-6 outline-none transition placeholder:text-stone-400 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100 sm:text-sm"
               />
 
               <button
@@ -1214,16 +1361,15 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                 onClick={
                   handleParseOffer
                 }
-                className="mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl bg-white px-5 font-black text-violet-700 shadow-sm ring-1 ring-violet-100 transition hover:shadow-md"
+                className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl bg-violet-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-violet-700"
               >
-                ✨ Inteligentnie
-                rozpoznaj ofertę
+                ✨ Rozpoznaj i uzupełnij
               </button>
 
               {parserMessage && (
-                <div className="mt-4 rounded-2xl border border-white bg-white/90 p-4 shadow-sm">
+                <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 p-3.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-black text-stone-800">
+                    <p className="text-xs font-bold leading-5 text-stone-700 sm:text-sm">
                       {
                         parserMessage
                       }
@@ -1240,7 +1386,7 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
 
                   {parserWarnings.length >
                     0 && (
-                    <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
+                    <div className="mt-3 space-y-1.5 border-t border-stone-200 pt-3">
                       {parserWarnings.map(
                         (
                           warning
@@ -1265,17 +1411,6 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                       )}
                     </div>
                   )}
-
-                  <p className="mt-3 text-xs leading-5 text-stone-400">
-                    Zawsze sprawdź
-                    nazwę, cenę i link
-                    przed publikacją.
-                    Parser pomaga
-                    przygotować dane,
-                    ale nie publikuje
-                    produktu
-                    automatycznie.
-                  </p>
                 </div>
               )}
             </section>
@@ -1285,14 +1420,18 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
               onSubmit={
                 handleSubmit
               }
-              className="mt-6 space-y-6 rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7"
+              className="mt-4 space-y-3"
             >
               <FormSection
                 number="1"
-                title="Podstawowe informacje"
+                title="Nazwa i opis"
+                description="Sprawdź dane rozpoznane z oferty."
+                complete={
+                  basicComplete
+                }
               >
                 <Input
-                  label="Pełna nazwa produktu"
+                  label="Pełna nazwa"
                   name="name"
                   value={
                     form.name
@@ -1330,20 +1469,20 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                     required
                   />
 
-                  <div className="mt-2 rounded-xl bg-stone-50 px-4 py-3 text-xs leading-5 text-stone-500">
-                    <span className="font-bold text-stone-700">
-                      Adres:
-                    </span>{" "}
-                    {slugPreview
-                      ? `/produkt/${slugPreview}`
-                      : "/produkt/..."}
-                  </div>
+                  {slugPreview && (
+                    <p className="mt-1.5 truncate px-1 text-[10px] text-stone-400 sm:text-xs">
+                      /produkt/
+                      {
+                        slugPreview
+                      }
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-black">
+                  <FieldLabel>
                     Opis
-                  </label>
+                  </FieldLabel>
 
                   <textarea
                     required
@@ -1360,8 +1499,8 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                           .value
                       )
                     }
-                    placeholder="Krótko opisz styl, fason i najważniejsze cechy produktu..."
-                    className="w-full resize-y rounded-2xl border border-stone-200 px-4 py-3 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                    placeholder="Opisz krótko styl, fason i najważniejsze cechy..."
+                    className="w-full resize-y rounded-xl border border-stone-200 bg-white px-3.5 py-3 text-base leading-6 outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
                   />
                 </div>
               </FormSection>
@@ -1369,8 +1508,12 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
               <FormSection
                 number="2"
                 title="Cena i kategoria"
+                description="Najważniejsze dane widoczne na karcie produktu."
+                complete={
+                  priceComplete
+                }
               >
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
                   <Input
                     label="Cena"
                     type="text"
@@ -1393,6 +1536,7 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
 
                   <Input
                     label="Stara cena"
+                    optional
                     type="text"
                     inputMode="decimal"
                     value={
@@ -1407,14 +1551,14 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                           .value
                       )
                     }
-                    placeholder="Opcjonalnie"
+                    placeholder="np. 59,99"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-black">
+                  <FieldLabel>
                     Kategoria
-                  </label>
+                  </FieldLabel>
 
                   <select
                     required
@@ -1430,7 +1574,7 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                           .value
                       )
                     }
-                    className="min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                    className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
                   >
                     <option
                       value=""
@@ -1463,62 +1607,100 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
 
               <FormSection
                 number="3"
-                title="Zdjęcie produktu"
+                title="Zdjęcie"
+                description="Dodaj główne zdjęcie produktu."
+                complete={
+                  imageComplete
+                }
               >
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-rose-200 bg-rose-50/40 px-5 py-9 text-center transition hover:border-rose-400 hover:bg-rose-50">
-                  <div className="text-4xl">
-                    📷
-                  </div>
+                {!previewUrl ? (
+                  <label className="flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-[18px] border-2 border-dashed border-rose-200 bg-rose-50/40 px-5 py-7 text-center transition active:bg-rose-50 sm:hover:border-rose-400">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                      📷
+                    </div>
 
-                  <p className="mt-3 font-black">
-                    Wybierz zdjęcie
-                  </p>
+                    <p className="mt-3 text-sm font-black">
+                      Wybierz zdjęcie
+                    </p>
 
-                  <p className="mt-1 text-sm text-stone-500">
-                    JPG, PNG lub WebP
-                    • maks. 5 MB
-                  </p>
+                    <p className="mt-1 text-xs leading-5 text-stone-500">
+                      JPG, PNG lub WebP
+                      • maks. 5 MB
+                    </p>
 
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={
-                      handleImageChange
-                    }
-                    className="hidden"
-                  />
-                </label>
-
-                {previewUrl && (
-                  <div className="mt-4 overflow-hidden rounded-3xl border border-stone-200 bg-stone-100">
-                    <img
-                      src={
-                        previewUrl
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={
+                        handleImageChange
                       }
-                      alt="Podgląd wybranego produktu"
-                      className="mx-auto max-h-[460px] w-full object-contain"
+                      className="hidden"
                     />
-                  </div>
-                )}
+                  </label>
+                ) : (
+                  <div className="grid grid-cols-[105px_minmax(0,1fr)] gap-3 rounded-[18px] border border-stone-200 bg-stone-50 p-3 sm:grid-cols-[130px_minmax(0,1fr)]">
+                    <div className="aspect-[4/5] overflow-hidden rounded-xl bg-white">
+                      <img
+                        src={
+                          previewUrl
+                        }
+                        alt="Wybrane zdjęcie produktu"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
 
-                {imageFile && (
-                  <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-stone-50 px-4 py-3 text-sm">
-                    <span className="min-w-0 truncate font-semibold">
-                      {
-                        imageFile.name
-                      }
-                    </span>
+                    <div className="flex min-w-0 flex-col justify-between py-1">
+                      <div>
+                        <p className="text-xs font-black text-green-700">
+                          ✓ Zdjęcie dodane
+                        </p>
 
-                    <span className="shrink-0 text-stone-400">
-                      {(
-                        imageFile.size /
-                        1024 /
-                        1024
-                      ).toFixed(
-                        2
-                      )}{" "}
-                      MB
-                    </span>
+                        <p className="mt-2 truncate text-xs font-semibold text-stone-700">
+                          {
+                            imageFile
+                              ?.name
+                          }
+                        </p>
+
+                        {imageFile && (
+                          <p className="mt-1 text-[10px] text-stone-400">
+                            {(
+                              imageFile.size /
+                              1024 /
+                              1024
+                            ).toFixed(
+                              2
+                            )}{" "}
+                            MB
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <label className="flex min-h-10 cursor-pointer items-center justify-center rounded-xl bg-white px-2 text-xs font-black text-stone-700 ring-1 ring-stone-200">
+                          Zmień
+
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={
+                              handleImageChange
+                            }
+                            className="hidden"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={
+                            removeImage
+                          }
+                          className="min-h-10 rounded-xl bg-red-50 px-2 text-xs font-black text-red-700"
+                        >
+                          Usuń
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </FormSection>
@@ -1526,10 +1708,15 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
               <FormSection
                 number="4"
                 title="Link i publikacja"
+                description="Sprawdź link i zdecyduj, czy wyróżnić ofertę."
+                complete={
+                  linkComplete
+                }
               >
                 <Input
                   label="Link afiliacyjny SHEIN"
                   type="url"
+                  inputMode="url"
                   value={
                     form.affiliateUrl
                   }
@@ -1548,6 +1735,7 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
 
                 <Input
                   label="Informacja o sprzedaży"
+                  optional
                   value={
                     form.soldText
                   }
@@ -1560,10 +1748,10 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                         .value
                     )
                   }
-                  placeholder="Opcjonalnie, tylko jeśli zweryfikowane"
+                  placeholder="Tylko jeśli dane są zweryfikowane"
                 />
 
-                <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-rose-100 bg-rose-50 p-4">
+                <label className="flex cursor-pointer items-start gap-3 rounded-[16px] border border-orange-100 bg-orange-50/70 p-3.5">
                   <input
                     type="checkbox"
                     checked={
@@ -1582,13 +1770,13 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
                   />
 
                   <div>
-                    <p className="font-black">
+                    <p className="text-sm font-black">
                       🔥 Gorąca okazja
                     </p>
 
-                    <p className="mt-1 text-sm leading-6 text-stone-500">
-                      Pokaż produkt
-                      również w
+                    <p className="mt-1 text-xs leading-5 text-stone-500">
+                      Produkt pojawi
+                      się również w
                       wyróżnionej
                       sekcji strony
                       głównej.
@@ -1598,27 +1786,76 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
               </FormSection>
 
               {error && (
-                <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700">
-                  {error}
+                <div
+                  id="new-product-error"
+                  className="rounded-[16px] border border-red-200 bg-red-50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-red-600">
+                      !
+                    </span>
+
+                    <div>
+                      <p className="text-sm font-black text-red-800">
+                        Sprawdź ofertę
+                      </p>
+
+                      <p className="mt-1 text-sm leading-6 text-red-700">
+                        {error}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={
-                  loading ||
-                  checking
-                }
-                className="hidden min-h-14 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-7 text-lg font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 lg:flex"
-              >
-                {checking
-                  ? "Sprawdzanie..."
-                  : "Sprawdź ofertę →"}
-              </button>
+              <div className="hidden lg:block">
+                <button
+                  type="submit"
+                  disabled={
+                    loading ||
+                    checking
+                  }
+                  className="flex min-h-14 w-full items-center justify-center rounded-xl bg-rose-600 px-7 text-base font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {checking
+                    ? "Sprawdzanie..."
+                    : "Sprawdź ofertę przed publikacją →"}
+                </button>
+              </div>
             </form>
+
+            <div className="mt-4 xl:hidden">
+              <OfferQualityChecks
+                name={
+                  form.name
+                }
+                shortName={
+                  form.shortName
+                }
+                description={
+                  form.description
+                }
+                price={
+                  form.price
+                }
+                oldPrice={
+                  form.oldPrice
+                }
+                affiliateUrl={
+                  form.affiliateUrl
+                }
+                soldText={
+                  form.soldText
+                }
+                imageSelected={
+                  imageFile !==
+                  null
+                }
+              />
+            </div>
           </div>
 
-          <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start">
+          <aside className="hidden space-y-4 xl:sticky xl:top-24 xl:block xl:self-start">
             <OfferQualityChecks
               name={
                 form.name
@@ -1646,13 +1883,13 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
               }
             />
 
-            <div className="rounded-[28px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-4">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
+            <div className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="mb-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-rose-600">
                   Podgląd
                 </p>
 
-                <h2 className="mt-1 text-xl font-black">
+                <h2 className="mt-1 text-lg font-black">
                   Widok produktu
                 </h2>
               </div>
@@ -1688,20 +1925,25 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
         </div>
       </AdminFormShell>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 pt-3 shadow-[0_-8px_30px_rgba(28,25,23,0.10)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/96 px-3 pt-2.5 shadow-[0_-6px_24px_rgba(28,25,23,0.10)] backdrop-blur-xl lg:hidden">
         <div
-          className="mx-auto flex max-w-xl gap-3"
+          className="mx-auto grid max-w-xl grid-cols-[110px_minmax(0,1fr)] gap-2"
           style={{
             paddingBottom:
-              "max(0.75rem, env(safe-area-inset-bottom))",
+              "max(0.65rem, env(safe-area-inset-bottom))",
           }}
         >
-          <Link
-            href="/admin"
-            className="flex min-h-12 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 font-black text-stone-600"
+          <button
+            type="button"
+            onClick={() =>
+              setMobilePreviewOpen(
+                true
+              )
+            }
+            className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-3 text-xs font-black text-stone-700"
           >
-            ←
-          </Link>
+            Podgląd
+          </button>
 
           <button
             type="submit"
@@ -1710,15 +1952,218 @@ Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
               loading ||
               checking
             }
-            className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 font-black text-white shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-12 min-w-0 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
           >
             {checking
               ? "Sprawdzanie..."
-              : "Sprawdź ofertę →"}
+              : completedSections ===
+                  4
+                ? "Sprawdź i publikuj →"
+                : `Sprawdź ofertę (${completedSections}/4)`}
           </button>
         </div>
       </div>
     </main>
+  );
+}
+
+function ProgressCard({
+  completedSections,
+  completionPercent,
+  basicComplete,
+  priceComplete,
+  imageComplete,
+  linkComplete,
+}: {
+  completedSections: number;
+  completionPercent: number;
+  basicComplete: boolean;
+  priceComplete: boolean;
+  imageComplete: boolean;
+  linkComplete: boolean;
+}) {
+  return (
+    <section className="rounded-[18px] border border-stone-200 bg-white p-3.5 shadow-sm sm:p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-black text-stone-900">
+            Postęp oferty
+          </p>
+
+          <p className="mt-0.5 text-[10px] text-stone-400 sm:text-xs">
+            {completedSections} z 4
+            sekcji gotowe
+          </p>
+        </div>
+
+        <span className="text-sm font-black text-rose-600">
+          {completionPercent}%
+        </span>
+      </div>
+
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100">
+        <div
+          className="h-full rounded-full bg-rose-600 transition-all duration-300"
+          style={{
+            width:
+              `${completionPercent}%`,
+          }}
+        />
+      </div>
+
+      <div className="mt-3 grid grid-cols-4 gap-1.5">
+        <ProgressStep
+          label="Dane"
+          complete={
+            basicComplete
+          }
+        />
+
+        <ProgressStep
+          label="Cena"
+          complete={
+            priceComplete
+          }
+        />
+
+        <ProgressStep
+          label="Zdjęcie"
+          complete={
+            imageComplete
+          }
+        />
+
+        <ProgressStep
+          label="Link"
+          complete={
+            linkComplete
+          }
+        />
+      </div>
+    </section>
+  );
+}
+
+function ProgressStep({
+  label,
+  complete,
+}: {
+  label: string;
+  complete: boolean;
+}) {
+  return (
+    <div
+      className={[
+        "flex min-h-8 items-center justify-center rounded-lg px-1 text-[9px] font-black sm:text-[10px]",
+        complete
+          ? "bg-green-50 text-green-700"
+          : "bg-stone-50 text-stone-400",
+      ].join(
+        " "
+      )}
+    >
+      {complete
+        ? "✓ "
+        : ""}
+      {label}
+    </div>
+  );
+}
+
+function FormSection({
+  number,
+  title,
+  description,
+  complete,
+  children,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  complete: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-4 flex items-start gap-3">
+        <span
+          className={[
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black",
+            complete
+              ? "bg-green-50 text-green-700"
+              : "bg-rose-50 text-rose-700",
+          ].join(
+            " "
+          )}
+        >
+          {complete
+            ? "✓"
+            : number}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base font-black text-stone-900 sm:text-lg">
+            {title}
+          </h2>
+
+          <p className="mt-0.5 text-xs leading-5 text-stone-400">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function Input({
+  label,
+  optional = false,
+  ...props
+}: {
+  label: string;
+  optional?: boolean;
+} & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div>
+      <FieldLabel
+        optional={
+          optional
+        }
+      >
+        {label}
+      </FieldLabel>
+
+      <input
+        {...props}
+        className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
+      />
+    </div>
+  );
+}
+
+function FieldLabel({
+  optional = false,
+  children,
+}: {
+  optional?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <label className="mb-1.5 flex items-center justify-between gap-2 text-xs font-black text-stone-700 sm:text-sm">
+      <span>
+        {children}
+      </span>
+
+      {optional && (
+        <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-stone-400">
+          opcjonalne
+        </span>
+      )}
+    </label>
   );
 }
 
@@ -1734,8 +2179,8 @@ function ParserConfidenceBadge({
     confidence === "high"
   ) {
     return (
-      <span className="rounded-full bg-green-50 px-3 py-1 text-[11px] font-black text-green-700">
-        ✓ wysoka pewność
+      <span className="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-black text-green-700">
+        ✓ wysoka
       </span>
     );
   }
@@ -1744,64 +2189,107 @@ function ParserConfidenceBadge({
     confidence === "medium"
   ) {
     return (
-      <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-700">
-        ~ średnia pewność
+      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">
+        ~ średnia
       </span>
     );
   }
 
   return (
-    <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-black text-red-700">
-      ! sprawdź dane
+    <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black text-red-700">
+      ! sprawdź
     </span>
   );
 }
 
-function FormSection({
-  number,
-  title,
-  children,
+function MobilePreview({
+  form,
+  imageUrl,
+  onClose,
 }: {
-  number: string;
-  title: string;
-  children:
-    React.ReactNode;
+  form: FormState;
+  imageUrl: string | null;
+  onClose: () => void;
 }) {
   return (
-    <section>
-      <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-sm font-black text-rose-700">
-          {number}
-        </span>
-
-        <h2 className="text-lg font-black text-stone-900">
-          {title}
-        </h2>
-      </div>
-
-      <div className="space-y-4">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Input({
-  label,
-  ...props
-}: {
-  label: string;
-} & InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <div>
-      <label className="mb-2 block text-sm font-black text-stone-800">
-        {label}
-      </label>
-
-      <input
-        {...props}
-        className="min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+    <div className="fixed inset-0 z-[90] flex items-end bg-stone-950/45 backdrop-blur-sm xl:hidden">
+      <button
+        type="button"
+        aria-label="Zamknij podgląd"
+        onClick={
+          onClose
+        }
+        className="absolute inset-0"
       />
+
+      <div className="relative z-10 max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] bg-stone-50 shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.13em] text-rose-600">
+              Podgląd
+            </p>
+
+            <p className="text-sm font-black">
+              Jak wygląda oferta
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              onClose
+            }
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-100 text-stone-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div
+          className="mx-auto max-w-sm p-4"
+          style={{
+            paddingBottom:
+              "max(1.25rem, env(safe-area-inset-bottom))",
+          }}
+        >
+          <ProductPreview
+            name={
+              form.name
+            }
+            shortName={
+              form.shortName
+            }
+            description={
+              form.description
+            }
+            price={
+              form.price
+            }
+            oldPrice={
+              form.oldPrice
+            }
+            category={
+              form.category
+            }
+            featured={
+              form.featured
+            }
+            imageUrl={
+              imageUrl
+            }
+          />
+
+          <button
+            type="button"
+            onClick={
+              onClose
+            }
+            className="mt-4 min-h-12 w-full rounded-xl bg-stone-900 px-4 text-sm font-black text-white"
+          >
+            Wróć do edycji
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

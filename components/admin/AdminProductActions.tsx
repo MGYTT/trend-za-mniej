@@ -31,7 +31,9 @@ function getStoragePath(
       marker
     );
 
-  if (index === -1) {
+  if (
+    index === -1
+  ) {
     return null;
   }
 
@@ -57,9 +59,9 @@ export default function AdminProductActions({
     loading,
     setLoading,
   ] = useState<
-    "toggle" |
-      "delete" |
-      null
+    | "toggle"
+    | "delete"
+    | null
   >(null);
 
   const [
@@ -176,15 +178,15 @@ export default function AdminProductActions({
     loading !== null;
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+    <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
       <Link
         href={`/admin/edytuj/${id}`}
-        className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-black text-rose-700 transition hover:bg-rose-50"
+        className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-3 text-xs font-black text-white transition hover:bg-rose-700 sm:text-sm"
       >
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
-          className="h-4 w-4"
+          className="h-4 w-4 shrink-0"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -206,11 +208,11 @@ export default function AdminProductActions({
         disabled={
           disabled
         }
-        className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 transition hover:border-rose-200 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-2 text-xs font-black text-stone-700 transition hover:border-rose-200 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
       >
         {loading ===
         "toggle"
-          ? "Zapisywanie..."
+          ? "..."
           : active
             ? "Ukryj"
             : "Opublikuj"}
@@ -224,11 +226,11 @@ export default function AdminProductActions({
         disabled={
           disabled
         }
-        className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1"
+        className="flex min-h-11 items-center justify-center rounded-xl border border-red-100 bg-red-50 px-2 text-xs font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
       >
         {loading ===
         "delete"
-          ? "Usuwanie..."
+          ? "..."
           : "Usuń"}
       </button>
     </div>

@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   type InputHTMLAttributes,
+  type ReactNode,
   useEffect,
   useMemo,
   useState,
@@ -187,11 +188,14 @@ export default function EditProductPage() {
     string | null
   >(null);
 
+  const [
+    mobilePreviewOpen,
+    setMobilePreviewOpen,
+  ] = useState(false);
+
   const hasChanges =
     useMemo(() => {
-      if (
-        !originalForm
-      ) {
+      if (!originalForm) {
         return false;
       }
 
@@ -200,9 +204,7 @@ export default function EditProductPage() {
       }
 
       return (
-        JSON.stringify(
-          form
-        ) !==
+        JSON.stringify(form) !==
         JSON.stringify(
           originalForm
         )
@@ -212,6 +214,58 @@ export default function EditProductPage() {
       originalForm,
       imageFile,
     ]);
+
+  const changedSections =
+    useMemo(() => {
+      if (!originalForm) {
+        return {
+          basic: false,
+          price: false,
+          image: false,
+          publication: false,
+        };
+      }
+
+      return {
+        basic:
+          form.name !==
+            originalForm.name ||
+          form.shortName !==
+            originalForm.shortName ||
+          form.description !==
+            originalForm.description,
+
+        price:
+          form.price !==
+            originalForm.price ||
+          form.oldPrice !==
+            originalForm.oldPrice ||
+          form.category !==
+            originalForm.category,
+
+        image:
+          imageFile !== null,
+
+        publication:
+          form.affiliateUrl !==
+            originalForm.affiliateUrl ||
+          form.soldText !==
+            originalForm.soldText ||
+          form.featured !==
+            originalForm.featured ||
+          form.active !==
+            originalForm.active,
+      };
+    }, [
+      form,
+      originalForm,
+      imageFile,
+    ]);
+
+  const changedSectionsCount =
+    Object.values(
+      changedSections
+    ).filter(Boolean).length;
 
   useEffect(() => {
     if (!id) {
@@ -379,6 +433,79 @@ export default function EditProductPage() {
       );
     };
   }, [hasChanges]);
+
+  useEffect(() => {
+    if (!mobilePreviewOpen) {
+      return;
+    }
+
+    const previousOverflow =
+      document.body.style
+        .overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    function handleKeyDown(
+      event: KeyboardEvent
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setMobilePreviewOpen(
+          false
+        );
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+    };
+  }, [mobilePreviewOpen]);
+
+  useEffect(() => {
+    if (!error || !slug) {
+      return;
+    }
+
+    const timeout =
+      window.setTimeout(
+        () => {
+          document
+            .getElementById(
+              "edit-product-error"
+            )
+            ?.scrollIntoView({
+              behavior:
+                "smooth",
+              block:
+                "center",
+            });
+        },
+        100
+      );
+
+    return () => {
+      window.clearTimeout(
+        timeout
+      );
+    };
+  }, [
+    error,
+    slug,
+  ]);
 
   function parsePrice(
     value: string
@@ -616,6 +743,35 @@ export default function EditProductPage() {
     setSuccess(null);
   }
 
+  function resetChanges() {
+    if (!originalForm) {
+      return;
+    }
+
+    if (
+      hasChanges &&
+      !window.confirm(
+        "Cofnąć wszystkie niezapisane zmiany?"
+      )
+    ) {
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    }
+
+    setImageFile(null);
+    setPreviewUrl(null);
+    setForm(
+      originalForm
+    );
+    setError(null);
+    setSuccess(null);
+  }
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -624,9 +780,7 @@ export default function EditProductPage() {
     setError(null);
     setSuccess(null);
 
-    if (
-      !hasChanges
-    ) {
+    if (!hasChanges) {
       setError(
         "Nie wprowadzono żadnych zmian."
       );
@@ -675,9 +829,7 @@ export default function EditProductPage() {
       return;
     }
 
-    if (
-      !description
-    ) {
+    if (!description) {
       setError(
         "Dodaj opis produktu."
       );
@@ -685,9 +837,7 @@ export default function EditProductPage() {
       return;
     }
 
-    if (
-      !category
-    ) {
+    if (!category) {
       setError(
         "Wybierz kategorię."
       );
@@ -721,10 +871,8 @@ export default function EditProductPage() {
     }
 
     if (
-      oldPrice !==
-        null &&
-      oldPrice <=
-        price
+      oldPrice !== null &&
+      oldPrice <= price
     ) {
       setError(
         "Stara cena powinna być wyższa od aktualnej ceny."
@@ -860,9 +1008,7 @@ export default function EditProductPage() {
         updateError,
     } =
       await supabase
-        .from(
-          "products"
-        )
+        .from("products")
         .update({
           name,
 
@@ -966,9 +1112,7 @@ export default function EditProductPage() {
         }
       }
 
-      if (
-        previewUrl
-      ) {
+      if (previewUrl) {
         URL.revokeObjectURL(
           previewUrl
         );
@@ -986,15 +1130,20 @@ export default function EditProductPage() {
       name,
       shortName,
       description,
+
       price:
         form.price,
+
       oldPrice:
         form.oldPrice,
+
       category,
       affiliateUrl,
       soldText,
+
       featured:
         form.featured,
+
       active:
         form.active,
     };
@@ -1012,6 +1161,7 @@ export default function EditProductPage() {
     );
 
     setSaving(false);
+    setMobilePreviewOpen(false);
 
     router.refresh();
 
@@ -1029,18 +1179,22 @@ export default function EditProductPage() {
       <main className="min-h-screen bg-stone-50">
         <AdminHeader />
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-          <div className="animate-pulse rounded-[30px] border border-stone-200 bg-white p-6 motion-reduce:animate-none">
-            <div className="h-4 w-28 rounded bg-rose-100" />
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+          <div className="animate-pulse motion-reduce:animate-none">
+            <div className="h-3 w-24 rounded bg-rose-100" />
 
-            <div className="mt-4 h-10 w-72 max-w-full rounded-xl bg-stone-200" />
+            <div className="mt-3 h-8 w-56 rounded-xl bg-stone-200" />
 
-            <div className="mt-3 h-5 w-full max-w-xl rounded bg-stone-100" />
+            <div className="mt-2 h-4 w-full max-w-lg rounded bg-stone-100" />
 
-            <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-              <div className="h-[560px] rounded-[28px] bg-stone-100" />
+            <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_370px]">
+              <div className="space-y-3">
+                <div className="h-48 rounded-[20px] bg-white" />
+                <div className="h-56 rounded-[20px] bg-white" />
+                <div className="h-44 rounded-[20px] bg-white" />
+              </div>
 
-              <div className="h-[460px] rounded-[28px] bg-stone-100" />
+              <div className="hidden h-[520px] rounded-[20px] bg-white xl:block" />
             </div>
           </div>
         </div>
@@ -1056,24 +1210,24 @@ export default function EditProductPage() {
       <main className="min-h-screen bg-stone-50">
         <AdminHeader />
 
-        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-          <div className="rounded-[30px] border border-red-100 bg-red-50 p-8 text-center">
-            <div className="text-4xl">
-              ⚠️
+        <div className="mx-auto max-w-xl px-4 py-14 sm:px-6">
+          <div className="rounded-[22px] border border-red-200 bg-red-50 p-6 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl">
+              ⚠
             </div>
 
-            <h1 className="mt-4 text-2xl font-black text-red-800">
+            <h1 className="mt-4 text-xl font-black text-red-900">
               Nie udało się
               otworzyć oferty
             </h1>
 
-            <p className="mt-3 text-sm leading-7 text-red-700">
+            <p className="mt-2 text-sm leading-6 text-red-700">
               {error}
             </p>
 
             <Link
               href="/admin"
-              className="mt-6 inline-flex min-h-12 items-center rounded-2xl bg-white px-6 font-black text-red-700 shadow-sm"
+              className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-white px-5 text-sm font-black text-red-700 shadow-sm"
             >
               ← Wróć do panelu
             </Link>
@@ -1089,194 +1243,130 @@ export default function EditProductPage() {
 
   return (
     <main className="min-h-screen bg-stone-50 pb-28 text-stone-900 lg:pb-0">
+      {mobilePreviewOpen && (
+        <MobilePreview
+          form={
+            form
+          }
+          imageUrl={
+            visibleImage
+          }
+          onClose={() =>
+            setMobilePreviewOpen(
+              false
+            )
+          }
+        />
+      )}
+
       <AdminHeader />
 
       <AdminFormShell
         eyebrow="Edycja oferty"
         title="Edytuj produkt"
-        description="Zaktualizuj dane produktu, zdjęcie, cenę i widoczność. Adres produktu pozostaje bez zmian."
+        description="Zmień potrzebne informacje i zapisz. Adres produktu pozostanie bez zmian."
       >
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          {hasChanges ? (
-            <span className="rounded-full bg-amber-50 px-4 py-2 text-xs font-black text-amber-700">
-              ● Niezapisane zmiany
-            </span>
-          ) : (
-            <span className="rounded-full bg-green-50 px-4 py-2 text-xs font-black text-green-700">
-              ✓ Wszystko zapisane
-            </span>
-          )}
+        <EditStatus
+          hasChanges={
+            hasChanges
+          }
+          changedSectionsCount={
+            changedSectionsCount
+          }
+          active={
+            form.active
+          }
+          featured={
+            form.featured
+          }
+          onReset={
+            resetChanges
+          }
+        />
 
-          {form.active ? (
-            <span className="rounded-full bg-green-50 px-4 py-2 text-xs font-black text-green-700">
-              Oferta aktywna
+        <div className="mt-4 rounded-[18px] border border-stone-200 bg-white p-3.5 shadow-sm sm:p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-50 text-stone-500">
+              🔗
             </span>
-          ) : (
-            <span className="rounded-full bg-stone-200 px-4 py-2 text-xs font-black text-stone-600">
-              Oferta ukryta
-            </span>
-          )}
 
-          {form.featured && (
-            <span className="rounded-full bg-orange-50 px-4 py-2 text-xs font-black text-orange-700">
-              🔥 Gorąca okazja
-            </span>
-          )}
-        </div>
+            <div className="min-w-0">
+              <p className="text-xs font-black text-stone-800">
+                Stały adres produktu
+              </p>
 
-        <div className="mb-6 rounded-2xl border border-stone-200 bg-white px-4 py-4 text-sm leading-6 text-stone-500 shadow-sm">
-          <p>
-            <strong className="text-stone-800">
-              Adres produktu:
-            </strong>{" "}
-            /produkt/{slug}
-          </p>
+              <p className="mt-1 break-all text-xs leading-5 text-stone-500">
+                /produkt/
+                {slug}
+              </p>
 
-          <p className="mt-1 text-xs text-stone-400">
-            Adres pozostaje
-            niezmieniony podczas
-            edycji, aby wcześniejsze
-            linki nadal działały.
-          </p>
+              <p className="mt-1 text-[10px] leading-5 text-stone-400">
+                Zmiana nazwy nie
+                zmienia tego adresu.
+              </p>
+            </div>
+          </div>
         </div>
 
         {success && (
-          <div className="mb-6 rounded-[28px] border border-green-200 bg-green-50 p-5 sm:p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-sm">
+          <div className="mt-4 rounded-[18px] border border-green-200 bg-green-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-green-700 shadow-sm">
                 ✓
               </div>
 
-              <div>
-                <h2 className="text-lg font-black text-green-900">
+              <div className="min-w-0">
+                <h2 className="text-sm font-black text-green-900">
                   {success}
                 </h2>
 
-                <p className="mt-1 text-sm leading-6 text-green-700">
+                <p className="mt-1 text-xs leading-5 text-green-700">
                   Oferta została
                   zaktualizowana.
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {form.active && (
-                    <Link
-                      href={`/produkt/${slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-11 items-center rounded-xl bg-green-700 px-5 text-sm font-black text-white"
-                    >
-                      Zobacz produkt ↗
-                    </Link>
-                  )}
-
+                {form.active && (
                   <Link
-                    href="/admin"
-                    className="inline-flex min-h-11 items-center rounded-xl border border-green-200 bg-white px-5 text-sm font-black text-green-800"
+                    href={`/produkt/${slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex min-h-9 items-center rounded-xl bg-green-700 px-3 text-xs font-black text-white"
                   >
-                    Wróć do panelu
+                    Zobacz produkt ↗
                   </Link>
-                </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px] xl:gap-8">
-          <form
-            id="edit-product-form"
-            onSubmit={
-              handleSubmit
-            }
-            className="space-y-7 rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7"
-          >
-            <FormSection
-              number="1"
-              title="Podstawowe informacje"
+        <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px] xl:gap-7">
+          <div className="min-w-0">
+            <form
+              id="edit-product-form"
+              onSubmit={
+                handleSubmit
+              }
+              className="space-y-3"
             >
-              <Input
-                label="Pełna nazwa produktu"
-                value={
-                  form.name
+              <FormSection
+                number="1"
+                title="Nazwa i opis"
+                description="Edytuj informacje prezentowane użytkownikowi."
+                changed={
+                  changedSections.basic
                 }
-                onChange={(
-                  event
-                ) =>
-                  updateField(
-                    "name",
-                    event.target
-                      .value
-                  )
-                }
-                required
-              />
-
-              <Input
-                label="Krótka nazwa"
-                value={
-                  form.shortName
-                }
-                onChange={(
-                  event
-                ) =>
-                  updateField(
-                    "shortName",
-                    event.target
-                      .value
-                  )
-                }
-                required
-              />
-
-              <div>
-                <label className="mb-2 block text-sm font-black text-stone-800">
-                  Opis
-                </label>
-
-                <textarea
-                  required
-                  rows={6}
-                  value={
-                    form.description
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    updateField(
-                      "description",
-                      event.target
-                        .value
-                    )
-                  }
-                  className="w-full resize-y rounded-2xl border border-stone-200 px-4 py-3 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
-                />
-
-                <p className="mt-2 text-xs leading-5 text-stone-400">
-                  Unikaj
-                  krótkotrwałych
-                  kodów i promocji,
-                  które szybko mogą
-                  stracić ważność.
-                </p>
-              </div>
-            </FormSection>
-
-            <FormSection
-              number="2"
-              title="Cena i kategoria"
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
+              >
                 <Input
-                  label="Cena"
-                  type="text"
-                  inputMode="decimal"
+                  label="Pełna nazwa"
                   value={
-                    form.price
+                    form.name
                   }
                   onChange={(
                     event
                   ) =>
                     updateField(
-                      "price",
+                      "name",
                       event.target
                         .value
                     )
@@ -1285,307 +1375,444 @@ export default function EditProductPage() {
                 />
 
                 <Input
-                  label="Stara cena"
-                  type="text"
-                  inputMode="decimal"
+                  label="Krótka nazwa"
                   value={
-                    form.oldPrice
+                    form.shortName
                   }
                   onChange={(
                     event
                   ) =>
                     updateField(
-                      "oldPrice",
+                      "shortName",
                       event.target
                         .value
                     )
                   }
-                  placeholder="Opcjonalnie"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-black text-stone-800">
-                  Kategoria
-                </label>
-
-                <select
                   required
-                  value={
-                    form.category
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    updateField(
-                      "category",
-                      event.target
-                        .value
-                    )
-                  }
-                  className="min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
-                >
-                  {!CATEGORIES.includes(
-                    form.category
-                  ) &&
-                    form.category && (
-                      <option
-                        value={
-                          form.category
-                        }
-                      >
-                        {
-                          form.category
-                        }
-                      </option>
-                    )}
-
-                  {CATEGORIES.map(
-                    (
-                      category
-                    ) => (
-                      <option
-                        key={
-                          category
-                        }
-                        value={
-                          category
-                        }
-                      >
-                        {
-                          category
-                        }
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-            </FormSection>
-
-            <FormSection
-              number="3"
-              title="Zdjęcie produktu"
-            >
-              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-stone-100">
-                <img
-                  src={
-                    visibleImage
-                  }
-                  alt="Podgląd produktu"
-                  className="mx-auto max-h-[520px] w-full object-contain"
                 />
-              </div>
 
-              {imageFile && (
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                  <p className="text-sm font-black text-amber-900">
-                    Nowe zdjęcie
-                    zostanie zapisane
+                <div>
+                  <FieldLabel>
+                    Opis
+                  </FieldLabel>
+
+                  <textarea
+                    required
+                    rows={5}
+                    value={
+                      form.description
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      updateField(
+                        "description",
+                        event.target
+                          .value
+                      )
+                    }
+                    className="w-full resize-y rounded-xl border border-stone-200 bg-white px-3.5 py-3 text-base leading-6 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
+                  />
+
+                  <p className="mt-1.5 px-1 text-[10px] leading-5 text-stone-400 sm:text-xs">
+                    Unikaj kodów
+                    promocyjnych i
+                    informacji, które
+                    szybko tracą
+                    aktualność.
                   </p>
+                </div>
+              </FormSection>
 
-                  <div className="mt-2 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-stone-700">
-                        {
-                          imageFile.name
-                        }
+              <FormSection
+                number="2"
+                title="Cena i kategoria"
+                description="Zaktualizuj cenę lub kategorię produktu."
+                changed={
+                  changedSections.price
+                }
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Cena"
+                    type="text"
+                    inputMode="decimal"
+                    value={
+                      form.price
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      updateField(
+                        "price",
+                        event.target
+                          .value
+                      )
+                    }
+                    required
+                  />
+
+                  <Input
+                    label="Stara cena"
+                    optional
+                    type="text"
+                    inputMode="decimal"
+                    value={
+                      form.oldPrice
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      updateField(
+                        "oldPrice",
+                        event.target
+                          .value
+                      )
+                    }
+                    placeholder="Opcjonalnie"
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>
+                    Kategoria
+                  </FieldLabel>
+
+                  <select
+                    required
+                    value={
+                      form.category
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      updateField(
+                        "category",
+                        event.target
+                          .value
+                      )
+                    }
+                    className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
+                  >
+                    {!CATEGORIES.includes(
+                      form.category
+                    ) &&
+                      form.category && (
+                        <option
+                          value={
+                            form.category
+                          }
+                        >
+                          {
+                            form.category
+                          }
+                        </option>
+                      )}
+
+                    {CATEGORIES.map(
+                      (
+                        category
+                      ) => (
+                        <option
+                          key={
+                            category
+                          }
+                          value={
+                            category
+                          }
+                        >
+                          {
+                            category
+                          }
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+              </FormSection>
+
+              <FormSection
+                number="3"
+                title="Zdjęcie"
+                description="Zostaw obecne albo wybierz nowe."
+                changed={
+                  changedSections.image
+                }
+              >
+                <div className="grid grid-cols-[105px_minmax(0,1fr)] gap-3 rounded-[18px] border border-stone-200 bg-stone-50 p-3 sm:grid-cols-[135px_minmax(0,1fr)]">
+                  <div className="aspect-[4/5] overflow-hidden rounded-xl bg-white">
+                    <img
+                      src={
+                        visibleImage
+                      }
+                      alt="Podgląd produktu"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex min-w-0 flex-col justify-between py-1">
+                    <div>
+                      <p
+                        className={[
+                          "text-xs font-black",
+                          imageFile
+                            ? "text-amber-700"
+                            : "text-green-700",
+                        ].join(
+                          " "
+                        )}
+                      >
+                        {imageFile
+                          ? "● Nowe zdjęcie"
+                          : "✓ Obecne zdjęcie"}
                       </p>
 
-                      <p className="mt-1 text-xs text-stone-400">
-                        {(
-                          imageFile.size /
-                          1024 /
-                          1024
-                        ).toFixed(
-                          2
-                        )}{" "}
-                        MB
-                      </p>
+                      {imageFile ? (
+                        <>
+                          <p className="mt-2 truncate text-xs font-semibold text-stone-700">
+                            {
+                              imageFile.name
+                            }
+                          </p>
+
+                          <p className="mt-1 text-[10px] text-stone-400">
+                            {(
+                              imageFile.size /
+                              1024 /
+                              1024
+                            ).toFixed(
+                              2
+                            )}{" "}
+                            MB
+                          </p>
+                        </>
+                      ) : (
+                        <p className="mt-2 text-[10px] leading-5 text-stone-400 sm:text-xs">
+                          Zdjęcie pozostanie
+                          bez zmian.
+                        </p>
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={
-                        removeNewImage
-                      }
-                      className="shrink-0 rounded-xl bg-white px-4 py-2 text-xs font-black text-amber-800 shadow-sm"
-                    >
-                      Cofnij
-                    </button>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <label className="flex min-h-10 cursor-pointer items-center justify-center rounded-xl bg-white px-2 text-xs font-black text-stone-700 ring-1 ring-stone-200">
+                        Zmień
+
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={
+                            handleImageChange
+                          }
+                          className="hidden"
+                        />
+                      </label>
+
+                      {imageFile ? (
+                        <button
+                          type="button"
+                          onClick={
+                            removeNewImage
+                          }
+                          className="min-h-10 rounded-xl bg-amber-50 px-2 text-xs font-black text-amber-700"
+                        >
+                          Cofnij
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMobilePreviewOpen(
+                              true
+                            )
+                          }
+                          className="min-h-10 rounded-xl bg-stone-100 px-2 text-xs font-black text-stone-600 xl:hidden"
+                        >
+                          Podgląd
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
+              </FormSection>
 
-              <label className="flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-rose-200 bg-rose-50/40 px-5 py-8 text-center transition hover:border-rose-400 hover:bg-rose-50">
-                <div className="text-3xl">
-                  📷
-                </div>
-
-                <p className="mt-2 font-black">
-                  Zmień zdjęcie
-                </p>
-
-                <p className="mt-1 text-sm text-stone-500">
-                  JPG, PNG lub WebP
-                  • maks. 5 MB
-                </p>
-
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={
-                    handleImageChange
+              <FormSection
+                number="4"
+                title="Link i widoczność"
+                description="Kontroluj link, wyróżnienie i publikację."
+                changed={
+                  changedSections.publication
+                }
+              >
+                <Input
+                  label="Link afiliacyjny SHEIN"
+                  type="url"
+                  inputMode="url"
+                  value={
+                    form.affiliateUrl
                   }
-                  className="hidden"
+                  onChange={(
+                    event
+                  ) =>
+                    updateField(
+                      "affiliateUrl",
+                      event.target
+                        .value
+                    )
+                  }
+                  required
                 />
-              </label>
-            </FormSection>
 
-            <FormSection
-              number="4"
-              title="Link i widoczność"
-            >
-              <Input
-                label="Link afiliacyjny SHEIN"
-                type="url"
-                value={
-                  form.affiliateUrl
-                }
-                onChange={(
-                  event
-                ) =>
-                  updateField(
-                    "affiliateUrl",
-                    event.target
-                      .value
-                  )
-                }
-                required
-              />
+                <Input
+                  label="Informacja o sprzedaży"
+                  optional
+                  value={
+                    form.soldText
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    updateField(
+                      "soldText",
+                      event.target
+                        .value
+                    )
+                  }
+                  placeholder="Tylko jeśli dane są zweryfikowane"
+                />
 
-              <Input
-                label="Informacja o sprzedaży"
-                value={
-                  form.soldText
-                }
-                onChange={(
-                  event
-                ) =>
-                  updateField(
-                    "soldText",
-                    event.target
-                      .value
-                  )
-                }
-                placeholder="Opcjonalnie, tylko jeśli zweryfikowane"
-              />
-
-              <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-rose-100 bg-rose-50 p-4">
-                <input
-                  type="checkbox"
+                <ToggleCard
                   checked={
                     form.featured
                   }
                   onChange={(
-                    event
+                    checked
                   ) =>
                     updateField(
                       "featured",
-                      event.target
-                        .checked
+                      checked
                     )
                   }
-                  className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600"
+                  tone="orange"
+                  title="🔥 Gorąca okazja"
+                  description="Pokaż produkt w wyróżnionej sekcji strony głównej."
                 />
 
-                <div>
-                  <p className="font-black">
-                    🔥 Gorąca okazja
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-stone-500">
-                    Produkt pojawi
-                    się również w
-                    wyróżnionej
-                    sekcji strony
-                    głównej.
-                  </p>
-                </div>
-              </label>
-
-              <label
-                className={[
-                  "flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition",
-                  form.active
-                    ? "border-green-100 bg-green-50"
-                    : "border-stone-200 bg-stone-100",
-                ].join(" ")}
-              >
-                <input
-                  type="checkbox"
+                <ToggleCard
                   checked={
                     form.active
                   }
                   onChange={(
-                    event
+                    checked
                   ) =>
                     updateField(
                       "active",
-                      event.target
-                        .checked
+                      checked
                     )
                   }
-                  className="mt-0.5 h-5 w-5 shrink-0 accent-green-600"
-                />
-
-                <div>
-                  <p className="font-black">
-                    {form.active
-                      ? "✅ Oferta opublikowana"
-                      : "🙈 Oferta ukryta"}
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-stone-500">
-                    {form.active
+                  tone="green"
+                  title={
+                    form.active
+                      ? "✓ Oferta opublikowana"
+                      : "Oferta ukryta"
+                  }
+                  description={
+                    form.active
                       ? "Produkt jest widoczny dla użytkowników."
-                      : "Produkt pozostaje w panelu, ale nie jest widoczny publicznie."}
-                  </p>
+                      : "Produkt pozostanie w panelu, ale zniknie ze strony publicznej."
+                  }
+                />
+              </FormSection>
+
+              {error && (
+                <div
+                  id="edit-product-error"
+                  className="rounded-[16px] border border-red-200 bg-red-50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-red-600">
+                      !
+                    </span>
+
+                    <div>
+                      <p className="text-sm font-black text-red-800">
+                        Nie udało się
+                        zapisać
+                      </p>
+
+                      <p className="mt-1 text-sm leading-6 text-red-700">
+                        {error}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </label>
-            </FormSection>
+              )}
 
-            {error && (
-              <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700">
-                {error}
+              <div className="hidden gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto]">
+                <button
+                  type="submit"
+                  disabled={
+                    saving ||
+                    !hasChanges
+                  }
+                  className="flex min-h-14 items-center justify-center rounded-xl bg-rose-600 px-6 text-base font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {saving
+                    ? "Zapisywanie..."
+                    : hasChanges
+                      ? "Zapisz zmiany"
+                      : "Brak zmian"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={
+                    resetChanges
+                  }
+                  disabled={
+                    !hasChanges ||
+                    saving
+                  }
+                  className="min-h-14 rounded-xl border border-stone-200 bg-white px-5 text-sm font-black text-stone-600 transition hover:border-rose-200 hover:text-rose-700 disabled:opacity-40"
+                >
+                  Cofnij zmiany
+                </button>
               </div>
-            )}
+            </form>
 
-            <div className="hidden gap-3 lg:flex">
-              <button
-                type="submit"
-                disabled={
-                  saving ||
-                  !hasChanges
+            <div className="mt-4 xl:hidden">
+              <OfferQualityChecks
+                name={
+                  form.name
                 }
-                className="flex min-h-14 flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-7 text-lg font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                {saving
-                  ? "Zapisywanie..."
-                  : hasChanges
-                    ? "Zapisz zmiany"
-                    : "Brak zmian"}
-              </button>
-
-              <Link
-                href="/admin"
-                className="flex min-h-14 items-center justify-center rounded-2xl border border-stone-200 bg-white px-7 font-black text-stone-600 transition hover:border-rose-200 hover:text-rose-700"
-              >
-                Anuluj
-              </Link>
+                shortName={
+                  form.shortName
+                }
+                description={
+                  form.description
+                }
+                price={
+                  form.price
+                }
+                oldPrice={
+                  form.oldPrice
+                }
+                affiliateUrl={
+                  form.affiliateUrl
+                }
+                soldText={
+                  form.soldText
+                }
+                imageSelected={
+                  Boolean(
+                    visibleImage
+                  )
+                }
+              />
             </div>
-          </form>
+          </div>
 
-          <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start">
+          <aside className="hidden space-y-4 xl:sticky xl:top-24 xl:block xl:self-start">
             <OfferQualityChecks
               name={
                 form.name
@@ -1615,14 +1842,14 @@ export default function EditProductPage() {
               }
             />
 
-            <div className="rounded-[28px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-4 flex items-end justify-between gap-3">
+            <div className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-rose-600">
                     Podgląd
                   </p>
 
-                  <h2 className="mt-1 text-xl font-black">
+                  <h2 className="mt-1 text-lg font-black">
                     Widok produktu
                   </h2>
                 </div>
@@ -1666,36 +1893,29 @@ export default function EditProductPage() {
                 }
               />
             </div>
-
-            <div className="rounded-2xl border border-stone-200 bg-white p-4 text-xs leading-6 text-stone-500">
-              <strong className="text-stone-800">
-                Ważne:
-              </strong>{" "}
-              zmiana nazwy nie
-              zmienia adresu URL
-              produktu. Dzięki temu
-              opublikowane wcześniej
-              linki nadal prowadzą
-              do tej samej oferty.
-            </div>
           </aside>
         </div>
       </AdminFormShell>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 pt-3 shadow-[0_-8px_30px_rgba(28,25,23,0.10)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/96 px-3 pt-2.5 shadow-[0_-6px_24px_rgba(28,25,23,0.10)] backdrop-blur-xl lg:hidden">
         <div
-          className="mx-auto flex max-w-xl gap-3"
+          className="mx-auto grid max-w-xl grid-cols-[105px_minmax(0,1fr)] gap-2"
           style={{
             paddingBottom:
-              "max(0.75rem, env(safe-area-inset-bottom))",
+              "max(0.65rem, env(safe-area-inset-bottom))",
           }}
         >
-          <Link
-            href="/admin"
-            className="flex min-h-12 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 font-black text-stone-600"
+          <button
+            type="button"
+            onClick={() =>
+              setMobilePreviewOpen(
+                true
+              )
+            }
+            className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-3 text-xs font-black text-stone-700"
           >
-            ←
-          </Link>
+            Podgląd
+          </button>
 
           <button
             type="submit"
@@ -1704,12 +1924,12 @@ export default function EditProductPage() {
               saving ||
               !hasChanges
             }
-            className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 font-black text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex min-h-12 min-w-0 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saving
               ? "Zapisywanie..."
               : hasChanges
-                ? "Zapisz zmiany"
+                ? `Zapisz zmiany (${changedSectionsCount})`
                 : "Brak zmian"}
           </button>
         </div>
@@ -1718,26 +1938,139 @@ export default function EditProductPage() {
   );
 }
 
+function EditStatus({
+  hasChanges,
+  changedSectionsCount,
+  active,
+  featured,
+  onReset,
+}: {
+  hasChanges: boolean;
+  changedSectionsCount: number;
+  active: boolean;
+  featured: boolean;
+  onReset: () => void;
+}) {
+  return (
+    <section className="rounded-[18px] border border-stone-200 bg-white p-3.5 shadow-sm sm:p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap gap-1.5">
+            <span
+              className={[
+                "rounded-full px-2.5 py-1 text-[10px] font-black",
+                hasChanges
+                  ? "bg-amber-50 text-amber-700"
+                  : "bg-green-50 text-green-700",
+              ].join(
+                " "
+              )}
+            >
+              {hasChanges
+                ? `● ${changedSectionsCount} sekcje zmienione`
+                : "✓ Wszystko zapisane"}
+            </span>
+
+            <span
+              className={[
+                "rounded-full px-2.5 py-1 text-[10px] font-black",
+                active
+                  ? "bg-green-50 text-green-700"
+                  : "bg-stone-100 text-stone-600",
+              ].join(
+                " "
+              )}
+            >
+              {active
+                ? "Aktywna"
+                : "Ukryta"}
+            </span>
+
+            {featured && (
+              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-black text-orange-700">
+                🔥 Gorąca
+              </span>
+            )}
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-stone-400">
+            {hasChanges
+              ? "Zmiany nie są jeszcze widoczne publicznie."
+              : "Oferta jest zsynchronizowana z zapisanymi danymi."}
+          </p>
+        </div>
+
+        {hasChanges && (
+          <button
+            type="button"
+            onClick={
+              onReset
+            }
+            className="shrink-0 rounded-xl bg-stone-100 px-3 py-2 text-[10px] font-black text-stone-600"
+          >
+            Cofnij
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function FormSection({
   number,
   title,
+  description,
+  changed,
   children,
 }: {
   number: string;
   title: string;
-  children:
-    React.ReactNode;
+  description: string;
+  changed: boolean;
+  children: ReactNode;
 }) {
   return (
-    <section>
-      <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-sm font-black text-rose-700">
+    <section
+      className={[
+        "rounded-[20px] border bg-white p-4 shadow-sm transition sm:p-5",
+        changed
+          ? "border-amber-200"
+          : "border-stone-200",
+      ].join(
+        " "
+      )}
+    >
+      <div className="mb-4 flex items-start gap-3">
+        <span
+          className={[
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black",
+            changed
+              ? "bg-amber-50 text-amber-700"
+              : "bg-rose-50 text-rose-700",
+          ].join(
+            " "
+          )}
+        >
           {number}
         </span>
 
-        <h2 className="text-lg font-black text-stone-900">
-          {title}
-        </h2>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-black text-stone-900 sm:text-lg">
+              {title}
+            </h2>
+
+            {changed && (
+              <span className="shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[9px] font-black text-amber-700">
+                zmieniono
+              </span>
+            )}
+          </div>
+
+          <p className="mt-0.5 text-xs leading-5 text-stone-400">
+            {description}
+          </p>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -1747,22 +2080,219 @@ function FormSection({
   );
 }
 
+function ToggleCard({
+  checked,
+  onChange,
+  title,
+  description,
+  tone,
+}: {
+  checked: boolean;
+  onChange: (
+    value: boolean
+  ) => void;
+  title: string;
+  description: string;
+  tone:
+    | "orange"
+    | "green";
+}) {
+  const activeClasses =
+    tone === "green"
+      ? "border-green-200 bg-green-50"
+      : "border-orange-200 bg-orange-50";
+
+  return (
+    <label
+      className={[
+        "flex cursor-pointer items-start gap-3 rounded-[16px] border p-3.5 transition",
+        checked
+          ? activeClasses
+          : "border-stone-200 bg-stone-50",
+      ].join(
+        " "
+      )}
+    >
+      <input
+        type="checkbox"
+        checked={
+          checked
+        }
+        onChange={(
+          event
+        ) =>
+          onChange(
+            event.target
+              .checked
+          )
+        }
+        className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600"
+      />
+
+      <div>
+        <p className="text-sm font-black text-stone-900">
+          {title}
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-stone-500">
+          {description}
+        </p>
+      </div>
+    </label>
+  );
+}
+
 function Input({
   label,
+  optional = false,
   ...props
 }: {
   label: string;
+  optional?: boolean;
 } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-black text-stone-800">
+      <FieldLabel
+        optional={
+          optional
+        }
+      >
         {label}
-      </label>
+      </FieldLabel>
 
       <input
         {...props}
-        className="min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+        className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
       />
+    </div>
+  );
+}
+
+function FieldLabel({
+  optional = false,
+  children,
+}: {
+  optional?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <label className="mb-1.5 flex items-center justify-between gap-2 text-xs font-black text-stone-700 sm:text-sm">
+      <span>
+        {children}
+      </span>
+
+      {optional && (
+        <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-stone-400">
+          opcjonalne
+        </span>
+      )}
+    </label>
+  );
+}
+
+function MobilePreview({
+  form,
+  imageUrl,
+  onClose,
+}: {
+  form: FormState;
+  imageUrl: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[90] flex items-end bg-stone-950/45 backdrop-blur-sm xl:hidden">
+      <button
+        type="button"
+        aria-label="Zamknij podgląd"
+        onClick={
+          onClose
+        }
+        className="absolute inset-0"
+      />
+
+      <div className="relative z-10 max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] bg-stone-50 shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.13em] text-rose-600">
+              Podgląd
+            </p>
+
+            <p className="text-sm font-black">
+              Jak wygląda oferta
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              onClose
+            }
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-100 text-stone-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div
+          className="mx-auto max-w-sm p-4"
+          style={{
+            paddingBottom:
+              "max(1.25rem, env(safe-area-inset-bottom))",
+          }}
+        >
+          <ProductPreview
+            name={
+              form.name
+            }
+            shortName={
+              form.shortName
+            }
+            description={
+              form.description
+            }
+            price={
+              form.price
+            }
+            oldPrice={
+              form.oldPrice
+            }
+            category={
+              form.category
+            }
+            featured={
+              form.featured
+            }
+            imageUrl={
+              imageUrl
+            }
+          />
+
+          <div
+            className={[
+              "mt-3 rounded-xl px-4 py-3 text-xs font-black",
+              form.active
+                ? "bg-green-50 text-green-700"
+                : "bg-stone-200 text-stone-600",
+            ].join(
+              " "
+            )}
+          >
+            {form.active
+              ? "✓ Oferta będzie widoczna publicznie"
+              : "Oferta jest ukryta"}
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              onClose
+            }
+            className="mt-3 min-h-12 w-full rounded-xl bg-stone-900 px-4 text-sm font-black text-white"
+          >
+            Wróć do edycji
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

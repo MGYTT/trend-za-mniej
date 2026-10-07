@@ -1,8 +1,15 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
+import {
+  redirect,
+} from "next/navigation";
+
+import AdminHeader from "@/components/admin/AdminHeader";
 import ClicksChart from "@/components/admin/ClicksChart";
-import { createClient } from "@/lib/supabase/server";
+
+import {
+  createClient,
+} from "@/lib/supabase/server";
 
 type Props = {
   searchParams: Promise<{
@@ -12,7 +19,9 @@ type Props = {
 
 type DayRow = {
   day: string;
-  clicks: number | string;
+  clicks:
+    | number
+    | string;
 };
 
 type ProductStatRow = {
@@ -20,61 +29,86 @@ type ProductStatRow = {
   short_name: string;
   image_url: string;
   active: boolean;
-  clicks: number | string;
+  clicks:
+    | number
+    | string;
 };
 
 export default async function StatisticsPage({
   searchParams,
 }: Props) {
-  const params = await searchParams;
+  const params =
+    await searchParams;
 
   const selectedDays =
-    params.days === "7" ? 7 : 30;
+    params.days === "7"
+      ? 7
+      : 30;
 
-  const supabase = await createClient();
+  const supabase =
+    await createClient();
 
-  const { data: authData } =
+  const {
+    data: authData,
+  } =
     await supabase.auth.getClaims();
 
-  if (!authData?.claims) {
-    redirect("/login");
+  if (
+    !authData?.claims
+  ) {
+    redirect(
+      "/login"
+    );
   }
 
   const [
     chartResult,
     rankingResult,
     allClicksResult,
-  ] = await Promise.all([
-    supabase.rpc(
-      "get_clicks_by_day",
-      {
-        p_days: selectedDays,
-      }
-    ),
+  ] =
+    await Promise.all([
+      supabase.rpc(
+        "get_clicks_by_day",
+        {
+          p_days:
+            selectedDays,
+        }
+      ),
 
-    supabase.rpc(
-      "get_product_click_stats",
-      {
-        p_days: selectedDays,
-      }
-    ),
+      supabase.rpc(
+        "get_product_click_stats",
+        {
+          p_days:
+            selectedDays,
+        }
+      ),
 
-    supabase
-      .from("affiliate_clicks")
-      .select("*", {
-        count: "exact",
-        head: true,
-      }),
-  ]);
+      supabase
+        .from(
+          "affiliate_clicks"
+        )
+        .select(
+          "*",
+          {
+            count:
+              "exact",
+            head: true,
+          }
+        ),
+    ]);
 
-  if (chartResult.error) {
+  if (
+    chartResult.error
+  ) {
     console.error(
       "Błąd statystyk dziennych:",
       chartResult.error
     );
   }
 
-  if (rankingResult.error) {
+  if (
+    rankingResult.error
+  ) {
     console.error(
       "Błąd rankingu:",
       rankingResult.error
@@ -82,30 +116,54 @@ export default async function StatisticsPage({
   }
 
   const chartData = (
-    (chartResult.data ?? []) as DayRow[]
-  ).map((item) => ({
-    day: item.day,
-    clicks: Number(item.clicks),
-  }));
+    (
+      chartResult.data ??
+      []
+    ) as DayRow[]
+  ).map(
+    (item) => ({
+      day:
+        item.day,
+
+      clicks:
+        Number(
+          item.clicks
+        ),
+    })
+  );
 
   const ranking = (
-    (rankingResult.data ??
-      []) as ProductStatRow[]
-  ).map((item) => ({
-    ...item,
-    clicks: Number(item.clicks),
-  }));
+    (
+      rankingResult.data ??
+      []
+    ) as ProductStatRow[]
+  ).map(
+    (item) => ({
+      ...item,
+
+      clicks:
+        Number(
+          item.clicks
+        ),
+    })
+  );
 
   const periodClicks =
     chartData.reduce(
-      (sum, item) =>
-        sum + item.clicks,
+      (
+        sum,
+        item
+      ) =>
+        sum +
+        item.clicks,
       0
     );
 
   const daysWithClicks =
     chartData.filter(
-      (item) => item.clicks > 0
+      (item) =>
+        item.clicks >
+        0
     ).length;
 
   const average =
@@ -117,7 +175,10 @@ export default async function StatisticsPage({
   const bestDay =
     chartData.length > 0
       ? chartData.reduce(
-          (best, current) =>
+          (
+            best,
+            current
+          ) =>
             current.clicks >
             best.clicks
               ? current
@@ -126,80 +187,61 @@ export default async function StatisticsPage({
       : null;
 
   return (
-    <main className="min-h-screen bg-stone-50">
-      <header className="border-b border-rose-100 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+    <main className="min-h-screen bg-stone-50 text-stone-900">
+      <AdminHeader />
+
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-2xl font-black">
-              Trend za Mniej
+            <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
+              Analityka
             </p>
 
-            <p className="text-sm text-stone-500">
-              Statystyki
-            </p>
-          </div>
-
-          <Link
-            href="/admin"
-            className="rounded-full border border-stone-200 bg-white px-5 py-2.5 text-sm font-bold transition hover:border-rose-300 hover:text-rose-600"
-          >
-            ← Panel
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <p className="font-bold text-rose-600">
-              📊 Analityka
-            </p>
-
-            <h1 className="mt-2 text-4xl font-black">
+            <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
               Statystyki kliknięć
             </h1>
 
-            <p className="mt-2 text-stone-500">
-              Sprawdź, które produkty
-              najbardziej interesują odwiedzających.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base">
+              Sprawdź, które
+              produkty najbardziej
+              interesują
+              odwiedzających.
             </p>
           </div>
 
-          <div className="flex rounded-2xl border border-rose-100 bg-white p-1 shadow-sm">
-            <Link
+          <div className="grid grid-cols-2 rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
+            <PeriodLink
               href="/admin/statystyki?days=7"
-              className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${
-                selectedDays === 7
-                  ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-sm"
-                  : "text-stone-500 hover:text-rose-600"
-              }`}
+              active={
+                selectedDays ===
+                7
+              }
             >
               7 dni
-            </Link>
+            </PeriodLink>
 
-            <Link
+            <PeriodLink
               href="/admin/statystyki?days=30"
-              className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${
-                selectedDays === 30
-                  ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-sm"
-                  : "text-stone-500 hover:text-rose-600"
-              }`}
+              active={
+                selectedDays ===
+                30
+              }
             >
               30 dni
-            </Link>
+            </PeriodLink>
           </div>
         </div>
 
-        <section className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard
-            icon="🖱️"
             title={`Kliknięcia / ${selectedDays} dni`}
-            value={periodClicks.toString()}
+            value={
+              periodClicks.toString()
+            }
           />
 
           <StatCard
-            icon="🌍"
-            title="Kliknięcia łącznie"
+            title="Łącznie"
             value={String(
               allClicksResult.count ??
                 0
@@ -207,44 +249,63 @@ export default async function StatisticsPage({
           />
 
           <StatCard
-            icon="📅"
-            title="Średnio dziennie"
-            value={average.toFixed(1)}
+            title="Średnio / dzień"
+            value={
+              average.toFixed(
+                1
+              )
+            }
           />
 
           <StatCard
-            icon="🔥"
             title="Aktywne dni"
             value={`${daysWithClicks}/${selectedDays}`}
           />
         </section>
 
-        <section className="mt-8">
-          <ClicksChart
-            data={chartData}
-          />
+        <section className="mt-5 overflow-hidden rounded-[22px] border border-stone-200 bg-white shadow-sm">
+          <div className="border-b border-stone-100 px-4 py-4 sm:px-6">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-600">
+              Ruch
+            </p>
+
+            <h2 className="mt-1 text-lg font-black sm:text-xl">
+              Kliknięcia w czasie
+            </h2>
+          </div>
+
+          <div className="p-3 sm:p-5">
+            <ClicksChart
+              data={
+                chartData
+              }
+            />
+          </div>
         </section>
 
-        <section className="mt-8 grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <div className="overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm">
-            <div className="border-b border-stone-100 p-6">
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-600">
-                🏆 Ranking
+        <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.7fr)]">
+          <div className="overflow-hidden rounded-[22px] border border-stone-200 bg-white shadow-sm">
+            <div className="border-b border-stone-100 p-4 sm:p-5">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-600">
+                Ranking
               </p>
 
-              <h2 className="mt-2 text-2xl font-black">
-                Najczęściej klikane produkty
+              <h2 className="mt-1 text-xl font-black">
+                Najczęściej klikane
               </h2>
 
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-xs text-stone-500">
                 Ostatnie{" "}
-                {selectedDays} dni.
+                {
+                  selectedDays
+                }{" "}
+                dni
               </p>
             </div>
 
             {ranking.length ===
             0 ? (
-              <div className="p-12 text-center text-stone-500">
+              <div className="p-10 text-center text-sm text-stone-500">
                 Brak danych.
               </div>
             ) : (
@@ -258,11 +319,14 @@ export default async function StatisticsPage({
                       key={
                         product.product_id
                       }
-                      className="flex items-center gap-4 p-5"
+                      className="grid grid-cols-[32px_48px_minmax(0,1fr)_auto] items-center gap-2.5 p-3 sm:grid-cols-[36px_56px_minmax(0,1fr)_auto] sm:gap-4 sm:p-4"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 font-black text-rose-600">
-                        {index + 1}
-                      </div>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-xs font-black text-stone-600">
+                        {
+                          index +
+                          1
+                        }
+                      </span>
 
                       <img
                         src={
@@ -271,31 +335,40 @@ export default async function StatisticsPage({
                         alt={
                           product.short_name
                         }
-                        className="h-16 w-16 shrink-0 rounded-2xl object-cover"
+                        className="h-12 w-12 rounded-xl object-cover sm:h-14 sm:w-14"
                       />
 
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-bold">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-black sm:text-sm">
                           {
                             product.short_name
                           }
                         </p>
 
-                        <p className="mt-1 text-xs text-stone-400">
+                        <p
+                          className={[
+                            "mt-1 text-[10px] font-bold",
+                            product.active
+                              ? "text-green-600"
+                              : "text-stone-400",
+                          ].join(
+                            " "
+                          )}
+                        >
                           {product.active
-                            ? "● Opublikowana"
+                            ? "● Aktywna"
                             : "● Ukryta"}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <p className="text-2xl font-black text-rose-600">
+                        <p className="text-lg font-black text-stone-900 sm:text-xl">
                           {
                             product.clicks
                           }
                         </p>
 
-                        <p className="text-xs text-stone-400">
+                        <p className="text-[9px] text-stone-400 sm:text-[10px]">
                           kliknięć
                         </p>
                       </div>
@@ -306,109 +379,141 @@ export default async function StatisticsPage({
             )}
           </div>
 
-          <div className="rounded-3xl border border-rose-100 bg-gradient-to-br from-rose-50 to-pink-50 p-7">
-            <div className="text-4xl">
-              💡
-            </div>
-
-            <h2 className="mt-5 text-2xl font-black">
-              Co warto obserwować?
-            </h2>
-
-            <p className="mt-4 leading-7 text-stone-600">
-              Produkty z największą
-              liczbą kliknięć warto
-              częściej promować na
-              Pinterest, Instagramie
-              i TikToku.
-            </p>
-
-            <div className="mt-7 rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-semibold text-stone-500">
-                Najlepszy dzień
-              </p>
-
-              {bestDay ? (
-                <>
-                  <p className="mt-1 text-xl font-black">
-                    {new Intl.DateTimeFormat(
+          <aside className="space-y-3">
+            <InsightCard
+              label="Najlepszy dzień"
+              value={
+                bestDay
+                  ? new Intl.DateTimeFormat(
                       "pl-PL",
                       {
-                        day: "numeric",
-                        month: "long",
+                        day:
+                          "numeric",
+                        month:
+                          "long",
                       }
                     ).format(
                       new Date(
                         `${bestDay.day}T12:00:00`
                       )
-                    )}
-                  </p>
+                    )
+                  : "Brak danych"
+              }
+              metric={
+                bestDay
+                  ? `${bestDay.clicks} kliknięć`
+                  : undefined
+              }
+            />
 
-                  <p className="mt-2 font-bold text-rose-600">
-                    {
-                      bestDay.clicks
-                    }{" "}
-                    kliknięć
-                  </p>
-                </>
-              ) : (
-                <p className="mt-2">
-                  Brak danych
-                </p>
-              )}
+            <InsightCard
+              label="Najlepszy produkt"
+              value={
+                ranking[0]
+                  ?.short_name ??
+                "Brak danych"
+              }
+              metric={
+                ranking[0]
+                  ? `${ranking[0].clicks} kliknięć`
+                  : undefined
+              }
+            />
+
+            <div className="rounded-[20px] border border-stone-200 bg-white p-4">
+              <p className="text-sm font-black">
+                Wskazówka
+              </p>
+
+              <p className="mt-2 text-xs leading-6 text-stone-500">
+                Produkty z dużą
+                liczbą kliknięć
+                warto wykorzystywać
+                częściej w
+                materiałach na
+                Pinterest,
+                Instagramie czy
+                TikToku.
+              </p>
             </div>
-
-            {ranking[0] && (
-              <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-semibold text-stone-500">
-                  Najlepszy produkt
-                </p>
-
-                <p className="mt-2 font-black">
-                  {
-                    ranking[0]
-                      .short_name
-                  }
-                </p>
-
-                <p className="mt-2 font-bold text-rose-600">
-                  {
-                    ranking[0]
-                      .clicks
-                  }{" "}
-                  kliknięć
-                </p>
-              </div>
-            )}
-          </div>
+          </aside>
         </section>
       </div>
     </main>
   );
 }
 
+function PeriodLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children:
+    React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={[
+        "flex min-h-9 items-center justify-center rounded-lg px-4 text-xs font-black transition sm:text-sm",
+        active
+          ? "bg-rose-600 text-white"
+          : "text-stone-500 hover:bg-stone-50",
+      ].join(
+        " "
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
 function StatCard({
-  icon,
   title,
   value,
 }: {
-  icon: string;
   title: string;
   value: string;
 }) {
   return (
-    <div className="rounded-3xl border border-rose-100 bg-white p-6 shadow-sm">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-2xl">
-        {icon}
-      </div>
-
-      <p className="mt-5 text-sm font-semibold text-stone-500">
+    <div className="rounded-[18px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-stone-400 sm:text-xs">
         {title}
       </p>
 
-      <p className="mt-1 text-4xl font-black">
+      <p className="mt-2 text-2xl font-black tracking-[-0.04em] sm:text-3xl">
         {value}
       </p>
+    </div>
+  );
+}
+
+function InsightCard({
+  label,
+  value,
+  metric,
+}: {
+  label: string;
+  value: string;
+  metric?: string;
+}) {
+  return (
+    <div className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-stone-400">
+        {label}
+      </p>
+
+      <p className="mt-2 text-sm font-black leading-5 text-stone-900">
+        {value}
+      </p>
+
+      {metric && (
+        <p className="mt-2 text-xs font-black text-rose-600">
+          {metric}
+        </p>
+      )}
     </div>
   );
 }

@@ -287,15 +287,15 @@ export default async function CategoryPage({
 
       <SiteHeader />
 
-      <section className="border-b border-rose-100 bg-gradient-to-br from-rose-50 via-white to-orange-50">
-        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-12 lg:py-14">
+      <section className="border-b border-stone-200 bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6 sm:py-8">
           <nav
             aria-label="Okruszki"
-            className="flex flex-wrap items-center gap-2 text-sm text-stone-500"
+            className="horizontal-scroll flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs font-semibold text-stone-400 sm:text-sm"
           >
             <Link
               href="/"
-              className="font-semibold transition hover:text-rose-600"
+              className="transition hover:text-rose-600"
             >
               Strona główna
             </Link>
@@ -309,7 +309,7 @@ export default async function CategoryPage({
 
             <Link
               href="/okazje"
-              className="font-semibold transition hover:text-rose-600"
+              className="transition hover:text-rose-600"
             >
               Okazje
             </Link>
@@ -322,56 +322,83 @@ export default async function CategoryPage({
             </span>
 
             <span className="font-bold text-stone-700">
-              {category.name}
+              {
+                category.name
+              }
             </span>
           </nav>
 
-          <div className="mt-7 max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-600 sm:text-sm">
-              Moda i okazje
-            </p>
+          <div className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
+                Kategoria
+              </p>
 
-            <h1 className="mt-2 text-balance text-3xl font-black tracking-[-0.035em] sm:text-4xl lg:text-5xl">
-              {category.name}
-            </h1>
+              <h1 className="mt-1 text-balance text-3xl font-black tracking-[-0.04em] sm:text-4xl lg:text-5xl">
+                {
+                  category.name
+                }
+              </h1>
 
-            <p className="mt-4 text-pretty text-base leading-8 text-stone-600 sm:text-lg">
-              {category.description}
-            </p>
+              <p className="mt-3 max-w-2xl text-pretty text-sm leading-7 text-stone-500 sm:text-base">
+                {
+                  category.description
+                }
+              </p>
+            </div>
 
-            <div className="mt-5 inline-flex items-center rounded-full border border-rose-100 bg-white px-4 py-2 text-sm font-bold text-stone-600 shadow-sm">
-              {getProductCountLabel(
-                products.length
-              )}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex min-h-10 items-center rounded-full border border-stone-200 bg-stone-50 px-4 text-sm font-bold text-stone-600">
+                {getProductCountLabel(
+                  products.length
+                )}
+              </span>
+
+              <Link
+                href={`/okazje?category=${encodeURIComponent(
+                  category.name
+                )}`}
+                className="inline-flex min-h-10 items-center rounded-full bg-rose-50 px-4 text-sm font-black text-rose-700 transition hover:bg-rose-100"
+              >
+                Filtry i sortowanie
+                →
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-14">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-10">
+        <div className="flex items-end justify-between gap-6 border-b border-stone-200 pb-5">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
               Najnowsze
             </p>
 
-            <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">
-              Produkty z kategorii{" "}
-              {category.name}
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
+              Produkty:
+              {" "}
+              {
+                category.name
+              }
             </h2>
+
+            <p className="mt-2 text-sm leading-6 text-stone-500">
+              Najnowsze oferty
+              dodane do tej
+              kategorii.
+            </p>
           </div>
 
           <Link
-            href={`/okazje?category=${encodeURIComponent(
-              category.name
-            )}`}
-            className="text-sm font-black text-rose-600 hover:text-rose-700"
+            href="/okazje"
+            className="hidden shrink-0 text-sm font-black text-rose-600 transition hover:text-rose-700 sm:block"
           >
-            Filtruj i sortuj →
+            Wszystkie okazje →
           </Link>
         </div>
 
-        <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {products.map(
             (product) => (
               <ProductCard
@@ -387,57 +414,83 @@ export default async function CategoryPage({
         </div>
       </section>
 
-      <section className="border-y border-stone-100 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_0.9fr] lg:gap-12">
+      <section className="border-y border-stone-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_0.85fr] lg:gap-14">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
               O kategorii
             </p>
 
-            <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
               Jak wybierać{" "}
-              {category.name.toLowerCase()}
+              {
+                category.name.toLowerCase()
+              }
               ?
             </h2>
 
             <p className="mt-4 text-base leading-8 text-stone-600">
-              {category.intro}
+              {
+                category.intro
+              }
             </p>
 
             <p className="mt-4 text-sm leading-7 text-stone-500">
-              Trend za Mniej nie jest
-              sprzedawcą produktów.
-              Prezentujemy wybrane
-              znaleziska i kierujemy
-              użytkownika do zewnętrznego
-              sklepu, gdzie można
-              sprawdzić aktualną cenę,
-              dostępność, rozmiary oraz
-              warunki zakupu.
+              Produkty w Trend za
+              Mniej są wybierane
+              i dodawane ręcznie.
+              Serwis nie jest
+              sprzedawcą — zakup,
+              płatność, dostawa,
+              reklamacje i zwroty
+              odbywają się
+              bezpośrednio w sklepie,
+              do którego prowadzi
+              oferta.
             </p>
+
+            <Link
+              href="/o-nas"
+              className="mt-5 inline-flex text-sm font-black text-rose-600 transition hover:text-rose-700"
+            >
+              Jak wybieramy okazje
+              →
+            </Link>
           </div>
 
-          <div className="rounded-[28px] border border-rose-100 bg-rose-50/60 p-5 sm:p-6">
+          <div className="rounded-[22px] border border-stone-200 bg-stone-50 p-5 sm:p-6">
             <h2 className="text-lg font-black text-stone-900">
-              Przed zakupem sprawdź
+              Przed zakupem
             </h2>
 
-            <div className="mt-4 space-y-4">
+            <p className="mt-1 text-sm leading-6 text-stone-500">
+              Kilka rzeczy, które
+              warto zawsze
+              sprawdzić.
+            </p>
+
+            <div className="mt-5 space-y-4">
               {category.tips.map(
                 (
                   tip,
                   index
                 ) => (
                   <div
-                    key={tip}
+                    key={
+                      tip
+                    }
                     className="flex items-start gap-3"
                   >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-rose-700 shadow-sm">
-                      {index + 1}
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[11px] font-black text-rose-700 shadow-sm">
+                      {
+                        index + 1
+                      }
                     </span>
 
                     <p className="text-sm leading-7 text-stone-600">
-                      {tip}
+                      {
+                        tip
+                      }
                     </p>
                   </div>
                 )
@@ -448,23 +501,25 @@ export default async function CategoryPage({
       </section>
 
       <section className="bg-stone-50">
-        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12">
-          <div className="flex flex-col items-center justify-between gap-5 rounded-[28px] border border-stone-200 bg-white p-6 text-center sm:flex-row sm:text-left">
+        <div className="mx-auto max-w-7xl px-5 py-9 sm:px-6 sm:py-12">
+          <div className="flex flex-col items-center justify-between gap-5 rounded-[22px] border border-stone-200 bg-white p-5 text-center sm:flex-row sm:p-6 sm:text-left">
             <div>
-              <p className="text-lg font-black">
-                Szukasz czegoś innego?
+              <p className="font-black text-stone-900">
+                Szukasz czegoś
+                innego?
               </p>
 
               <p className="mt-1 text-sm leading-6 text-stone-500">
-                Zobacz wszystkie
-                kategorie i najnowsze
-                okazje.
+                Przejdź do pełnego
+                katalogu i skorzystaj
+                z wyszukiwarki oraz
+                filtrów.
               </p>
             </div>
 
             <Link
               href="/okazje"
-              className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-rose-50 px-6 font-black text-rose-700 transition hover:bg-rose-100 sm:w-auto"
+              className="flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-rose-600 px-5 text-sm font-black text-white transition hover:bg-rose-700 sm:w-auto"
             >
               Wszystkie okazje →
             </Link>

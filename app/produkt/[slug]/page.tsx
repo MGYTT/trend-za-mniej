@@ -2,6 +2,10 @@ import type {
   Metadata,
 } from "next";
 
+import type {
+  ReactNode,
+} from "react";
+
 import Link from "next/link";
 
 import {
@@ -41,7 +45,7 @@ function buildMetaDescription(
   shortName: string
 ) {
   const description =
-    `Sprawdź ${shortName}: opis, cenę w chwili publikacji oraz link do aktualnej oferty SHEIN. Zobacz dostępność, warianty i szczegóły produktu.`;
+    `Sprawdź ${shortName}: opis, cenę w chwili publikacji oraz link do aktualnej oferty SHEIN. Zobacz szczegóły produktu i dostępność w sklepie.`;
 
   return description.length >
     160
@@ -111,7 +115,8 @@ export async function generateMetadata({
     },
 
     openGraph: {
-      type: "website",
+      type:
+        "website",
 
       locale:
         SITE_LANGUAGE,
@@ -191,7 +196,10 @@ export default async function ProductPage({
           item.id !==
           product.id
       )
-      .slice(0, 4);
+      .slice(
+        0,
+        4
+      );
 
   const siteUrl =
     getSiteUrl();
@@ -373,66 +381,23 @@ export default async function ProductPage({
 
       <SiteHeader />
 
-      <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6 sm:py-8 lg:py-10">
-        <nav
-          aria-label="Okruszki"
-          className="mb-6 flex flex-wrap items-center gap-2 text-sm text-stone-500"
-        >
-          <Link
-            href="/"
-            className="font-semibold transition hover:text-rose-600"
-          >
-            Strona główna
-          </Link>
+      <div className="mx-auto max-w-7xl px-5 pb-10 pt-5 sm:px-6 sm:pb-14 sm:pt-7">
+        <ProductBreadcrumbs
+          category={
+            product.category
+          }
+          categorySlug={
+            categorySlug
+          }
+          shortName={
+            product.shortName
+          }
+        />
 
-          <span
-            aria-hidden="true"
-            className="text-stone-300"
-          >
-            /
-          </span>
-
-          <Link
-            href="/okazje"
-            className="font-semibold transition hover:text-rose-600"
-          >
-            Okazje
-          </Link>
-
-          <span
-            aria-hidden="true"
-            className="text-stone-300"
-          >
-            /
-          </span>
-
-          <Link
-            href={`/kategoria/${categorySlug}`}
-            className="font-semibold transition hover:text-rose-600"
-          >
-            {
-              product.category
-            }
-          </Link>
-
-          <span
-            aria-hidden="true"
-            className="text-stone-300"
-          >
-            /
-          </span>
-
-          <span className="max-w-[180px] truncate font-semibold text-stone-700 sm:max-w-sm">
-            {
-              product.shortName
-            }
-          </span>
-        </nav>
-
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] lg:gap-12">
+        <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.85fr)] lg:gap-12">
           <section>
-            <div className="relative overflow-hidden rounded-[30px] border border-stone-200 bg-white shadow-sm sm:rounded-[36px]">
-              <div className="flex min-h-[420px] items-center justify-center bg-gradient-to-br from-stone-50 to-rose-50 p-3 sm:min-h-[560px] sm:p-6 lg:min-h-[650px]">
+            <div className="relative overflow-hidden rounded-[24px] border border-stone-200 bg-white">
+              <div className="flex min-h-[420px] items-center justify-center bg-stone-100 p-3 sm:min-h-[560px] sm:p-6 lg:min-h-[650px]">
                 <img
                   src={
                     product.image
@@ -445,33 +410,57 @@ export default async function ProductPage({
               </div>
 
               {product.featured && (
-                <div className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-black text-rose-700 shadow-md backdrop-blur sm:left-6 sm:top-6 sm:text-sm">
+                <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3.5 py-2 text-xs font-black text-rose-700 shadow-sm backdrop-blur">
                   🔥 Gorąca okazja
                 </div>
               )}
             </div>
 
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-xs leading-6 text-stone-500 sm:text-sm">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100">
-                📷
-              </div>
+            <div className="mt-3 flex items-start gap-3 px-1 text-xs leading-6 text-stone-400">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="mt-1 h-4 w-4 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect
+                  x="3"
+                  y="5"
+                  width="18"
+                  height="14"
+                  rx="2"
+                />
+
+                <circle
+                  cx="8.5"
+                  cy="10"
+                  r="1.5"
+                />
+
+                <path d="m21 15-5-5L5 19" />
+              </svg>
 
               <p>
                 Zdjęcie przedstawia
                 prezentowany produkt.
-                Kolor może nieznacznie
-                różnić się w zależności
-                od ekranu i materiałów
-                sklepu.
+                Odcień może wyglądać
+                inaczej zależnie od
+                ekranu i materiałów
+                udostępnionych przez
+                sklep.
               </p>
             </div>
           </section>
 
-          <section className="lg:sticky lg:top-28 lg:self-start">
+          <section className="lg:sticky lg:top-24 lg:self-start">
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/kategoria/${categorySlug}`}
-                className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 sm:text-sm"
+                className="inline-flex min-h-9 items-center rounded-full bg-rose-50 px-3.5 text-xs font-black text-rose-700 transition hover:bg-rose-100"
               >
                 {
                   product.category
@@ -479,29 +468,39 @@ export default async function ProductPage({
               </Link>
 
               {product.featured && (
-                <span className="rounded-full bg-orange-50 px-4 py-2 text-xs font-black text-orange-700 sm:text-sm">
+                <span className="inline-flex min-h-9 items-center rounded-full bg-orange-50 px-3.5 text-xs font-black text-orange-700">
                   Popularny wybór
                 </span>
               )}
             </div>
 
-            <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+            <h1 className="mt-4 text-balance text-3xl font-black leading-[1.08] tracking-[-0.04em] text-stone-900 sm:text-4xl lg:text-[42px]">
               {
                 product.name
               }
             </h1>
 
-            <p className="mt-5 text-base leading-7 text-stone-600 sm:text-lg sm:leading-8">
+            <p className="mt-4 text-pretty text-base leading-7 text-stone-500 sm:text-lg sm:leading-8">
               {
                 product.description
               }
             </p>
 
             {product.sold && (
-              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-600">
-                <span>
-                  🛍️
-                </span>
+              <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-stone-500">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="h-4 w-4 text-rose-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 8h12l1 12H5L6 8Z" />
+                  <path d="M9 8a3 3 0 0 1 6 0" />
+                </svg>
 
                 {
                   product.sold
@@ -509,14 +508,14 @@ export default async function ProductPage({
               </div>
             )}
 
-            <div className="mt-7 rounded-[28px] border border-rose-100 bg-white p-5 shadow-sm sm:p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-stone-400">
+            <div className="mt-6 border-y border-stone-200 py-6">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-400">
                 Cena w chwili
                 publikacji
               </p>
 
-              <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <span className="text-4xl font-black tracking-tight text-rose-600 sm:text-5xl">
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-4xl font-black tracking-[-0.04em] text-stone-900 sm:text-5xl">
                   {formatPrice(
                     product.price
                   )}
@@ -524,7 +523,7 @@ export default async function ProductPage({
 
                 {product.oldPrice !==
                   null && (
-                  <span className="text-lg font-semibold text-stone-400 line-through">
+                  <span className="text-base font-semibold text-stone-400 line-through sm:text-lg">
                     {formatPrice(
                       product.oldPrice
                     )}
@@ -532,54 +531,82 @@ export default async function ProductPage({
                 )}
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <InfoBox
-                  icon="✓"
-                  title="Aktualną cenę"
-                  text="sprawdzisz w sklepie"
-                />
+              <p className="mt-2 text-xs leading-5 text-stone-400">
+                Aktualna cena,
+                dostępność i promocje
+                mogą się zmieniać.
+              </p>
+            </div>
 
-                <InfoBox
-                  icon="↗"
-                  title="Zakup i dostawa"
-                  text="odbywają się w SHEIN"
-                />
-              </div>
+            <a
+              href={`/go/${product.id}`}
+              target="_blank"
+              rel="sponsored nofollow noopener noreferrer"
+              className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl bg-rose-600 px-6 text-base font-black text-white shadow-sm transition hover:bg-rose-700 hover:shadow-md sm:text-lg"
+            >
+              Sprawdź na SHEIN
 
-              <a
-                href={`/go/${product.id}`}
-                target="_blank"
-                rel="sponsored nofollow noopener noreferrer"
-                className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-4 text-base font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-lg"
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="ml-2 h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                Sprawdź na SHEIN
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </a>
 
+            <p className="mt-2 text-center text-xs leading-5 text-stone-400">
+              Przejdziesz do
+              zewnętrznego sklepu.
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+              <MiniFeature
+                icon="check"
+                title="Cena"
+                text="sprawdź w sklepie"
+              />
+
+              <MiniFeature
+                icon="size"
+                title="Rozmiar"
+                text="zweryfikuj tabelę"
+              />
+
+              <MiniFeature
+                icon="external"
+                title="Zakup"
+                text="odbywa się w SHEIN"
+              />
+            </div>
+
+            <div className="mt-5 rounded-[20px] bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden="true"
-                  className="ml-2 h-5 w-5"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-amber-700"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M5 12h14" />
-                  <path d="m13 6 6 6-6 6" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                  />
+
+                  <path d="M12 11v5" />
+                  <path d="M12 8h.01" />
                 </svg>
-              </a>
-
-              <p className="mt-3 text-center text-xs leading-5 text-stone-400">
-                Link otworzy ofertę
-                w zewnętrznym sklepie.
-              </p>
-            </div>
-
-            <div className="mt-5 rounded-3xl border border-amber-100 bg-amber-50/70 p-5">
-              <div className="flex gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                  ℹ️
-                </div>
 
                 <div>
                   <p className="text-sm font-black text-stone-800">
@@ -587,68 +614,104 @@ export default async function ProductPage({
                     afiliacyjny
                   </p>
 
-                  <p className="mt-1 text-xs leading-6 text-stone-600 sm:text-sm">
+                  <p className="mt-1 text-xs leading-6 text-stone-600">
                     Możemy otrzymać
                     prowizję, jeśli
                     dokonasz zakupu po
                     przejściu przez ten
                     link. Nie powinno
                     to zwiększać ceny
-                    produktu dla
-                    kupującego.
+                    produktu.
                   </p>
 
                   <Link
                     href="/afiliacja"
-                    className="mt-2 inline-flex text-xs font-black text-rose-600 hover:text-rose-700 sm:text-sm"
+                    className="mt-2 inline-flex text-xs font-black text-rose-600 hover:text-rose-700"
                   >
-                    Więcej informacji →
+                    Jak działa
+                    afiliacja →
                   </Link>
                 </div>
-              </div>
-            </div>
-
-            <div className="mt-5 rounded-3xl border border-stone-200 bg-white p-5">
-              <h2 className="font-black text-stone-900">
-                Przed zakupem
-              </h2>
-
-              <div className="mt-4 space-y-3 text-sm leading-6 text-stone-600">
-                <CheckItem>
-                  Sprawdź aktualną
-                  cenę i dostępność
-                  rozmiaru w SHEIN.
-                </CheckItem>
-
-                <CheckItem>
-                  Zweryfikuj tabelę
-                  rozmiarów przed
-                  złożeniem zamówienia.
-                </CheckItem>
-
-                <CheckItem>
-                  Kupony i promocje
-                  mogą różnić się
-                  zależnie od konta i
-                  czasu.
-                </CheckItem>
               </div>
             </div>
           </section>
         </div>
       </div>
 
+      <section className="border-y border-stone-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_0.85fr] lg:gap-14">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
+              O produkcie
+            </p>
+
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
+              Najważniejsze informacje
+            </h2>
+
+            <p className="mt-4 max-w-3xl text-base leading-8 text-stone-600">
+              {
+                product.description
+              }
+            </p>
+
+            <Link
+              href={`/kategoria/${categorySlug}`}
+              className="mt-5 inline-flex items-center text-sm font-black text-rose-600 transition hover:text-rose-700"
+            >
+              Więcej produktów:
+              {" "}
+              {
+                product.category
+              }
+              {" "}
+              →
+            </Link>
+          </div>
+
+          <div className="rounded-[22px] border border-stone-200 bg-stone-50 p-5 sm:p-6">
+            <h2 className="text-lg font-black">
+              Przed zakupem sprawdź
+            </h2>
+
+            <div className="mt-5 space-y-4">
+              <ChecklistItem>
+                Aktualną cenę produktu
+                bezpośrednio na stronie
+                SHEIN.
+              </ChecklistItem>
+
+              <ChecklistItem>
+                Dostępność wybranego
+                koloru oraz rozmiaru.
+              </ChecklistItem>
+
+              <ChecklistItem>
+                Tabelę wymiarów
+                konkretnego produktu.
+              </ChecklistItem>
+
+              <ChecklistItem>
+                Aktualne kupony,
+                promocje, dostawę i
+                warunki zwrotu.
+              </ChecklistItem>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {relatedProducts.length >
         0 && (
-        <section className="mt-4 border-y border-stone-100 bg-white">
-          <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 sm:py-16">
-            <div className="mb-7 flex items-end justify-between gap-4">
+        <section className="bg-stone-50">
+          <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-14">
+            <div className="flex items-end justify-between gap-6">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-600 sm:text-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
                   Zobacz również
                 </p>
 
-                <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
                   Podobne produkty
                 </h2>
 
@@ -666,13 +729,13 @@ export default async function ProductPage({
 
               <Link
                 href={`/kategoria/${categorySlug}`}
-                className="hidden text-sm font-black text-rose-600 hover:text-rose-700 sm:block"
+                className="hidden shrink-0 text-sm font-black text-rose-600 transition hover:text-rose-700 sm:block"
               >
                 Wszystkie →
               </Link>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-4">
               {relatedProducts.map(
                 (
                   relatedProduct
@@ -691,43 +754,22 @@ export default async function ProductPage({
 
             <Link
               href={`/kategoria/${categorySlug}`}
-              className="mt-6 flex min-h-12 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 font-black text-rose-700 sm:hidden"
+              className="mt-5 flex min-h-12 items-center justify-center rounded-2xl border border-stone-200 bg-white font-black text-stone-700 transition hover:border-rose-200 hover:text-rose-700 sm:hidden"
             >
-              Więcej z tej kategorii
+              Więcej z kategorii{" "}
+              {
+                product.category
+              }
+              {" "}
               →
             </Link>
           </div>
         </section>
       )}
 
-      <section className="bg-stone-50">
-        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12">
-          <div className="flex flex-col items-center justify-between gap-5 rounded-[28px] border border-stone-200 bg-white p-6 text-center sm:flex-row sm:text-left">
-            <div>
-              <p className="text-lg font-black">
-                Chcesz zobaczyć więcej?
-              </p>
-
-              <p className="mt-1 text-sm leading-6 text-stone-500">
-                Przeglądaj wszystkie
-                kategorie i najnowsze
-                znaleziska.
-              </p>
-            </div>
-
-            <Link
-              href="/okazje"
-              className="flex min-h-12 w-full shrink-0 items-center justify-center rounded-2xl bg-rose-50 px-6 font-black text-rose-700 transition hover:bg-rose-100 sm:w-auto"
-            >
-              Wszystkie okazje →
-            </Link>
-          </div>
-        </div>
-      </section>
-
       <SiteFooter />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 pt-3 shadow-[0_-6px_24px_rgba(28,25,23,0.08)] backdrop-blur-xl md:hidden">
         <div
           className="mx-auto flex max-w-xl items-center gap-3"
           style={{
@@ -742,7 +784,7 @@ export default async function ProductPage({
               }
             </p>
 
-            <p className="mt-0.5 text-lg font-black text-rose-600">
+            <p className="mt-0.5 text-lg font-black text-stone-900">
               {formatPrice(
                 product.price
               )}
@@ -753,7 +795,7 @@ export default async function ProductPage({
             href={`/go/${product.id}`}
             target="_blank"
             rel="sponsored nofollow noopener noreferrer"
-            className="flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 font-black text-white shadow-md"
+            className="flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-rose-600 px-5 font-black text-white shadow-sm"
           >
             Sprawdź na SHEIN
           </a>
@@ -763,27 +805,95 @@ export default async function ProductPage({
   );
 }
 
-function InfoBox({
+function ProductBreadcrumbs({
+  category,
+  categorySlug,
+  shortName,
+}: {
+  category: string;
+  categorySlug: string;
+  shortName: string;
+}) {
+  return (
+    <nav
+      aria-label="Okruszki"
+      className="horizontal-scroll flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs font-semibold text-stone-400 sm:text-sm"
+    >
+      <Link
+        href="/"
+        className="transition hover:text-rose-600"
+      >
+        Strona główna
+      </Link>
+
+      <span
+        aria-hidden="true"
+        className="text-stone-300"
+      >
+        /
+      </span>
+
+      <Link
+        href="/okazje"
+        className="transition hover:text-rose-600"
+      >
+        Okazje
+      </Link>
+
+      <span
+        aria-hidden="true"
+        className="text-stone-300"
+      >
+        /
+      </span>
+
+      <Link
+        href={`/kategoria/${categorySlug}`}
+        className="transition hover:text-rose-600"
+      >
+        {category}
+      </Link>
+
+      <span
+        aria-hidden="true"
+        className="text-stone-300"
+      >
+        /
+      </span>
+
+      <span className="max-w-[220px] truncate text-stone-600">
+        {shortName}
+      </span>
+    </nav>
+  );
+}
+
+function MiniFeature({
   icon,
   title,
   text,
 }: {
-  icon: string;
+  icon:
+    | "check"
+    | "size"
+    | "external";
   title: string;
   text: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl bg-stone-50 p-4">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white font-black text-rose-600 shadow-sm">
-        {icon}
+    <div className="flex items-start gap-3 rounded-[18px] border border-stone-200 bg-white p-3.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-stone-50 text-rose-600">
+        <MiniIcon
+          type={icon}
+        />
       </div>
 
-      <div>
-        <p className="text-sm font-black text-stone-800">
+      <div className="min-w-0">
+        <p className="text-xs font-black text-stone-800">
           {title}
         </p>
 
-        <p className="mt-0.5 text-xs leading-5 text-stone-500">
+        <p className="mt-0.5 text-[11px] leading-5 text-stone-400">
           {text}
         </p>
       </div>
@@ -791,19 +901,86 @@ function InfoBox({
   );
 }
 
-function CheckItem({
+function MiniIcon({
+  type,
+}: {
+  type:
+    | "check"
+    | "size"
+    | "external";
+}) {
+  if (
+    type === "check"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="m5 12 4 4L19 6" />
+      </svg>
+    );
+  }
+
+  if (
+    type === "size"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 6h16v12H4z" />
+        <path d="M8 6v4" />
+        <path d="M12 6v2" />
+        <path d="M16 6v4" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14 5h5v5" />
+      <path d="M10 14 19 5" />
+      <path d="M19 13v6H5V5h6" />
+    </svg>
+  );
+}
+
+function ChecklistItem({
   children,
 }: {
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-50 text-[11px] font-black text-green-700">
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-50 text-[10px] font-black text-green-700">
         ✓
       </span>
 
-      <p>
+      <p className="text-sm leading-6 text-stone-600">
         {children}
       </p>
     </div>

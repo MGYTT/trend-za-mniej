@@ -49,7 +49,13 @@ export default function MobileBottomNav() {
 
   const visible =
     pathname === "/" ||
-    pathname === "/okazje";
+    pathname ===
+      "/okazje" ||
+    pathname.startsWith(
+      "/kategoria/"
+    ) ||
+    pathname ===
+      "/o-nas";
 
   useEffect(() => {
     function updateHash() {
@@ -115,9 +121,15 @@ export default function MobileBottomNav() {
       "categories"
     ) {
       return (
-        pathname === "/" &&
-        currentHash ===
-          "#kategorie"
+        pathname.startsWith(
+          "/kategoria/"
+        ) ||
+        (
+          pathname ===
+            "/" &&
+          currentHash ===
+            "#kategorie"
+        )
       );
     }
 
@@ -131,10 +143,10 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Nawigacja mobilna"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200/80 bg-white/95 shadow-[0_-8px_30px_rgba(28,25,23,0.08)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/97 shadow-[0_-5px_20px_rgba(28,25,23,0.06)] backdrop-blur-xl lg:hidden"
     >
       <div
-        className="mx-auto grid max-w-lg grid-cols-3 px-2 pt-2"
+        className="mx-auto grid max-w-md grid-cols-3 px-3 pt-1.5"
         style={{
           paddingBottom:
             "max(0.5rem, env(safe-area-inset-bottom))",
@@ -171,21 +183,31 @@ export default function MobileBottomNav() {
                   }
                 }}
                 className={[
-                  "group flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5",
-                  "text-[11px] font-bold transition",
-                  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-100",
+                  "group relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl px-2",
+                  "text-[10px] font-black transition",
                   active
-                    ? "bg-rose-50 text-rose-700"
-                    : "text-stone-500 active:bg-stone-100",
-                ].join(" ")}
+                    ? "text-rose-700"
+                    : "text-stone-400 active:bg-stone-50",
+                ].join(
+                  " "
+                )}
               >
+                {active && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-0 h-[3px] w-8 rounded-full bg-rose-600"
+                  />
+                )}
+
                 <span
                   className={[
-                    "flex h-7 w-7 items-center justify-center rounded-xl transition",
+                    "flex h-7 w-7 items-center justify-center transition",
                     active
                       ? "text-rose-600"
-                      : "text-stone-500",
-                  ].join(" ")}
+                      : "text-stone-400",
+                  ].join(
+                    " "
+                  )}
                 >
                   <NavigationIcon
                     type={
@@ -223,7 +245,7 @@ function NavigationIcon({
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-6 w-6"
+        className="h-[22px] w-[22px]"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -247,20 +269,20 @@ function NavigationIcon({
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-6 w-6"
+        className="h-[22px] w-[22px]"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M6 2h9l5 5-9 9-7-7V2Z" />
+        <path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7" />
 
-        <path d="M9 6h.01" />
+        <path d="M2 7h20" />
 
-        <path d="m14 11 4 4" />
+        <path d="M5 3h14l3 4H2l3-4Z" />
 
-        <path d="m18 11-4 4" />
+        <path d="M12 7v14" />
       </svg>
     );
   }
@@ -269,7 +291,7 @@ function NavigationIcon({
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-6 w-6"
+      className="h-[22px] w-[22px]"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
