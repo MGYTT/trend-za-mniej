@@ -8,6 +8,9 @@ import {
   notFound,
 } from "next/navigation";
 
+import BrandLogo from "@/components/BrandLogo";
+import SiteFooter from "@/components/SiteFooter";
+
 import {
   formatPrice,
   getProductBySlug,
@@ -199,17 +202,7 @@ export default async function ProductPage({
 
       <header className="border-b border-rose-100 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <Link href="/">
-            <div>
-              <p className="text-2xl font-black">
-                Trend za Mniej
-              </p>
-
-              <p className="text-xs text-stone-500">
-                Moda i okazje
-              </p>
-            </div>
-          </Link>
+          <BrandLogo />
 
           <Link
             href="/okazje"
@@ -356,6 +349,8 @@ export default async function ProductPage({
           </div>
         </div>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
