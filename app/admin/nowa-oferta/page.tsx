@@ -140,6 +140,23 @@ export default function NewProductPage() {
   >(null);
 
   const [
+    parserWarnings,
+    setParserWarnings,
+  ] = useState<
+    string[]
+  >([]);
+
+  const [
+    parserConfidence,
+    setParserConfidence,
+  ] = useState<
+    | "high"
+    | "medium"
+    | "low"
+    | null
+  >(null);
+
+  const [
     confirmOpen,
     setConfirmOpen,
   ] = useState(false);
@@ -447,6 +464,7 @@ export default function NewProductPage() {
         featured:
           form.featured,
       },
+
       error: null,
     };
   }
@@ -481,6 +499,7 @@ export default function NewProductPage() {
       return {
         duplicate:
           true,
+
         productName:
           data[0]
             .short_name,
@@ -490,6 +509,7 @@ export default function NewProductPage() {
     return {
       duplicate:
         false,
+
       productName:
         null,
     };
@@ -498,10 +518,12 @@ export default function NewProductPage() {
   function handleParseOffer() {
     setError(null);
     setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
 
     if (!rawOffer.trim()) {
       setParserMessage(
-        "Najpierw wklej treść oferty."
+        "Najpierw wklej treść oferty SHEIN."
       );
 
       return;
@@ -525,25 +547,25 @@ export default function NewProductPage() {
           next.name =
             parsed.name;
 
-          if (
-            !current.shortName
-          ) {
-            next.shortName =
-              parsed.name.length >
-              70
-                ? parsed.name.slice(
-                    0,
-                    70
-                  )
-                : parsed.name;
-          }
-
           found.push(
-            "nazwę"
+            "pełną nazwę"
           );
         }
 
-        if (parsed.price) {
+        if (
+          parsed.shortName
+        ) {
+          next.shortName =
+            parsed.shortName;
+
+          found.push(
+            "krótką nazwę"
+          );
+        }
+
+        if (
+          parsed.price
+        ) {
           next.price =
             parsed.price;
 
@@ -570,7 +592,30 @@ export default function NewProductPage() {
             parsed.affiliateUrl;
 
           found.push(
-            "link"
+            "link afiliacyjny"
+          );
+        }
+
+        if (
+          parsed.category
+        ) {
+          next.category =
+            parsed.category;
+
+          found.push(
+            "kategorię"
+          );
+        }
+
+        if (
+          parsed.soldText &&
+          !current.soldText
+        ) {
+          next.soldText =
+            parsed.soldText;
+
+          found.push(
+            "sprzedaż"
           );
         }
 
@@ -578,20 +623,37 @@ export default function NewProductPage() {
       }
     );
 
+    setParserConfidence(
+      parsed.confidence
+    );
+
+    setParserWarnings(
+      parsed.warnings
+    );
+
     if (
       found.length === 0
     ) {
       setParserMessage(
-        "Nie udało się automatycznie rozpoznać danych."
+        "Nie udało się automatycznie rozpoznać danych produktu."
       );
 
       return;
     }
 
+    const confidenceLabel =
+      parsed.confidence ===
+      "high"
+        ? "wysoka"
+        : parsed.confidence ===
+            "medium"
+          ? "średnia"
+          : "niska";
+
     setParserMessage(
       `Rozpoznano: ${found.join(
         ", "
-      )}. Sprawdź dane przed publikacją.`
+      )}. Pewność parsera: ${confidenceLabel}.`
     );
   }
 
@@ -661,6 +723,7 @@ export default function NewProductPage() {
       );
 
     setImageFile(file);
+
     setPreviewUrl(
       localPreview
     );
@@ -719,6 +782,7 @@ export default function NewProductPage() {
     }
 
     setChecking(false);
+
     setConfirmOpen(true);
   }
 
@@ -965,11 +1029,17 @@ export default function NewProductPage() {
     }
 
     setConfirmOpen(false);
+
     setForm(
       INITIAL_FORM
     );
+
     setRawOffer("");
+
     setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
+
     setImageFile(null);
     setPreviewUrl(null);
     setSuccessSlug(slug);
@@ -1093,11 +1163,15 @@ export default function NewProductPage() {
                   </h2>
 
                   <p className="mt-1 text-sm leading-6 text-stone-500">
-                    Wklej tekst
-                    ręcznie. Nie
-                    pobieramy danych
-                    automatycznie ze
-                    strony sklepu.
+                    Możesz wkleić nawet
+                    cały tekst
+                    skopiowany ze strony
+                    produktu. Parser
+                    spróbuje odrzucić
+                    menu, reklamy,
+                    rabaty, dostawę i
+                    inne niepotrzebne
+                    elementy.
                   </p>
                 </div>
               </div>
@@ -1117,14 +1191,22 @@ export default function NewProductPage() {
                   setParserMessage(
                     null
                   );
-                }}
-                rows={6}
-                placeholder={`Przykład:
 
-Bordowa bluza oversize
-Cena[38,35zł]
-https://onelink.shein.com/...`}
-                className="mt-5 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-4 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  setParserWarnings(
+                    []
+                  );
+
+                  setParserConfidence(
+                    null
+                  );
+                }}
+                rows={9}
+                placeholder={`Wklej tutaj tekst skopiowany z produktu SHEIN.
+
+Możesz wkleić całość, np. nazwę produktu, cenę, informacje ze strony i link afiliacyjny.
+
+Parser spróbuje sam odnaleźć właściwą nazwę, cenę, kategorię i link.`}
+                className="mt-5 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-4 text-sm leading-6 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
               />
 
               <button
@@ -1134,15 +1216,66 @@ https://onelink.shein.com/...`}
                 }
                 className="mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl bg-white px-5 font-black text-violet-700 shadow-sm ring-1 ring-violet-100 transition hover:shadow-md"
               >
-                ✨ Uzupełnij
-                formularz
+                ✨ Inteligentnie
+                rozpoznaj ofertę
               </button>
 
               {parserMessage && (
-                <div className="mt-4 rounded-2xl bg-white/80 px-4 py-3 text-sm font-semibold leading-6 text-stone-600">
-                  {
-                    parserMessage
-                  }
+                <div className="mt-4 rounded-2xl border border-white bg-white/90 p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-black text-stone-800">
+                      {
+                        parserMessage
+                      }
+                    </p>
+
+                    {parserConfidence && (
+                      <ParserConfidenceBadge
+                        confidence={
+                          parserConfidence
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {parserWarnings.length >
+                    0 && (
+                    <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
+                      {parserWarnings.map(
+                        (
+                          warning
+                        ) => (
+                          <p
+                            key={
+                              warning
+                            }
+                            className="flex gap-2 text-xs leading-5 text-amber-700"
+                          >
+                            <span>
+                              ⚠
+                            </span>
+
+                            <span>
+                              {
+                                warning
+                              }
+                            </span>
+                          </p>
+                        )
+                      )}
+                    </div>
+                  )}
+
+                  <p className="mt-3 text-xs leading-5 text-stone-400">
+                    Zawsze sprawdź
+                    nazwę, cenę i link
+                    przed publikacją.
+                    Parser pomaga
+                    przygotować dane,
+                    ale nie publikuje
+                    produktu
+                    automatycznie.
+                  </p>
                 </div>
               )}
             </section>
@@ -1586,6 +1719,41 @@ https://onelink.shein.com/...`}
         </div>
       </div>
     </main>
+  );
+}
+
+function ParserConfidenceBadge({
+  confidence,
+}: {
+  confidence:
+    | "high"
+    | "medium"
+    | "low";
+}) {
+  if (
+    confidence === "high"
+  ) {
+    return (
+      <span className="rounded-full bg-green-50 px-3 py-1 text-[11px] font-black text-green-700">
+        ✓ wysoka pewność
+      </span>
+    );
+  }
+
+  if (
+    confidence === "medium"
+  ) {
+    return (
+      <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-700">
+        ~ średnia pewność
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-black text-red-700">
+      ! sprawdź dane
+    </span>
   );
 }
 
