@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import ProductCard from "@/components/ProductCard";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 
 import {
   getFeaturedProducts,
@@ -16,18 +18,18 @@ const categories = [
     href: "/okazje?category=Swetry",
   },
   {
-    name: "Koszule",
-    emoji: "👚",
+    name: "Bluzy",
+    emoji: "🧶",
     description:
-      "Casualowe i modne koszule",
-    href: "/okazje?category=Koszule",
+      "Wygodne modele na co dzień",
+    href: "/okazje?category=Bluzy",
   },
   {
-    name: "Kardigany",
-    emoji: "🍂",
+    name: "Topy",
+    emoji: "👚",
     description:
-      "Idealne na chłodniejsze dni",
-    href: "/okazje?category=Kardigany",
+      "Lekkie i modne fasony",
+    href: "/okazje?category=Topy",
   },
   {
     name: "Do 100 zł",
@@ -51,59 +53,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-stone-50 text-stone-900">
-      <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="flex flex-col"
-          >
-            <span className="text-2xl font-black tracking-tight">
-              Trend za Mniej
-            </span>
-
-            <span className="text-xs text-stone-500">
-              Moda i okazje
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-7 text-sm font-semibold md:flex">
-            <Link
-              href="/okazje"
-              className="transition hover:text-rose-600"
-            >
-              Wszystkie okazje
-            </Link>
-
-            <a
-              href="#kategorie"
-              className="transition hover:text-rose-600"
-            >
-              Kategorie
-            </a>
-
-            <a
-              href="#najnowsze"
-              className="transition hover:text-rose-600"
-            >
-              Najnowsze
-            </a>
-
-            <a
-              href="#o-nas"
-              className="transition hover:text-rose-600"
-            >
-              O nas
-            </a>
-          </nav>
-
-          <Link
-            href="/okazje"
-            className="rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            🔥 Okazje
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <section className="relative overflow-hidden bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
         <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-rose-200/30 blur-3xl" />
@@ -123,9 +73,8 @@ export default async function Home() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-stone-600 md:text-xl">
-            Wyszukujemy ciekawe
-            ubrania, dodatki i
-            promocje, żebyś nie
+            Wyszukujemy ciekawe ubrania,
+            dodatki i promocje, żebyś nie
             musiał przeglądać setek
             produktów.
           </p>
@@ -150,7 +99,7 @@ export default async function Home() {
 
       <section
         id="kategorie"
-        className="mx-auto max-w-7xl px-6 py-16"
+        className="scroll-mt-24 mx-auto max-w-7xl px-6 py-16"
       >
         <div className="mb-8">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-rose-600">
@@ -166,30 +115,20 @@ export default async function Home() {
           {categories.map(
             (category) => (
               <Link
-                href={
-                  category.href
-                }
-                key={
-                  category.name
-                }
+                href={category.href}
+                key={category.name}
                 className="group rounded-3xl border border-rose-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-rose-200 hover:shadow-lg"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-3xl transition group-hover:scale-110">
-                  {
-                    category.emoji
-                  }
+                  {category.emoji}
                 </div>
 
                 <h3 className="mt-4 text-xl font-bold">
-                  {
-                    category.name
-                  }
+                  {category.name}
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-stone-500">
-                  {
-                    category.description
-                  }
+                  {category.description}
                 </p>
 
                 <p className="mt-4 text-sm font-bold text-rose-600">
@@ -221,18 +160,13 @@ export default async function Home() {
           </Link>
         </div>
 
-        {featuredProducts.length >
-        0 ? (
+        {featuredProducts.length > 0 ? (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {featuredProducts.map(
               (product) => (
                 <ProductCard
-                  key={
-                    product.id
-                  }
-                  product={
-                    product
-                  }
+                  key={product.id}
+                  product={product}
                 />
               )
             )}
@@ -244,7 +178,7 @@ export default async function Home() {
 
       <section
         id="najnowsze"
-        className="bg-gradient-to-b from-white to-rose-50/40"
+        className="scroll-mt-24 bg-gradient-to-b from-white to-rose-50/40"
       >
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="mb-9 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -273,12 +207,8 @@ export default async function Home() {
                 .map(
                   (product) => (
                     <ProductCard
-                      key={
-                        product.id
-                      }
-                      product={
-                        product
-                      }
+                      key={product.id}
+                      product={product}
                     />
                   )
                 )}
@@ -291,7 +221,7 @@ export default async function Home() {
 
       <section
         id="o-nas"
-        className="border-t border-rose-100 bg-white"
+        className="scroll-mt-24 border-t border-rose-100 bg-white"
       >
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-3xl">
@@ -303,44 +233,25 @@ export default async function Home() {
           </h2>
 
           <p className="mt-5 text-lg leading-8 text-stone-600">
-            Wyszukujemy modne
-            produkty, promocje i
-            ciekawe okazje zakupowe.
+            Wyszukujemy modne produkty,
+            promocje i ciekawe okazje
+            zakupowe.
           </p>
 
           <div className="mt-8 rounded-3xl border border-rose-100 bg-rose-50/50 p-6 text-sm leading-6 text-stone-600">
             <strong className="text-stone-800">
               Informacja o afiliacji:
             </strong>{" "}
-            część linków na stronie
-            to linki afiliacyjne.
-            Możemy otrzymać prowizję
-            od zakupu bez dodatkowych
-            kosztów dla kupującego.
+            część linków na stronie to
+            linki afiliacyjne. Możemy
+            otrzymać prowizję od zakupu
+            bez dodatkowych kosztów dla
+            kupującego.
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-rose-100 bg-white text-stone-500">
-        <div className="mx-auto max-w-7xl px-6 py-10">
-          <div className="flex flex-col items-center justify-between gap-5 md:flex-row">
-            <div>
-              <p className="font-black text-stone-900">
-                Trend za Mniej
-              </p>
-
-              <p className="mt-1 text-sm">
-                Moda, okazje i modne
-                perełki
-              </p>
-            </div>
-
-            <p className="text-sm">
-              © 2026 Trend za Mniej
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

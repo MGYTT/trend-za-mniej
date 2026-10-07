@@ -56,6 +56,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           "daily",
         priority: 0.9,
       },
+
+      {
+        url: `${siteUrl}/afiliacja`,
+        changeFrequency:
+          "yearly",
+        priority: 0.3,
+      },
+
+      {
+        url: `${siteUrl}/polityka-prywatnosci`,
+        changeFrequency:
+          "yearly",
+        priority: 0.3,
+      },
+
+      {
+        url: `${siteUrl}/kontakt`,
+        changeFrequency:
+          "monthly",
+        priority: 0.4,
+      },
     ];
 
   const productPages: MetadataRoute.Sitemap =

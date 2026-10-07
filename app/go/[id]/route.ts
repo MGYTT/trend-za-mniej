@@ -16,9 +16,11 @@ export async function GET(
   request: Request,
   context: RouteContext
 ) {
-  const { id } = await context.params;
+  const { id } =
+    await context.params;
 
-  const product = await getProductById(id);
+  const product =
+    await getProductById(id);
 
   if (!product) {
     return NextResponse.redirect(
@@ -27,18 +29,11 @@ export async function GET(
     );
   }
 
-  const referrer =
-    request.headers.get("referer") ?? null;
-
-  const userAgent =
-    request.headers.get("user-agent") ?? null;
-
   const { error } = await supabase
     .from("affiliate_clicks")
     .insert({
-      product_id: product.id,
-      referrer,
-      user_agent: userAgent,
+      product_id:
+        product.id,
     });
 
   if (error) {

@@ -1,16 +1,16 @@
-import type {
-  Metadata,
-} from "next";
+import type { Metadata } from "next";
 
 import Link from "next/link";
 
 import ProductCard from "@/components/ProductCard";
 import ProductFilters from "@/components/ProductFilters";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 
 import {
   getCategories,
   getProducts,
-  ProductSort,
+  type ProductSort,
 } from "@/lib/products";
 
 type Props = {
@@ -22,8 +22,7 @@ type Props = {
   }>;
 };
 
-export const revalidate =
-  60;
+export const revalidate = 60;
 
 export async function generateMetadata({
   searchParams,
@@ -52,8 +51,7 @@ export async function generateMetadata({
     Boolean(maxPrice) ||
     Boolean(
       sort &&
-        sort !==
-          "newest"
+        sort !== "newest"
     );
 
   let title =
@@ -83,29 +81,19 @@ export async function generateMetadata({
     description,
 
     alternates: {
-      canonical:
-        "/okazje",
+      canonical: "/okazje",
     },
 
     robots: {
-      index:
-        !hasFilters,
-
+      index: !hasFilters,
       follow: true,
     },
 
     openGraph: {
-      type:
-        "website",
-
-      locale:
-        "pl_PL",
-
-      url:
-        "/okazje",
-
+      type: "website",
+      locale: "pl_PL",
+      url: "/okazje",
       title,
-
       description,
     },
   };
@@ -118,8 +106,7 @@ export default async function OffersPage({
     await searchParams;
 
   const query =
-    params.q?.trim() ??
-    "";
+    params.q?.trim() ?? "";
 
   const category =
     params.category &&
@@ -135,12 +122,11 @@ export default async function OffersPage({
       ? undefined
       : Number(maxPrice);
 
-  const allowedSorts: ProductSort[] =
-    [
-      "newest",
-      "price-asc",
-      "price-desc",
-    ];
+  const allowedSorts: ProductSort[] = [
+    "newest",
+    "price-asc",
+    "price-desc",
+  ];
 
   const sort: ProductSort =
     allowedSorts.includes(
@@ -156,8 +142,7 @@ export default async function OffersPage({
     getProducts({
       query,
       category:
-        category ||
-        undefined,
+        category || undefined,
       maxPrice:
         parsedMaxPrice,
       sort,
@@ -168,37 +153,7 @@ export default async function OffersPage({
 
   return (
     <main className="min-h-screen bg-stone-50">
-      <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/">
-            <div>
-              <p className="text-2xl font-black">
-                Trend za Mniej
-              </p>
-
-              <p className="text-xs text-stone-500">
-                Moda i okazje
-              </p>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="hidden text-sm font-bold text-stone-600 hover:text-rose-600 sm:block"
-            >
-              Strona główna
-            </Link>
-
-            <Link
-              href="/okazje"
-              className="rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm"
-            >
-              🛍️ Okazje
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <section className="bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
         <div className="mx-auto max-w-7xl px-6 py-14 md:py-20">
@@ -211,26 +166,19 @@ export default async function OffersPage({
           </h1>
 
           <p className="mt-4 max-w-2xl text-lg leading-8 text-stone-600">
-            Wyszukuj produkty,
-            filtruj po cenie i
-            przeglądaj najlepsze
-            modne znaleziska.
+            Wyszukuj produkty, filtruj
+            po cenie i przeglądaj
+            najlepsze modne znaleziska.
           </p>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl px-6 py-10">
         <ProductFilters
-          categories={
-            categories
-          }
+          categories={categories}
           query={query}
-          category={
-            category
-          }
-          maxPrice={
-            maxPrice
-          }
+          category={category}
+          maxPrice={maxPrice}
           sort={sort}
         />
 
@@ -242,11 +190,8 @@ export default async function OffersPage({
 
             <h2 className="mt-2 text-3xl font-black">
               Znaleziono{" "}
-              {
-                products.length
-              }{" "}
-              {products.length ===
-              1
+              {products.length}{" "}
+              {products.length === 1
                 ? "ofertę"
                 : "ofert"}
             </h2>
@@ -259,18 +204,13 @@ export default async function OffersPage({
           )}
         </div>
 
-        {products.length >
-        0 ? (
+        {products.length > 0 ? (
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map(
               (product) => (
                 <ProductCard
-                  key={
-                    product.id
-                  }
-                  product={
-                    product
-                  }
+                  key={product.id}
+                  product={product}
                 />
               )
             )}
@@ -301,6 +241,8 @@ export default async function OffersPage({
           </div>
         )}
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

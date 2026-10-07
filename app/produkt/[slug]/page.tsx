@@ -1,12 +1,11 @@
-import type {
-  Metadata,
-} from "next";
+import type { Metadata } from "next";
 
 import Link from "next/link";
 
-import {
-  notFound,
-} from "next/navigation";
+import { notFound } from "next/navigation";
+
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 
 import {
   formatPrice,
@@ -24,8 +23,7 @@ type ProductPageProps = {
   }>;
 };
 
-export const revalidate =
-  60;
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -34,9 +32,7 @@ export async function generateMetadata({
     await params;
 
   const product =
-    await getProductBySlug(
-      slug
-    );
+    await getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -54,42 +50,27 @@ export async function generateMetadata({
     `/produkt/${product.slug}`;
 
   return {
-    title:
-      product.shortName,
-
+    title: product.shortName,
     description:
       product.description,
 
     alternates: {
-      canonical:
-        productUrl,
+      canonical: productUrl,
     },
 
     openGraph: {
       type: "website",
-
-      locale:
-        "pl_PL",
-
-      url:
-        productUrl,
-
-      siteName:
-        SITE_NAME,
-
-      title:
-        product.name,
-
+      locale: "pl_PL",
+      url: productUrl,
+      siteName: SITE_NAME,
+      title: product.name,
       description:
         product.description,
 
       images: [
         {
-          url:
-            product.image,
-
-          alt:
-            product.name,
+          url: product.image,
+          alt: product.name,
         },
       ],
     },
@@ -97,13 +78,9 @@ export async function generateMetadata({
     twitter: {
       card:
         "summary_large_image",
-
-      title:
-        product.name,
-
+      title: product.name,
       description:
         product.description,
-
       images: [
         product.image,
       ],
@@ -111,9 +88,7 @@ export async function generateMetadata({
 
     other: {
       "product:price:amount":
-        product.price.toFixed(
-          2
-        ),
+        product.price.toFixed(2),
 
       "product:price:currency":
         "PLN",
@@ -128,9 +103,7 @@ export default async function ProductPage({
     await params;
 
   const product =
-    await getProductBySlug(
-      slug
-    );
+    await getProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -149,8 +122,7 @@ export default async function ProductPage({
     "@type":
       "Product",
 
-    name:
-      product.name,
+    name: product.name,
 
     description:
       product.description,
@@ -159,8 +131,7 @@ export default async function ProductPage({
       product.image,
     ],
 
-    url:
-      productUrl,
+    url: productUrl,
 
     category:
       product.category,
@@ -169,16 +140,13 @@ export default async function ProductPage({
       "@type":
         "Offer",
 
-      url:
-        productUrl,
+      url: productUrl,
 
       priceCurrency:
         "PLN",
 
       price:
-        product.price.toFixed(
-          2
-        ),
+        product.price.toFixed(2),
     },
   };
 
@@ -197,39 +165,23 @@ export default async function ProductPage({
         }}
       />
 
-      <header className="border-b border-rose-100 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <Link href="/">
-            <div>
-              <p className="text-2xl font-black">
-                Trend za Mniej
-              </p>
-
-              <p className="text-xs text-stone-500">
-                Moda i okazje
-              </p>
-            </div>
-          </Link>
-
-          <Link
-            href="/okazje"
-            className="text-sm font-semibold transition hover:text-rose-600"
-          >
-            ← Wróć do okazji
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <div className="mx-auto max-w-7xl px-6 py-10 md:py-16">
+        <div className="mb-8">
+          <Link
+            href="/okazje"
+            className="inline-flex text-sm font-bold text-stone-500 transition hover:text-rose-600"
+          >
+            ← Wróć do wszystkich okazji
+          </Link>
+        </div>
+
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
             <img
-              src={
-                product.image
-              }
-              alt={
-                product.name
-              }
+              src={product.image}
+              alt={product.name}
               className="aspect-[4/5] h-full w-full object-cover"
             />
           </div>
@@ -242,9 +194,7 @@ export default async function ProductPage({
                 )}`}
                 className="inline-flex rounded-full bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 transition hover:bg-rose-200"
               >
-                {
-                  product.category
-                }
+                {product.category}
               </Link>
 
               {product.featured && (
@@ -255,23 +205,16 @@ export default async function ProductPage({
             </div>
 
             <h1 className="mt-6 text-4xl font-black leading-tight md:text-5xl">
-              {
-                product.name
-              }
+              {product.name}
             </h1>
 
             <p className="mt-6 text-lg leading-8 text-stone-600">
-              {
-                product.description
-              }
+              {product.description}
             </p>
 
             {product.sold && (
               <p className="mt-5 text-sm font-semibold text-stone-500">
-                🛍️{" "}
-                {
-                  product.sold
-                }
+                🛍️ {product.sold}
               </p>
             )}
 
@@ -298,13 +241,10 @@ export default async function ProductPage({
               </div>
 
               <p className="mt-3 text-xs leading-5 text-stone-400">
-                Cena i
-                dostępność mogą
-                zmienić się po
-                publikacji.
-                Aktualną cenę
-                zawsze sprawdź na
-                stronie sklepu.
+                Cena i dostępność mogą
+                zmienić się po publikacji.
+                Aktualną cenę zawsze
+                sprawdź na stronie sklepu.
               </p>
             </div>
 
@@ -345,17 +285,15 @@ export default async function ProductPage({
                 )}`}
                 className="mt-3 inline-flex font-bold text-rose-600 hover:text-rose-700"
               >
-                Zobacz więcej z
-                kategorii{" "}
-                {
-                  product.category
-                }{" "}
-                →
+                Zobacz więcej z kategorii{" "}
+                {product.category} →
               </Link>
             </div>
           </div>
         </div>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
