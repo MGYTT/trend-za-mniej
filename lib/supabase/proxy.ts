@@ -53,10 +53,40 @@ export async function updateSession(
       "/admin"
     );
 
-  if (isAdminRoute && !data?.claims) {
+  if (!isAdminRoute) {
+    return response;
+  }
+
+  const userId =
+    data?.claims?.sub;
+
+  if (!userId) {
     const url = request.nextUrl.clone();
 
     url.pathname = "/login";
+    url.search = "";
+
+    return NextResponse.redirect(url);
+  }
+
+  const {
+    data: admin,
+    error: adminError,
+  } = await supabase
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (adminError || !admin) {
+    const url = request.nextUrl.clone();
+
+    url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set(
+      "error",
+      "access-denied"
+    );
 
     return NextResponse.redirect(url);
   }
