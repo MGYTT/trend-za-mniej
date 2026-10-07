@@ -4,8 +4,10 @@ import type {
 
 import Link from "next/link";
 
+import BrandLogo from "@/components/BrandLogo";
 import ProductCard from "@/components/ProductCard";
 import ProductFilters from "@/components/ProductFilters";
+import SiteFooter from "@/components/SiteFooter";
 
 import {
   getCategories,
@@ -170,17 +172,7 @@ export default async function OffersPage({
     <main className="min-h-screen bg-stone-50">
       <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/">
-            <div>
-              <p className="text-2xl font-black">
-                Trend za Mniej
-              </p>
-
-              <p className="text-xs text-stone-500">
-                Moda i okazje
-              </p>
-            </div>
-          </Link>
+          <BrandLogo />
 
           <div className="flex items-center gap-3">
             <Link
@@ -301,6 +293,8 @@ export default async function OffersPage({
           </div>
         )}
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
