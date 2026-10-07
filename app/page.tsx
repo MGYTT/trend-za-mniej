@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import BrandLogo from "@/components/BrandLogo";
 import ProductCard from "@/components/ProductCard";
 
 import {
@@ -16,18 +17,18 @@ const categories = [
     href: "/okazje?category=Swetry",
   },
   {
-    name: "Koszule",
-    emoji: "👚",
+    name: "Bluzy",
+    emoji: "🧶",
     description:
-      "Casualowe i modne koszule",
-    href: "/okazje?category=Koszule",
+      "Wygodne modele na co dzień",
+    href: "/okazje?category=Bluzy",
   },
   {
-    name: "Kardigany",
-    emoji: "🍂",
+    name: "Topy",
+    emoji: "👚",
     description:
-      "Idealne na chłodniejsze dni",
-    href: "/okazje?category=Kardigany",
+      "Lekkie i modne fasony",
+    href: "/okazje?category=Topy",
   },
   {
     name: "Do 100 zł",
@@ -53,18 +54,7 @@ export default async function Home() {
     <main className="min-h-screen bg-stone-50 text-stone-900">
       <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="flex flex-col"
-          >
-            <span className="text-2xl font-black tracking-tight">
-              Trend za Mniej
-            </span>
-
-            <span className="text-xs text-stone-500">
-              Moda i okazje
-            </span>
-          </Link>
+          <BrandLogo />
 
           <nav className="hidden items-center gap-7 text-sm font-semibold md:flex">
             <Link
@@ -324,16 +314,7 @@ export default async function Home() {
       <footer className="border-t border-rose-100 bg-white text-stone-500">
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="flex flex-col items-center justify-between gap-5 md:flex-row">
-            <div>
-              <p className="font-black text-stone-900">
-                Trend za Mniej
-              </p>
-
-              <p className="mt-1 text-sm">
-                Moda, okazje i modne
-                perełki
-              </p>
-            </div>
+            <BrandLogo compact />
 
             <p className="text-sm">
               © 2026 Trend za Mniej
