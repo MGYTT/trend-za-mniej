@@ -1,6 +1,7 @@
 import Link from "next/link";
+
 import {
-  Product,
+  type Product,
   formatPrice,
 } from "@/lib/products";
 
@@ -12,69 +13,99 @@ export default function ProductCard({
   product,
 }: ProductCardProps) {
   return (
-    <article className="group overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <article className="group interactive-lift flex h-full overflow-hidden rounded-[28px] border border-stone-200/80 bg-white shadow-sm">
       <Link
         href={`/produkt/${product.slug}`}
-        className="block"
+        aria-label={`Zobacz produkt: ${product.shortName}`}
+        className="flex h-full w-full flex-col"
       >
-        <div className="relative aspect-[4/5] overflow-hidden bg-rose-50">
+        <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
           <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            src={
+              product.image
+            }
+            alt={
+              product.name
+            }
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
           />
 
           {product.featured && (
-            <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-3 py-1.5 text-xs font-bold text-white shadow-md">
+            <span className="absolute left-3 top-3 rounded-full border border-white/80 bg-white/95 px-3 py-1.5 text-[11px] font-black text-rose-700 shadow-sm backdrop-blur sm:left-4 sm:top-4 sm:text-xs">
               🔥 Gorąca okazja
             </span>
           )}
         </div>
-      </Link>
 
-      <div className="p-5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-stone-500">
-            {product.category}
-          </span>
-
-          {product.sold && (
-            <span className="text-xs text-stone-400">
-              {product.sold}
+        <div className="flex flex-1 flex-col p-4 sm:p-5">
+          <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
+            <span className="rounded-full bg-rose-50 px-3 py-1 text-[11px] font-bold text-rose-700 sm:text-xs">
+              {
+                product.category
+              }
             </span>
-          )}
-        </div>
 
-        <Link href={`/produkt/${product.slug}`}>
-          <h3 className="mt-2 text-xl font-bold leading-snug text-stone-900 transition hover:text-rose-600">
-            {product.shortName}
+            {product.sold && (
+              <span className="text-[11px] font-medium text-stone-400 sm:text-xs">
+                {
+                  product.sold
+                }
+              </span>
+            )}
+          </div>
+
+          <h3 className="mt-3 text-pretty text-lg font-black leading-snug tracking-[-0.02em] text-stone-900 transition group-hover:text-rose-700 sm:text-xl">
+            {
+              product.shortName
+            }
           </h3>
-        </Link>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <span className="text-2xl font-black text-rose-600">
-            {formatPrice(product.price)}
-          </span>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-500">
+            {
+              product.description
+            }
+          </p>
 
-          {product.oldPrice !== null && (
-            <span className="text-sm text-stone-400 line-through">
-              {formatPrice(product.oldPrice)}
-            </span>
-          )}
+          <div className="mt-auto pt-5">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="text-2xl font-black tracking-[-0.03em] text-rose-600">
+                {formatPrice(
+                  product.price
+                )}
+              </span>
+
+              {product.oldPrice !==
+                null && (
+                <span className="text-sm font-semibold text-stone-400 line-through">
+                  {formatPrice(
+                    product.oldPrice
+                  )}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-1 text-[11px] leading-5 text-stone-400">
+              Cena w chwili
+              publikacji
+            </p>
+
+            <div className="mt-4 flex min-h-12 items-center justify-between rounded-2xl bg-rose-50 px-4 py-3 font-black text-rose-700 transition group-hover:bg-rose-100">
+              <span>
+                Zobacz szczegóły
+              </span>
+
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg shadow-sm transition group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </div>
+          </div>
         </div>
-
-        <p className="mt-2 text-xs text-stone-400">
-          Cena w chwili publikacji
-        </p>
-
-        <Link
-          href={`/produkt/${product.slug}`}
-          className="mt-5 flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-3.5 font-bold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:from-rose-600 hover:to-pink-600 hover:shadow-lg"
-        >
-          Zobacz okazję
-          <span className="ml-2">→</span>
-        </Link>
-      </div>
+      </Link>
     </article>
   );
 }

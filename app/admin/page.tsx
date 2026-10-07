@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
+import {
+  redirect,
+} from "next/navigation";
+
+import AdminHeader from "@/components/admin/AdminHeader";
 import AdminProductList from "@/components/admin/AdminProductList";
 
 import {
@@ -9,18 +13,26 @@ import {
 
 type ProductStatRow = {
   product_id: string;
-  clicks: number | string;
+  clicks:
+    | number
+    | string;
 };
 
 export default async function AdminPage() {
   const supabase =
     await createClient();
 
-  const { data: authData } =
+  const {
+    data: authData,
+  } =
     await supabase.auth.getClaims();
 
-  if (!authData?.claims) {
-    redirect("/login");
+  if (
+    !authData?.claims
+  ) {
+    redirect(
+      "/login"
+    );
   }
 
   const today =
@@ -38,47 +50,58 @@ export default async function AdminPage() {
     clicksResult,
     todayClicksResult,
     productStatsResult,
-  ] = await Promise.all([
-    supabase
-      .from("products")
-      .select("*")
-      .order(
-        "created_at",
+  ] =
+    await Promise.all([
+      supabase
+        .from(
+          "products"
+        )
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending:
+              false,
+          }
+        ),
+
+      supabase
+        .from(
+          "affiliate_clicks"
+        )
+        .select(
+          "*",
+          {
+            count:
+              "exact",
+            head: true,
+          }
+        ),
+
+      supabase
+        .from(
+          "affiliate_clicks"
+        )
+        .select(
+          "*",
+          {
+            count:
+              "exact",
+            head: true,
+          }
+        )
+        .gte(
+          "created_at",
+          today.toISOString()
+        ),
+
+      supabase.rpc(
+        "get_product_click_stats",
         {
-          ascending:
-            false,
+          p_days: 30,
         }
       ),
-
-    supabase
-      .from(
-        "affiliate_clicks"
-      )
-      .select("*", {
-        count: "exact",
-        head: true,
-      }),
-
-    supabase
-      .from(
-        "affiliate_clicks"
-      )
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .gte(
-        "created_at",
-        today.toISOString()
-      ),
-
-    supabase.rpc(
-      "get_product_click_stats",
-      {
-        p_days: 30,
-      }
-    ),
-  ]);
+    ]);
 
   const products =
     productsResult.data ??
@@ -114,7 +137,10 @@ export default async function AdminPage() {
       []
     ) as ProductStatRow[]
   ).reduce<
-    Record<string, number>
+    Record<
+      string,
+      number
+    >
   >(
     (
       result,
@@ -133,129 +159,132 @@ export default async function AdminPage() {
   );
 
   return (
-    <main className="min-h-screen bg-stone-50">
-      <header className="border-b border-rose-100 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-5">
-          <div>
-            <p className="text-2xl font-black">
-              Trend za Mniej
-            </p>
+    <main className="min-h-screen bg-stone-50 text-stone-900">
+      <AdminHeader />
 
-            <p className="text-sm text-stone-500">
-              Panel
-              administratora
-            </p>
-          </div>
+      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10">
+        <section className="overflow-hidden rounded-[30px] border border-rose-100 bg-gradient-to-br from-white via-rose-50/50 to-orange-50 p-5 shadow-sm sm:p-7 lg:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-600 sm:text-sm">
+                Centrum zarządzania
+              </p>
 
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            <Link
-              href="/"
-              target="_blank"
-              className="rounded-full border border-stone-200 bg-white px-5 py-2.5 text-sm font-bold transition hover:border-rose-300 hover:text-rose-600"
-            >
-              Zobacz stronę
-            </Link>
+              <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+                Panel administratora
+              </h1>
 
-            <form
-              action="/auth/signout"
-              method="post"
-            >
-              <button
-                type="submit"
-                className="rounded-full bg-rose-50 px-5 py-2.5 text-sm font-bold text-rose-700 transition hover:bg-rose-100"
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500 sm:text-base">
+                Dodawaj i edytuj
+                oferty, kontroluj ich
+                widoczność oraz
+                obserwuj
+                zainteresowanie.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:flex">
+              <Link
+                href="/admin/nowa-oferta"
+                className="flex min-h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
               >
-                Wyloguj
-              </button>
-            </form>
+                <span className="mr-2 text-xl">
+                  +
+                </span>
+
+                Dodaj ofertę
+              </Link>
+
+              <Link
+                href="/admin/statystyki"
+                className="flex min-h-13 items-center justify-center rounded-2xl border border-rose-200 bg-white px-6 font-black text-rose-700 shadow-sm transition hover:bg-rose-50"
+              >
+                Statystyki
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <p className="font-bold text-rose-600">
-              ✨ Centrum
-              zarządzania
-            </p>
+        <section className="mt-5">
+          <div className="horizontal-scroll -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3 xl:grid-cols-6">
+            <StatCard
+              icon="🛍️"
+              title="Wszystkie"
+              value={
+                products.length
+              }
+            />
 
-            <h1 className="mt-2 text-4xl font-black">
-              Panel Trend za
-              Mniej
-            </h1>
+            <StatCard
+              icon="✅"
+              title="Aktywne"
+              value={
+                activeProducts
+              }
+            />
 
-            <p className="mt-2 text-stone-500">
-              Zarządzaj ofertami
-              i obserwuj
-              zainteresowanie
-              użytkowników.
-            </p>
+            <StatCard
+              icon="🙈"
+              title="Ukryte"
+              value={
+                hiddenProducts
+              }
+            />
+
+            <StatCard
+              icon="🔥"
+              title="Gorące"
+              value={
+                featuredProducts
+              }
+            />
+
+            <StatCard
+              icon="🖱️"
+              title="Kliknięcia"
+              value={
+                totalClicks
+              }
+              subtitle="łącznie"
+            />
+
+            <StatCard
+              icon="📈"
+              title="Dzisiaj"
+              value={
+                todayClicks
+              }
+              subtitle="kliknięć"
+            />
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/admin/statystyki"
-              className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-7 py-4 font-bold text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-50"
-            >
-              📊 Statystyki
-            </Link>
+          <p className="mt-2 text-xs font-semibold text-stone-400 sm:hidden">
+            ← Przesuń, aby zobaczyć
+            wszystkie statystyki →
+          </p>
+        </section>
 
-            <Link
-              href="/admin/nowa-oferta"
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-7 py-4 font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              + Dodaj nową ofertę
-            </Link>
-          </div>
-        </div>
-
-        <section className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-6">
-          <StatCard
-            icon="🛍️"
-            title="Wszystkie produkty"
-            value={
-              products.length
-            }
+        <section className="mt-7 grid gap-3 sm:grid-cols-3">
+          <QuickAction
+            href="/admin/nowa-oferta"
+            icon="＋"
+            title="Nowa oferta"
+            description="Dodaj kolejny produkt"
           />
 
-          <StatCard
-            icon="✅"
-            title="Opublikowane"
-            value={
-              activeProducts
-            }
+          <QuickAction
+            href="/admin/statystyki"
+            icon="↗"
+            title="Analityka"
+            description="Sprawdź kliknięcia"
           />
 
-          <StatCard
-            icon="🙈"
-            title="Ukryte"
-            value={
-              hiddenProducts
-            }
-          />
-
-          <StatCard
-            icon="🔥"
-            title="Gorące okazje"
-            value={
-              featuredProducts
-            }
-          />
-
-          <StatCard
-            icon="🖱️"
-            title="Kliknięcia łącznie"
-            value={
-              totalClicks
-            }
-          />
-
-          <StatCard
-            icon="📈"
-            title="Kliknięcia dzisiaj"
-            value={
-              todayClicks
-            }
+          <QuickAction
+            href="/"
+            icon="◎"
+            title="Publiczna strona"
+            description="Zobacz efekt zmian"
+            external
           />
         </section>
 
@@ -276,24 +305,86 @@ function StatCard({
   icon,
   title,
   value,
+  subtitle,
 }: {
   icon: string;
   title: string;
   value: number;
+  subtitle?: string;
 }) {
   return (
-    <div className="rounded-3xl border border-rose-100 bg-white p-5 shadow-sm">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-xl">
-        {icon}
+    <div className="min-w-[155px] snap-start rounded-[24px] border border-stone-200 bg-white p-4 shadow-sm sm:min-w-0 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-lg">
+          {icon}
+        </div>
+
+        <p className="text-2xl font-black tracking-tight text-stone-900">
+          {value}
+        </p>
       </div>
 
-      <p className="mt-4 text-xs font-semibold leading-5 text-stone-500">
+      <p className="mt-4 text-sm font-black text-stone-700">
         {title}
       </p>
 
-      <p className="mt-1 text-3xl font-black">
-        {value}
-      </p>
+      {subtitle && (
+        <p className="mt-0.5 text-xs text-stone-400">
+          {subtitle}
+        </p>
+      )}
     </div>
+  );
+}
+
+function QuickAction({
+  href,
+  icon,
+  title,
+  description,
+  external = false,
+}: {
+  href: string;
+  icon: string;
+  title: string;
+  description: string;
+  external?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      target={
+        external
+          ? "_blank"
+          : undefined
+      }
+      rel={
+        external
+          ? "noopener noreferrer"
+          : undefined
+      }
+      className="group flex min-h-[82px] items-center gap-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-rose-200 hover:shadow-md"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-xl font-black text-stone-700 transition group-hover:bg-rose-50 group-hover:text-rose-700">
+        {icon}
+      </div>
+
+      <div className="min-w-0">
+        <p className="font-black text-stone-900">
+          {title}
+        </p>
+
+        <p className="mt-0.5 text-xs leading-5 text-stone-500">
+          {description}
+        </p>
+      </div>
+
+      <span
+        aria-hidden="true"
+        className="ml-auto text-stone-300 transition group-hover:translate-x-1 group-hover:text-rose-500"
+      >
+        →
+      </span>
+    </Link>
   );
 }

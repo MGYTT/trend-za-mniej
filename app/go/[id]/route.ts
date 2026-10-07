@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import {
+  NextResponse,
+} from "next/server";
 
 import {
   getProductById,
 } from "@/lib/products";
 
-import { supabase } from "@/lib/supabase";
+import {
+  createAdminClient,
+} from "@/lib/supabase/admin";
 
 type RouteContext = {
   params: Promise<{
@@ -29,16 +33,29 @@ export async function GET(
     );
   }
 
-  const { error } = await supabase
-    .from("affiliate_clicks")
-    .insert({
-      product_id:
-        product.id,
-    });
+  try {
+    const supabase =
+      createAdminClient();
 
-  if (error) {
+    const { error } =
+      await supabase
+        .from(
+          "affiliate_clicks"
+        )
+        .insert({
+          product_id:
+            product.id,
+        });
+
+    if (error) {
+      console.error(
+        "Nie udało się zapisać kliknięcia:",
+        error
+      );
+    }
+  } catch (error) {
     console.error(
-      "Nie udało się zapisać kliknięcia:",
+      "Błąd zapisywania kliknięcia:",
       error
     );
   }

@@ -13,17 +13,17 @@ export default function BrandLogo({
     <Link
       href={href}
       aria-label="Trend za Mniej - strona główna"
-      className="group inline-flex items-center gap-3"
+      className="group inline-flex min-w-0 items-center gap-2.5 sm:gap-3"
     >
       <span
         className={[
           "relative flex shrink-0 items-center justify-center overflow-hidden",
           "bg-gradient-to-br from-rose-400 via-pink-500 to-orange-400",
-          "shadow-sm ring-1 ring-rose-200 transition duration-300",
+          "shadow-sm ring-1 ring-rose-200/80 transition duration-300",
           "group-hover:-rotate-2 group-hover:scale-105 group-hover:shadow-md",
           compact
             ? "h-10 w-10 rounded-xl"
-            : "h-12 w-12 rounded-2xl",
+            : "h-11 w-11 rounded-2xl sm:h-12 sm:w-12",
         ].join(" ")}
       >
         <span
@@ -31,7 +31,7 @@ export default function BrandLogo({
             "flex items-center justify-center bg-rose-50 font-black text-rose-700",
             compact
               ? "h-8 w-8 rounded-lg text-2xl"
-              : "h-10 w-10 rounded-xl text-3xl",
+              : "h-9 w-9 rounded-xl text-2xl sm:h-10 sm:w-10 sm:text-3xl",
           ].join(" ")}
         >
           T
@@ -59,13 +59,13 @@ export default function BrandLogo({
         />
       </span>
 
-      <span className="flex flex-col leading-none">
+      <span className="min-w-0 leading-none">
         <span
           className={[
-            "font-black tracking-tight text-stone-900 transition group-hover:text-rose-600",
+            "block whitespace-nowrap font-black tracking-tight text-stone-900 transition group-hover:text-rose-600",
             compact
-              ? "text-lg"
-              : "text-xl sm:text-2xl",
+              ? "text-base sm:text-lg"
+              : "text-lg sm:text-2xl",
           ].join(" ")}
         >
           Trend za Mniej
@@ -73,10 +73,11 @@ export default function BrandLogo({
 
         <span
           className={[
-            "mt-1 font-medium text-stone-500",
+            "mt-1 text-stone-500",
+            "hidden min-[360px]:block",
             compact
-              ? "text-[10px]"
-              : "text-xs",
+              ? "text-[10px] font-medium"
+              : "text-[11px] font-medium sm:text-xs",
           ].join(" ")}
         >
           Moda i okazje
