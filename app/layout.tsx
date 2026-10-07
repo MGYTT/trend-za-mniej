@@ -1,4 +1,7 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+  Viewport,
+} from "next";
 
 import "./globals.css";
 
@@ -16,6 +19,11 @@ const googleVerification =
 const pinterestVerification =
   process.env.NEXT_PUBLIC_PINTEREST_SITE_VERIFICATION;
 
+export const viewport: Viewport = {
+  themeColor: "#e11d48",
+  colorScheme: "light",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
@@ -27,6 +35,25 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
 
   applicationName: SITE_NAME,
+
+  manifest: "/manifest.webmanifest",
+
+  icons: {
+    icon: [
+      {
+        url: "/icon",
+        type: "image/png",
+        sizes: "512x512",
+      },
+    ],
+    apple: [
+      {
+        url: "/apple-icon",
+        type: "image/png",
+        sizes: "180x180",
+      },
+    ],
+  },
 
   authors: [
     {
