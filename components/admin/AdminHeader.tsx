@@ -17,30 +17,67 @@ type NavigationItem = {
   label: string;
   shortLabel: string;
   href: string;
+
   type:
     | "dashboard"
     | "add"
-    | "stats";
+    | "stats"
+    | "team";
 };
 
-const navigation: NavigationItem[] = [
+const navigation:
+  NavigationItem[] = [
   {
-    label: "Panel",
-    shortLabel: "Panel",
-    href: "/admin",
-    type: "dashboard",
+    label:
+      "Panel",
+
+    shortLabel:
+      "Panel",
+
+    href:
+      "/admin",
+
+    type:
+      "dashboard",
   },
   {
-    label: "Dodaj ofertę",
-    shortLabel: "Dodaj",
-    href: "/admin/nowa-oferta",
-    type: "add",
+    label:
+      "Dodaj ofertę",
+
+    shortLabel:
+      "Dodaj",
+
+    href:
+      "/admin/nowa-oferta",
+
+    type:
+      "add",
   },
   {
-    label: "Statystyki",
-    shortLabel: "Statystyki",
-    href: "/admin/statystyki",
-    type: "stats",
+    label:
+      "Statystyki",
+
+    shortLabel:
+      "Statystyki",
+
+    href:
+      "/admin/statystyki",
+
+    type:
+      "stats",
+  },
+  {
+    label:
+      "Zespół",
+
+    shortLabel:
+      "Zespół",
+
+    href:
+      "/admin/zespol",
+
+    type:
+      "team",
   },
 ];
 
@@ -51,14 +88,22 @@ export default function AdminHeader() {
   const [
     menuOpen,
     setMenuOpen,
-  ] = useState(false);
+  ] = useState(
+    false
+  );
 
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+    setMenuOpen(
+      false
+    );
+  }, [
+    pathname,
+  ]);
 
   useEffect(() => {
-    if (!menuOpen) {
+    if (
+      !menuOpen
+    ) {
       return;
     }
 
@@ -70,13 +115,16 @@ export default function AdminHeader() {
       "hidden";
 
     function handleKeyDown(
-      event: KeyboardEvent
+      event:
+        KeyboardEvent
     ) {
       if (
         event.key ===
         "Escape"
       ) {
-        setMenuOpen(false);
+        setMenuOpen(
+          false
+        );
       }
     }
 
@@ -94,10 +142,13 @@ export default function AdminHeader() {
         handleKeyDown
       );
     };
-  }, [menuOpen]);
+  }, [
+    menuOpen,
+  ]);
 
   function isActive(
-    item: NavigationItem
+    item:
+      NavigationItem
   ) {
     if (
       item.type ===
@@ -110,7 +161,8 @@ export default function AdminHeader() {
     }
 
     if (
-      item.type === "add"
+      item.type ===
+      "add"
     ) {
       return (
         pathname ===
@@ -124,6 +176,15 @@ export default function AdminHeader() {
     ) {
       return pathname.startsWith(
         "/admin/statystyki"
+      );
+    }
+
+    if (
+      item.type ===
+      "team"
+    ) {
+      return pathname.startsWith(
+        "/admin/zespol"
       );
     }
 
@@ -149,7 +210,9 @@ export default function AdminHeader() {
           className="hidden items-center gap-1 lg:flex"
         >
           {navigation.map(
-            (item) => {
+            (
+              item
+            ) => {
               const active =
                 isActive(
                   item
@@ -169,7 +232,7 @@ export default function AdminHeader() {
                       : undefined
                   }
                   className={[
-                    "relative flex min-h-10 items-center rounded-xl px-4 text-sm font-bold transition",
+                    "relative flex min-h-10 items-center rounded-xl px-3.5 text-sm font-bold transition",
                     active
                       ? "bg-stone-100 text-stone-900"
                       : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
@@ -232,6 +295,7 @@ export default function AdminHeader() {
                 strokeLinecap="round"
               >
                 <path d="M6 6l12 12" />
+
                 <path d="M18 6L6 18" />
               </svg>
             ) : (
@@ -262,9 +326,11 @@ export default function AdminHeader() {
         aria-label="Szybka nawigacja administratora"
         className="border-t border-stone-100 bg-white lg:hidden"
       >
-        <div className="mx-auto grid max-w-xl grid-cols-3 gap-1 px-3 py-1.5">
+        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1 px-2 py-1.5">
           {navigation.map(
-            (item) => {
+            (
+              item
+            ) => {
               const active =
                 isActive(
                   item
@@ -284,7 +350,7 @@ export default function AdminHeader() {
                       : undefined
                   }
                   className={[
-                    "flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-[11px] font-black transition sm:text-xs",
+                    "flex min-h-10 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-black transition sm:text-xs",
                     active
                       ? "bg-rose-50 text-rose-700"
                       : "text-stone-500 active:bg-stone-100",
@@ -339,6 +405,24 @@ export default function AdminHeader() {
             </div>
 
             <div className="border-t border-stone-100 pt-2">
+              <Link
+                href="/admin/zespol"
+                onClick={() =>
+                  setMenuOpen(
+                    false
+                  )
+                }
+                className="flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-bold text-stone-600 transition hover:bg-stone-50"
+              >
+                <span>
+                  Zespół i role
+                </span>
+
+                <span>
+                  →
+                </span>
+              </Link>
+
               <Link
                 href="/"
                 target="_blank"
@@ -397,7 +481,8 @@ function AdminNavIcon({
   type:
     | "dashboard"
     | "add"
-    | "stats";
+    | "stats"
+    | "team";
 }) {
   if (
     type ===
@@ -450,7 +535,8 @@ function AdminNavIcon({
   }
 
   if (
-    type === "add"
+    type ===
+    "add"
   ) {
     return (
       <svg
@@ -463,7 +549,42 @@ function AdminNavIcon({
         strokeLinecap="round"
       >
         <path d="M12 5v14" />
+
         <path d="M5 12h14" />
+      </svg>
+    );
+  }
+
+  if (
+    type ===
+    "team"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle
+          cx="9"
+          cy="8"
+          r="3"
+        />
+
+        <path d="M3 20a6 6 0 0 1 12 0" />
+
+        <circle
+          cx="17"
+          cy="9"
+          r="2"
+        />
+
+        <path d="M16 15a5 5 0 0 1 5 5" />
       </svg>
     );
   }
@@ -480,8 +601,11 @@ function AdminNavIcon({
       strokeLinejoin="round"
     >
       <path d="M4 19V9" />
+
       <path d="M10 19V5" />
+
       <path d="M16 19v-7" />
+
       <path d="M22 19H2" />
     </svg>
   );

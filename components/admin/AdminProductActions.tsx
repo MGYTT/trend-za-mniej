@@ -16,8 +16,10 @@ import {
 
 type Props = {
   id: string;
+  slug: string;
   active: boolean;
   imageUrl: string;
+  canManage: boolean;
 };
 
 function getStoragePath(
@@ -49,8 +51,10 @@ function getStoragePath(
 
 export default function AdminProductActions({
   id,
+  slug,
   active,
   imageUrl,
+  canManage,
 }: Props) {
   const router =
     useRouter();
@@ -67,17 +71,28 @@ export default function AdminProductActions({
   const [
     supabase,
   ] = useState(
-    () => createClient()
+    () =>
+      createClient()
   );
 
   async function toggleActive() {
+    if (
+      !canManage
+    ) {
+      return;
+    }
+
     setLoading(
       "toggle"
     );
 
-    const { error } =
+    const {
+      error,
+    } =
       await supabase
-        .from("products")
+        .from(
+          "products"
+        )
         .update({
           active:
             !active,
@@ -96,16 +111,27 @@ export default function AdminProductActions({
         error
       );
 
-      setLoading(null);
+      setLoading(
+        null
+      );
 
       return;
     }
 
-    setLoading(null);
+    setLoading(
+      null
+    );
+
     router.refresh();
   }
 
   async function deleteProduct() {
+    if (
+      !canManage
+    ) {
+      return;
+    }
+
     const confirmed =
       window.confirm(
         "Czy na pewno chcesz usunąć tę ofertę? Produkt i jego zdjęcie zostaną usunięte. Tej operacji nie można cofnąć."
@@ -119,9 +145,13 @@ export default function AdminProductActions({
       "delete"
     );
 
-    const { error } =
+    const {
+      error,
+    } =
       await supabase
-        .from("products")
+        .from(
+          "products"
+        )
         .delete()
         .eq(
           "id",
@@ -137,7 +167,9 @@ export default function AdminProductActions({
         error
       );
 
-      setLoading(null);
+      setLoading(
+        null
+      );
 
       return;
     }
@@ -170,12 +202,49 @@ export default function AdminProductActions({
       }
     }
 
-    setLoading(null);
+    setLoading(
+      null
+    );
+
     router.refresh();
   }
 
+  if (
+    !canManage
+  ) {
+    return (
+      <div className="space-y-2">
+        <div className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-3 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-stone-500">
+            🔒 Oferta innego
+            administratora
+          </p>
+
+          <p className="mt-1 text-[10px] leading-4 text-stone-400">
+            Możesz ją zobaczyć,
+            ale nie możesz zmieniać
+            jej danych ani linku
+            afiliacyjnego.
+          </p>
+        </div>
+
+        {active && (
+          <Link
+            href={`/produkt/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-10 items-center justify-center rounded-xl border border-stone-200 bg-white px-3 text-xs font-black text-stone-600"
+          >
+            Zobacz ofertę ↗
+          </Link>
+        )}
+      </div>
+    );
+  }
+
   const disabled =
-    loading !== null;
+    loading !==
+    null;
 
   return (
     <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
@@ -194,6 +263,7 @@ export default function AdminProductActions({
           strokeLinejoin="round"
         >
           <path d="M12 20h9" />
+
           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
         </svg>
 

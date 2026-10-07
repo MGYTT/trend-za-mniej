@@ -8,6 +8,13 @@ import {
 } from "react";
 
 import AdminProductActions from "@/components/admin/AdminProductActions";
+import AdminProductOwnerSelect from "@/components/admin/AdminProductOwnerSelect";
+
+import {
+  canManageOffer,
+  type AdminRole,
+  type AdminTeamMember,
+} from "@/lib/admin-permissions";
 
 type AdminProduct = {
   id: string;
@@ -15,23 +22,32 @@ type AdminProduct = {
   name: string;
   short_name: string;
   description: string;
+
   price:
     | number
     | string;
+
   old_price:
     | number
     | string
     | null;
+
   category: string;
   image_url: string;
   affiliate_url: string;
   featured: boolean;
+
   sold_text:
     | string
     | null;
+
   active: boolean;
   created_at: string;
   updated_at: string;
+
+  created_by:
+    | string
+    | null;
 };
 
 type StatusFilter =
@@ -39,6 +55,12 @@ type StatusFilter =
   | "active"
   | "hidden"
   | "featured";
+
+type OwnershipFilter =
+  | "all"
+  | "mine"
+  | "others"
+  | "unassigned";
 
 type SortOption =
   | "newest"
@@ -48,11 +70,26 @@ type SortOption =
   | "name";
 
 type Props = {
-  products: AdminProduct[];
-  productStats: Record<
-    string,
-    number
-  >;
+  products:
+    AdminProduct[];
+
+  productStats:
+    Record<
+      string,
+      number
+    >;
+
+  currentUserId:
+    string;
+
+  currentRole:
+    AdminRole;
+
+  ownerModeActive:
+    boolean;
+
+  teamMembers:
+    AdminTeamMember[];
 };
 
 function formatPrice(
@@ -63,11 +100,16 @@ function formatPrice(
   return new Intl.NumberFormat(
     "pl-PL",
     {
-      style: "currency",
-      currency: "PLN",
+      style:
+        "currency",
+
+      currency:
+        "PLN",
     }
   ).format(
-    Number(price)
+    Number(
+      price
+    )
   );
 }
 
@@ -77,18 +119,29 @@ function formatDate(
   return new Intl.DateTimeFormat(
     "pl-PL",
     {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric",
     }
   ).format(
-    new Date(value)
+    new Date(
+      value
+    )
   );
 }
 
 export default function AdminProductList({
   products,
   productStats,
+  currentUserId,
+  currentRole,
+  ownerModeActive,
+  teamMembers,
 }: Props) {
   const [
     query,
@@ -104,9 +157,19 @@ export default function AdminProductList({
     );
 
   const [
+    ownership,
+    setOwnership,
+  ] =
+    useState<OwnershipFilter>(
+      "all"
+    );
+
+  const [
     category,
     setCategory,
-  ] = useState("all");
+  ] = useState(
+    "all"
+  );
 
   const [
     sort,
@@ -119,7 +182,9 @@ export default function AdminProductList({
   const [
     filtersOpen,
     setFiltersOpen,
-  ] = useState(false);
+  ] = useState(
+    false
+  );
 
   const categories =
     useMemo(() => {
@@ -127,28 +192,57 @@ export default function AdminProductList({
         ...new Set(
           products
             .map(
-              (product) =>
+              (
+                product
+              ) =>
                 product.category
             )
-            .filter(Boolean)
+            .filter(
+              Boolean
+            )
         ),
       ].sort(
-        (a, b) =>
+        (
+          a,
+          b
+        ) =>
           a.localeCompare(
             b,
             "pl"
           )
       );
-    }, [products]);
+    }, [
+      products,
+    ]);
+
+  const membersById =
+    useMemo(() => {
+      return new Map(
+        teamMembers.map(
+          (
+            member
+          ) => [
+            member.userId,
+            member,
+          ]
+        )
+      );
+    }, [
+      teamMembers,
+    ]);
 
   const activeCount =
     useMemo(
       () =>
         products.filter(
-          (product) =>
+          (
+            product
+          ) =>
             product.active
         ).length,
-      [products]
+      [
+        products,
+      ]
     );
 
   const hiddenCount =
@@ -159,10 +253,63 @@ export default function AdminProductList({
     useMemo(
       () =>
         products.filter(
-          (product) =>
+          (
+            product
+          ) =>
             product.featured
         ).length,
-      [products]
+      [
+        products,
+      ]
+    );
+
+  const mineCount =
+    useMemo(
+      () =>
+        products.filter(
+          (
+            product
+          ) =>
+            product.created_by ===
+            currentUserId
+        ).length,
+      [
+        products,
+        currentUserId,
+      ]
+    );
+
+  const othersCount =
+    useMemo(
+      () =>
+        products.filter(
+          (
+            product
+          ) =>
+            Boolean(
+              product.created_by
+            ) &&
+            product.created_by !==
+              currentUserId
+        ).length,
+      [
+        products,
+        currentUserId,
+      ]
+    );
+
+  const unassignedCount =
+    useMemo(
+      () =>
+        products.filter(
+          (
+            product
+          ) =>
+            !product.created_by
+        ).length,
+      [
+        products,
+      ]
     );
 
   const filteredProducts =
@@ -174,7 +321,9 @@ export default function AdminProductList({
 
       const result =
         products.filter(
-          (product) => {
+          (
+            product
+          ) => {
             const haystack =
               [
                 product.name,
@@ -182,7 +331,9 @@ export default function AdminProductList({
                 product.category,
                 product.description,
               ]
-                .join(" ")
+                .join(
+                  " "
+                )
                 .toLowerCase();
 
             const matchesQuery =
@@ -224,17 +375,55 @@ export default function AdminProductList({
                 product.featured;
             }
 
+            let matchesOwnership =
+              true;
+
+            if (
+              ownership ===
+              "mine"
+            ) {
+              matchesOwnership =
+                product.created_by ===
+                currentUserId;
+            }
+
+            if (
+              ownership ===
+              "others"
+            ) {
+              matchesOwnership =
+                Boolean(
+                  product.created_by
+                ) &&
+                product.created_by !==
+                  currentUserId;
+            }
+
+            if (
+              ownership ===
+              "unassigned"
+            ) {
+              matchesOwnership =
+                !product.created_by;
+            }
+
             return (
               matchesQuery &&
               matchesCategory &&
-              matchesStatus
+              matchesStatus &&
+              matchesOwnership
             );
           }
         );
 
       result.sort(
-        (a, b) => {
-          switch (sort) {
+        (
+          a,
+          b
+        ) => {
+          switch (
+            sort
+          ) {
             case "oldest":
               return (
                 new Date(
@@ -289,22 +478,73 @@ export default function AdminProductList({
       products,
       query,
       status,
+      ownership,
       category,
       sort,
+      currentUserId,
     ]);
 
   const hasFilters =
-    query.trim() !== "" ||
-    status !== "all" ||
-    category !== "all" ||
-    sort !== "newest";
+    query.trim() !==
+      "" ||
+    status !==
+      "all" ||
+    ownership !==
+      "all" ||
+    category !==
+      "all" ||
+    sort !==
+      "newest";
 
   function clearFilters() {
     setQuery("");
-    setStatus("all");
-    setCategory("all");
-    setSort("newest");
-    setFiltersOpen(false);
+    setStatus(
+      "all"
+    );
+    setOwnership(
+      "all"
+    );
+    setCategory(
+      "all"
+    );
+    setSort(
+      "newest"
+    );
+    setFiltersOpen(
+      false
+    );
+  }
+
+  function getOwnerLabel(
+    product:
+      AdminProduct
+  ) {
+    if (
+      !product.created_by
+    ) {
+      return "Nieprzypisana";
+    }
+
+    if (
+      product.created_by ===
+      currentUserId
+    ) {
+      return "Twoja oferta";
+    }
+
+    if (
+      currentRole !==
+      "owner"
+    ) {
+      return "Inny administrator";
+    }
+
+    return (
+      membersById.get(
+        product.created_by
+      )?.displayName ??
+      "Administrator"
+    );
   }
 
   return (
@@ -316,12 +556,14 @@ export default function AdminProductList({
           </p>
 
           <h2 className="mt-1 text-2xl font-black tracking-[-0.035em] sm:text-3xl">
-            Twoje oferty
+            Oferty
           </h2>
 
           <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm">
-            Kliknięcia z ostatnich
-            30 dni.
+            Widzisz cały katalog.
+            Uprawnienia do edycji
+            zależą od właściciela
+            oferty.
           </p>
         </div>
 
@@ -415,7 +657,8 @@ export default function AdminProductList({
         <div className="horizontal-scroll -mx-3 mt-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           <StatusChip
             active={
-              status === "all"
+              status ===
+              "all"
             }
             onClick={() =>
               setStatus(
@@ -424,7 +667,9 @@ export default function AdminProductList({
             }
           >
             Wszystkie{" "}
-            {products.length}
+            {
+              products.length
+            }
           </StatusChip>
 
           <StatusChip
@@ -439,7 +684,9 @@ export default function AdminProductList({
             }
           >
             Aktywne{" "}
-            {activeCount}
+            {
+              activeCount
+            }
           </StatusChip>
 
           <StatusChip
@@ -454,7 +701,9 @@ export default function AdminProductList({
             }
           >
             Ukryte{" "}
-            {hiddenCount}
+            {
+              hiddenCount
+            }
           </StatusChip>
 
           <StatusChip
@@ -469,9 +718,83 @@ export default function AdminProductList({
             }
           >
             🔥{" "}
-            {featuredCount}
+            {
+              featuredCount
+            }
           </StatusChip>
         </div>
+
+        {ownerModeActive && (
+          <div className="horizontal-scroll -mx-3 mt-2 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
+            <StatusChip
+              active={
+                ownership ===
+                "all"
+              }
+              onClick={() =>
+                setOwnership(
+                  "all"
+                )
+              }
+            >
+              Wszyscy
+            </StatusChip>
+
+            <StatusChip
+              active={
+                ownership ===
+                "mine"
+              }
+              onClick={() =>
+                setOwnership(
+                  "mine"
+                )
+              }
+            >
+              Moje{" "}
+              {
+                mineCount
+              }
+            </StatusChip>
+
+            <StatusChip
+              active={
+                ownership ===
+                "others"
+              }
+              onClick={() =>
+                setOwnership(
+                  "others"
+                )
+              }
+            >
+              Innych{" "}
+              {
+                othersCount
+              }
+            </StatusChip>
+
+            {unassignedCount >
+              0 && (
+              <StatusChip
+                active={
+                  ownership ===
+                  "unassigned"
+                }
+                onClick={() =>
+                  setOwnership(
+                    "unassigned"
+                  )
+                }
+              >
+                Nieprzypisane{" "}
+                {
+                  unassignedCount
+                }
+              </StatusChip>
+            )}
+          </div>
+        )}
 
         <div
           className={[
@@ -498,7 +821,9 @@ export default function AdminProductList({
             </option>
 
             {categories.map(
-              (item) => (
+              (
+                item
+              ) => (
                 <option
                   key={
                     item
@@ -507,7 +832,9 @@ export default function AdminProductList({
                     item
                   }
                 >
-                  {item}
+                  {
+                    item
+                  }
                 </option>
               )
             )}
@@ -522,7 +849,8 @@ export default function AdminProductList({
               value
             ) =>
               setSort(
-                value as SortOption
+                value as
+                  SortOption
               )
             }
           >
@@ -588,11 +916,28 @@ export default function AdminProductList({
       ) : (
         <div className="mt-4 grid gap-3">
           {filteredProducts.map(
-            (product) => {
+            (
+              product
+            ) => {
               const clicks =
                 productStats[
                   product.id
                 ] ?? 0;
+
+              const canManage =
+                canManageOffer({
+                  currentUserId,
+                  currentRole,
+                  ownerModeActive,
+
+                  productOwnerId:
+                    product.created_by,
+                });
+
+              const ownerLabel =
+                getOwnerLabel(
+                  product
+                );
 
               return (
                 <article
@@ -601,7 +946,7 @@ export default function AdminProductList({
                   }
                   className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm"
                 >
-                  <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_190px]">
+                  <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_210px]">
                     <div className="relative aspect-[4/5] overflow-hidden rounded-[14px] bg-stone-100">
                       <img
                         src={
@@ -632,6 +977,27 @@ export default function AdminProductList({
                           {
                             product.category
                           }
+                        </span>
+
+                        <span
+                          className={[
+                            "max-w-full truncate rounded-full px-2.5 py-1 text-[9px] font-black sm:text-[10px]",
+                            product.created_by ===
+                            currentUserId
+                              ? "bg-blue-50 text-blue-700"
+                              : !product.created_by
+                                ? "bg-amber-50 text-amber-700"
+                                : "bg-violet-50 text-violet-700",
+                          ].join(
+                            " "
+                          )}
+                        >
+                          {product.created_by ===
+                          currentUserId
+                            ? "👤 Moja"
+                            : !product.created_by
+                              ? "⚠ Nieprzypisana"
+                              : `👤 ${ownerLabel}`}
                         </span>
                       </div>
 
@@ -693,13 +1059,35 @@ export default function AdminProductList({
                           id={
                             product.id
                           }
+                          slug={
+                            product.slug
+                          }
                           active={
                             product.active
                           }
                           imageUrl={
                             product.image_url
                           }
+                          canManage={
+                            canManage
+                          }
                         />
+
+                        {currentRole ===
+                          "owner" &&
+                          ownerModeActive && (
+                          <AdminProductOwnerSelect
+                            productId={
+                              product.id
+                            }
+                            ownerId={
+                              product.created_by
+                            }
+                            members={
+                              teamMembers
+                            }
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -727,6 +1115,7 @@ function StatusChip({
 }: {
   active: boolean;
   onClick: () => void;
+
   children:
     React.ReactNode;
 }) {
@@ -774,9 +1163,11 @@ function FilterSelect({
 }: {
   label: string;
   value: string;
+
   onChange: (
     value: string
   ) => void;
+
   children:
     React.ReactNode;
 }) {
@@ -814,7 +1205,7 @@ function EmptyProducts() {
       </div>
 
       <h3 className="mt-3 text-lg font-black">
-        Nie masz jeszcze ofert
+        Brak ofert
       </h3>
 
       <p className="mt-1 text-sm text-stone-500">
@@ -834,7 +1225,8 @@ function EmptyProducts() {
 function EmptyFilters({
   onClear,
 }: {
-  onClear: () => void;
+  onClear:
+    () => void;
 }) {
   return (
     <div className="mt-4 rounded-[20px] border border-dashed border-stone-200 bg-white px-5 py-12 text-center">
