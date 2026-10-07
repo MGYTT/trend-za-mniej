@@ -11,13 +11,16 @@ export default function SiteFooter() {
       <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 sm:py-14">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <BrandLogo compact />
+            <BrandLogo
+              compact
+            />
 
             <p className="mt-5 max-w-md text-sm leading-7 text-stone-500">
-              Modne ubrania,
+              Wybrane ubrania,
               dodatki i ciekawe
-              znaleziska wybrane w
-              jednym miejscu.
+              modowe znaleziska
+              zebrane w jednym
+              miejscu.
             </p>
 
             <div className="mt-5 max-w-xl rounded-2xl bg-rose-50/70 p-4 text-xs leading-6 text-stone-500">
@@ -59,7 +62,7 @@ export default function SiteFooter() {
               </FooterLink>
 
               <FooterLink
-                href="/#o-nas"
+                href="/o-nas"
               >
                 O Trend za Mniej
               </FooterLink>
@@ -72,6 +75,13 @@ export default function SiteFooter() {
             </p>
 
             <nav className="mt-4 grid gap-1">
+              <FooterLink
+                href="/o-nas"
+              >
+                Jak wybieramy
+                okazje
+              </FooterLink>
+
               <FooterLink
                 href="/afiliacja"
               >

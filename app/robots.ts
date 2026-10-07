@@ -14,17 +14,22 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
+
         allow: "/",
 
         disallow: [
-          "/admin/",
+          "/admin",
           "/login",
-          "/auth/",
-          "/go/",
+          "/auth",
+          "/go",
         ],
       },
     ],
 
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap:
+      `${siteUrl}/sitemap.xml`,
+
+    host:
+      siteUrl,
   };
 }

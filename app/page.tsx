@@ -45,7 +45,8 @@ export default async function Home() {
       emoji: "🧥",
       description:
         "Ciepłe modele na chłodniejsze dni",
-      href: "/okazje?category=Swetry",
+      href:
+        "/kategoria/swetry",
       count:
         countCategory(
           products,
@@ -57,7 +58,8 @@ export default async function Home() {
       emoji: "🧶",
       description:
         "Wygodne fasony na co dzień",
-      href: "/okazje?category=Bluzy",
+      href:
+        "/kategoria/bluzy",
       count:
         countCategory(
           products,
@@ -69,7 +71,8 @@ export default async function Home() {
       emoji: "👚",
       description:
         "Lekkie i modne propozycje",
-      href: "/okazje?category=Topy",
+      href:
+        "/kategoria/topy",
       count:
         countCategory(
           products,
@@ -81,7 +84,8 @@ export default async function Home() {
       emoji: "💸",
       description:
         "Znaleziska w dobrej cenie",
-      href: "/okazje?maxPrice=100",
+      href:
+        "/okazje?maxPrice=100",
       count:
         products.filter(
           (product) =>
@@ -480,7 +484,7 @@ export default async function Home() {
 
               <Link
                 href="/okazje"
-                className="mt-6 inline-flex min-h-12 items-center justify-center rounded-2xl bg-stone-900 px-6 font-black text-white transition hover:bg-rose-600"
+                className="mt-6 inline-flex min-h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 Przejdź do okazji →
               </Link>

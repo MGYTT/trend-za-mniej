@@ -3,6 +3,7 @@ import type {
 } from "next";
 
 import Link from "next/link";
+
 import {
   notFound,
 } from "next/navigation";
@@ -12,6 +13,10 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 import {
+  slugifyCategory,
+} from "@/lib/categories";
+
+import {
   formatPrice,
   getProductBySlug,
   getProducts,
@@ -19,6 +24,7 @@ import {
 
 import {
   getSiteUrl,
+  SITE_LANGUAGE,
   SITE_NAME,
 } from "@/lib/site";
 
@@ -30,6 +36,21 @@ type ProductPageProps = {
 
 export const revalidate =
   60;
+
+function buildMetaDescription(
+  shortName: string
+) {
+  const description =
+    `Sprawdź ${shortName}: opis, cenę w chwili publikacji oraz link do aktualnej oferty SHEIN. Zobacz dostępność, warianty i szczegóły produktu.`;
+
+  return description.length >
+    160
+    ? `${description.slice(
+        0,
+        157
+      )}...`
+    : description;
+}
 
 export async function generateMetadata({
   params,
@@ -57,33 +78,60 @@ export async function generateMetadata({
   const productUrl =
     `/produkt/${product.slug}`;
 
-  return {
-    title:
-      product.shortName,
+  const title =
+    `${product.shortName} – cena i oferta SHEIN`;
 
-    description:
-      product.description,
+  const description =
+    buildMetaDescription(
+      product.shortName
+    );
+
+  return {
+    title,
+
+    description,
 
     alternates: {
       canonical:
         productUrl,
     },
 
+    robots: {
+      index: true,
+      follow: true,
+
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview":
+          "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+
     openGraph: {
       type: "website",
-      locale: "pl_PL",
-      url: productUrl,
+
+      locale:
+        SITE_LANGUAGE,
+
+      url:
+        productUrl,
+
       siteName:
         SITE_NAME,
+
       title:
-        product.name,
-      description:
-        product.description,
+        `${product.name} | ${SITE_NAME}`,
+
+      description,
 
       images: [
         {
           url:
             product.image,
+
           alt:
             product.name,
         },
@@ -95,10 +143,9 @@ export async function generateMetadata({
         "summary_large_image",
 
       title:
-        product.name,
+        `${product.name} | ${SITE_NAME}`,
 
-      description:
-        product.description,
+      description,
 
       images: [
         product.image,
@@ -152,44 +199,161 @@ export default async function ProductPage({
   const productUrl =
     `${siteUrl}/produkt/${product.slug}`;
 
-  const jsonLd = {
+  const categorySlug =
+    slugifyCategory(
+      product.category
+    );
+
+  const categoryUrl =
+    `${siteUrl}/kategoria/${categorySlug}`;
+
+  const structuredData = {
     "@context":
       "https://schema.org",
 
-    "@type":
-      "Product",
+    "@graph": [
+      {
+        "@type":
+          "WebPage",
 
-    name:
-      product.name,
+        "@id":
+          `${productUrl}#webpage`,
 
-    description:
-      product.description,
+        url:
+          productUrl,
 
-    image: [
-      product.image,
+        name:
+          product.name,
+
+        description:
+          product.description,
+
+        inLanguage:
+          SITE_LANGUAGE,
+
+        isPartOf: {
+          "@id":
+            `${siteUrl}/#website`,
+        },
+
+        breadcrumb: {
+          "@id":
+            `${productUrl}#breadcrumb`,
+        },
+
+        mainEntity: {
+          "@id":
+            `${productUrl}#product`,
+        },
+      },
+
+      {
+        "@type":
+          "Product",
+
+        "@id":
+          `${productUrl}#product`,
+
+        name:
+          product.name,
+
+        description:
+          product.description,
+
+        image: [
+          product.image,
+        ],
+
+        url:
+          productUrl,
+
+        category:
+          product.category,
+
+        mainEntityOfPage: {
+          "@id":
+            `${productUrl}#webpage`,
+        },
+
+        offers: {
+          "@type":
+            "Offer",
+
+          url:
+            productUrl,
+
+          priceCurrency:
+            "PLN",
+
+          price:
+            product.price.toFixed(
+              2
+            ),
+        },
+      },
+
+      {
+        "@type":
+          "BreadcrumbList",
+
+        "@id":
+          `${productUrl}#breadcrumb`,
+
+        itemListElement: [
+          {
+            "@type":
+              "ListItem",
+
+            position: 1,
+
+            name:
+              "Strona główna",
+
+            item:
+              siteUrl,
+          },
+
+          {
+            "@type":
+              "ListItem",
+
+            position: 2,
+
+            name:
+              "Okazje",
+
+            item:
+              `${siteUrl}/okazje`,
+          },
+
+          {
+            "@type":
+              "ListItem",
+
+            position: 3,
+
+            name:
+              product.category,
+
+            item:
+              categoryUrl,
+          },
+
+          {
+            "@type":
+              "ListItem",
+
+            position: 4,
+
+            name:
+              product.shortName,
+
+            item:
+              productUrl,
+          },
+        ],
+      },
     ],
-
-    url:
-      productUrl,
-
-    category:
-      product.category,
-
-    offers: {
-      "@type":
-        "Offer",
-
-      url:
-        productUrl,
-
-      priceCurrency:
-        "PLN",
-
-      price:
-        product.price.toFixed(
-          2
-        ),
-    },
   };
 
   return (
@@ -199,7 +363,7 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{
           __html:
             JSON.stringify(
-              jsonLd
+              structuredData
             ).replace(
               /</g,
               "\\u003c"
@@ -242,7 +406,23 @@ export default async function ProductPage({
             /
           </span>
 
-          <span className="max-w-[220px] truncate font-semibold text-stone-700 sm:max-w-md">
+          <Link
+            href={`/kategoria/${categorySlug}`}
+            className="font-semibold transition hover:text-rose-600"
+          >
+            {
+              product.category
+            }
+          </Link>
+
+          <span
+            aria-hidden="true"
+            className="text-stone-300"
+          >
+            /
+          </span>
+
+          <span className="max-w-[180px] truncate font-semibold text-stone-700 sm:max-w-sm">
             {
               product.shortName
             }
@@ -280,9 +460,9 @@ export default async function ProductPage({
                 Zdjęcie przedstawia
                 prezentowany produkt.
                 Kolor może nieznacznie
-                różnić się w
-                zależności od ekranu
-                i materiałów sklepu.
+                różnić się w zależności
+                od ekranu i materiałów
+                sklepu.
               </p>
             </div>
           </section>
@@ -290,9 +470,7 @@ export default async function ProductPage({
           <section className="lg:sticky lg:top-28 lg:self-start">
             <div className="flex flex-wrap items-center gap-2">
               <Link
-                href={`/okazje?category=${encodeURIComponent(
-                  product.category
-                )}`}
+                href={`/kategoria/${categorySlug}`}
                 className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 sm:text-sm"
               >
                 {
@@ -375,6 +553,7 @@ export default async function ProductPage({
                 className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-4 text-base font-black text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-lg"
               >
                 Sprawdź na SHEIN
+
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -392,8 +571,7 @@ export default async function ProductPage({
 
               <p className="mt-3 text-center text-xs leading-5 text-stone-400">
                 Link otworzy ofertę
-                w zewnętrznym
-                sklepie.
+                w zewnętrznym sklepie.
               </p>
             </div>
 
@@ -424,8 +602,7 @@ export default async function ProductPage({
                     href="/afiliacja"
                     className="mt-2 inline-flex text-xs font-black text-rose-600 hover:text-rose-700 sm:text-sm"
                   >
-                    Więcej informacji
-                    →
+                    Więcej informacji →
                   </Link>
                 </div>
               </div>
@@ -446,15 +623,14 @@ export default async function ProductPage({
                 <CheckItem>
                   Zweryfikuj tabelę
                   rozmiarów przed
-                  złożeniem
-                  zamówienia.
+                  złożeniem zamówienia.
                 </CheckItem>
 
                 <CheckItem>
                   Kupony i promocje
-                  mogą różnić się w
-                  zależności od konta
-                  i czasu.
+                  mogą różnić się
+                  zależnie od konta i
+                  czasu.
                 </CheckItem>
               </div>
             </div>
@@ -489,9 +665,7 @@ export default async function ProductPage({
               </div>
 
               <Link
-                href={`/okazje?category=${encodeURIComponent(
-                  product.category
-                )}`}
+                href={`/kategoria/${categorySlug}`}
                 className="hidden text-sm font-black text-rose-600 hover:text-rose-700 sm:block"
               >
                 Wszystkie →
@@ -516,9 +690,7 @@ export default async function ProductPage({
             </div>
 
             <Link
-              href={`/okazje?category=${encodeURIComponent(
-                product.category
-              )}`}
+              href={`/kategoria/${categorySlug}`}
               className="mt-6 flex min-h-12 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 font-black text-rose-700 sm:hidden"
             >
               Więcej z tej kategorii
@@ -533,8 +705,7 @@ export default async function ProductPage({
           <div className="flex flex-col items-center justify-between gap-5 rounded-[28px] border border-stone-200 bg-white p-6 text-center sm:flex-row sm:text-left">
             <div>
               <p className="text-lg font-black">
-                Chcesz zobaczyć
-                więcej?
+                Chcesz zobaczyć więcej?
               </p>
 
               <p className="mt-1 text-sm leading-6 text-stone-500">
