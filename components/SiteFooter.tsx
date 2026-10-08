@@ -10,24 +10,39 @@ const discoveryLinks = [
   {
     label:
       "Wszystkie okazje",
+
     href:
       "/okazje",
   },
+
+  {
+    label:
+      "Promocje SHEIN i kody",
+
+    href:
+      "/promocje-shein",
+  },
+
   {
     label:
       "Kategorie",
+
     href:
       "/#kategorie",
   },
+
   {
     label:
       "Najnowsze",
+
     href:
       "/#najnowsze",
   },
+
   {
     label:
       "O Trend za Mniej",
+
     href:
       "/o-nas",
   },
@@ -37,24 +52,31 @@ const informationLinks = [
   {
     label:
       "Jak wybieramy okazje",
+
     href:
       "/o-nas",
   },
+
   {
     label:
       "Informacja o afiliacji",
+
     href:
       "/afiliacja",
   },
+
   {
     label:
       "Polityka prywatności",
+
     href:
       "/polityka-prywatnosci",
   },
+
   {
     label:
       "Kontakt",
+
     href:
       "/kontakt",
   },
@@ -75,7 +97,8 @@ export default function SiteFooter() {
 
             <p className="mt-4 max-w-md text-sm leading-7 text-stone-500">
               Wybrane ubrania,
-              dodatki i ciekawe
+              dodatki, promocje
+              SHEIN i ciekawe
               znaleziska zebrane
               w jednym miejscu,
               żeby łatwiej znaleźć
@@ -100,7 +123,9 @@ export default function SiteFooter() {
                   dodatkowych
                   kosztów dla
                   kupującego.
-                  Ceny i dostępność
+                  Ceny, promocje,
+                  kupony
+                  i dostępność
                   mogą się zmieniać.
                 </p>
               </div>
@@ -111,7 +136,9 @@ export default function SiteFooter() {
             title="Odkrywaj"
           >
             {discoveryLinks.map(
-              (item) => (
+              (
+                item
+              ) => (
                 <FooterLink
                   key={
                     item.href +
@@ -133,7 +160,9 @@ export default function SiteFooter() {
             title="Informacje"
           >
             {informationLinks.map(
-              (item) => (
+              (
+                item
+              ) => (
                 <FooterLink
                   key={
                     item.href +
@@ -168,8 +197,9 @@ export default function SiteFooter() {
             </span>
 
             <span>
-              Ceny sprawdzaj
-              przed zakupem
+              Ceny i promocje
+              sprawdzaj przed
+              zakupem
             </span>
           </div>
         </div>
@@ -183,7 +213,9 @@ function FooterColumn({
   children,
 }: {
   title: string;
-  children: ReactNode;
+
+  children:
+    ReactNode;
 }) {
   return (
     <div>
@@ -203,11 +235,15 @@ function FooterLink({
   children,
 }: {
   href: string;
-  children: ReactNode;
+
+  children:
+    ReactNode;
 }) {
   return (
     <Link
-      href={href}
+      href={
+        href
+      }
       className="flex min-h-10 w-fit items-center rounded-lg py-1 text-sm font-semibold text-stone-500 transition hover:text-rose-600"
     >
       {children}

@@ -13,28 +13,60 @@ import {
 
 type NavigationItem = {
   label: string;
+
   href: string;
+
   type:
     | "home"
     | "offers"
+    | "promotions"
     | "categories";
 };
 
-const navigation: NavigationItem[] = [
+const navigation:
+  NavigationItem[] = [
   {
-    label: "Start",
-    href: "/",
-    type: "home",
+    label:
+      "Start",
+
+    href:
+      "/",
+
+    type:
+      "home",
   },
+
   {
-    label: "Okazje",
-    href: "/okazje",
-    type: "offers",
+    label:
+      "Okazje",
+
+    href:
+      "/okazje",
+
+    type:
+      "offers",
   },
+
   {
-    label: "Kategorie",
-    href: "/#kategorie",
-    type: "categories",
+    label:
+      "Promocje",
+
+    href:
+      "/promocje-shein",
+
+    type:
+      "promotions",
+  },
+
+  {
+    label:
+      "Kategorie",
+
+    href:
+      "/#kategorie",
+
+    type:
+      "categories",
   },
 ];
 
@@ -45,12 +77,16 @@ export default function MobileBottomNav() {
   const [
     currentHash,
     setCurrentHash,
-  ] = useState("");
+  ] =
+    useState("");
 
   const visible =
-    pathname === "/" ||
+    pathname ===
+      "/" ||
     pathname ===
       "/okazje" ||
+    pathname ===
+      "/promocje-shein" ||
     pathname.startsWith(
       "/kategoria/"
     ) ||
@@ -77,7 +113,9 @@ export default function MobileBottomNav() {
         updateHash
       );
     };
-  }, [pathname]);
+  }, [
+    pathname,
+  ]);
 
   useEffect(() => {
     if (!visible) {
@@ -97,14 +135,17 @@ export default function MobileBottomNav() {
         "has-mobile-bottom-nav"
       );
     };
-  }, [visible]);
+  }, [
+    visible,
+  ]);
 
   if (!visible) {
     return null;
   }
 
   function isActive(
-    item: NavigationItem
+    item:
+      NavigationItem
   ) {
     if (
       item.type ===
@@ -113,6 +154,16 @@ export default function MobileBottomNav() {
       return (
         pathname ===
         "/okazje"
+      );
+    }
+
+    if (
+      item.type ===
+      "promotions"
+    ) {
+      return (
+        pathname ===
+        "/promocje-shein"
       );
     }
 
@@ -134,7 +185,8 @@ export default function MobileBottomNav() {
     }
 
     return (
-      pathname === "/" &&
+      pathname ===
+        "/" &&
       currentHash !==
         "#kategorie"
     );
@@ -146,14 +198,16 @@ export default function MobileBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/97 shadow-[0_-5px_20px_rgba(28,25,23,0.06)] backdrop-blur-xl lg:hidden"
     >
       <div
-        className="mx-auto grid max-w-md grid-cols-3 px-3 pt-1.5"
+        className="mx-auto grid max-w-lg grid-cols-4 px-2 pt-1.5"
         style={{
           paddingBottom:
             "max(0.5rem, env(safe-area-inset-bottom))",
         }}
       >
         {navigation.map(
-          (item) => {
+          (
+            item
+          ) => {
             const active =
               isActive(
                 item
@@ -183,8 +237,8 @@ export default function MobileBottomNav() {
                   }
                 }}
                 className={[
-                  "group relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl px-2",
-                  "text-[10px] font-black transition",
+                  "group relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl px-1",
+                  "text-[9px] font-black transition sm:text-[10px]",
                   active
                     ? "text-rose-700"
                     : "text-stone-400 active:bg-stone-50",
@@ -236,10 +290,12 @@ function NavigationIcon({
   type:
     | "home"
     | "offers"
+    | "promotions"
     | "categories";
 }) {
   if (
-    type === "home"
+    type ===
+    "home"
   ) {
     return (
       <svg
@@ -283,6 +339,40 @@ function NavigationIcon({
         <path d="M5 3h14l3 4H2l3-4Z" />
 
         <path d="M12 7v14" />
+      </svg>
+    );
+  }
+
+  if (
+    type ===
+    "promotions"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="h-[22px] w-[22px]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20 12 12 20 4 12l8-8Z" />
+
+        <circle
+          cx="9"
+          cy="9"
+          r="1"
+        />
+
+        <circle
+          cx="15"
+          cy="15"
+          r="1"
+        />
+
+        <path d="m15 9-6 6" />
       </svg>
     );
   }

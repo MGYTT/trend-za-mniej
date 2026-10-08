@@ -7,6 +7,10 @@ import {
 } from "@/lib/categories";
 
 import {
+  SHEIN_PROMOTIONS_UPDATED_AT,
+} from "@/lib/shein-promotions";
+
+import {
   supabase,
 } from "@/lib/supabase";
 
@@ -16,7 +20,9 @@ import {
 
 type SitemapProductRow = {
   slug: string;
+
   category: string;
+
   updated_at:
     | string
     | null;
@@ -31,7 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     error,
   } =
     await supabase
-      .from("products")
+      .from(
+        "products"
+      )
       .select(
         "slug, category, updated_at"
       )
@@ -47,7 +55,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       );
 
-  if (error) {
+  if (
+    error
+  ) {
     console.error(
       "Błąd generowania sitemap:",
       error
@@ -55,11 +65,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const products =
-    (data ??
-      []) as SitemapProductRow[];
+    (
+      data ??
+      []
+    ) as SitemapProductRow[];
 
-  const staticPages: MetadataRoute.Sitemap =
-    [
+  const staticPages:
+    MetadataRoute.Sitemap = [
       {
         url:
           siteUrl,
@@ -77,6 +89,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
         changeFrequency:
           "daily",
+
+        priority:
+          0.9,
+      },
+
+      {
+        url:
+          `${siteUrl}/promocje-shein`,
+
+        lastModified:
+          new Date(
+            SHEIN_PROMOTIONS_UPDATED_AT
+          ),
+
+        changeFrequency:
+          "weekly",
 
         priority:
           0.9,
@@ -127,9 +155,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     ];
 
-  const productPages: MetadataRoute.Sitemap =
+  const productPages:
+    MetadataRoute.Sitemap =
     products.map(
-      (product) => ({
+      (
+        product
+      ) => ({
         url:
           `${siteUrl}/produkt/${product.slug}`,
 
@@ -159,9 +190,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     of products
   ) {
     const category =
-      product.category?.trim();
+      product.category
+        ?.trim();
 
-    if (!category) {
+    if (
+      !category
+    ) {
       continue;
     }
 
@@ -192,7 +226,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  const categoryPages: MetadataRoute.Sitemap =
+  const categoryPages:
+    MetadataRoute.Sitemap =
     Array.from(
       categoryDates.entries()
     ).map(

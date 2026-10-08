@@ -19,31 +19,67 @@ type NavigationItem = {
   href: string;
   type:
     | "offers"
+    | "promotions"
     | "categories"
     | "latest"
     | "about";
 };
 
-const navigation: NavigationItem[] = [
+const navigation:
+  NavigationItem[] = [
   {
-    label: "Okazje",
-    href: "/okazje",
-    type: "offers",
+    label:
+      "Okazje",
+
+    href:
+      "/okazje",
+
+    type:
+      "offers",
   },
+
   {
-    label: "Kategorie",
-    href: "/#kategorie",
-    type: "categories",
+    label:
+      "Promocje SHEIN",
+
+    href:
+      "/promocje-shein",
+
+    type:
+      "promotions",
   },
+
   {
-    label: "Najnowsze",
-    href: "/#najnowsze",
-    type: "latest",
+    label:
+      "Kategorie",
+
+    href:
+      "/#kategorie",
+
+    type:
+      "categories",
   },
+
   {
-    label: "O nas",
-    href: "/o-nas",
-    type: "about",
+    label:
+      "Najnowsze",
+
+    href:
+      "/#najnowsze",
+
+    type:
+      "latest",
+  },
+
+  {
+    label:
+      "O nas",
+
+    href:
+      "/o-nas",
+
+    type:
+      "about",
   },
 ];
 
@@ -54,11 +90,18 @@ export default function SiteHeader() {
   const [
     menuOpen,
     setMenuOpen,
-  ] = useState(false);
+  ] =
+    useState(
+      false
+    );
 
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+    setMenuOpen(
+      false
+    );
+  }, [
+    pathname,
+  ]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -73,7 +116,8 @@ export default function SiteHeader() {
       "hidden";
 
     function handleKeyDown(
-      event: KeyboardEvent
+      event:
+        KeyboardEvent
     ) {
       if (
         event.key ===
@@ -99,10 +143,13 @@ export default function SiteHeader() {
         handleKeyDown
       );
     };
-  }, [menuOpen]);
+  }, [
+    menuOpen,
+  ]);
 
   function isActive(
-    item: NavigationItem
+    item:
+      NavigationItem
   ) {
     if (
       item.type ===
@@ -111,6 +158,16 @@ export default function SiteHeader() {
       return (
         pathname ===
         "/okazje"
+      );
+    }
+
+    if (
+      item.type ===
+      "promotions"
+    ) {
+      return (
+        pathname ===
+        "/promocje-shein"
       );
     }
 
@@ -137,7 +194,9 @@ export default function SiteHeader() {
   }
 
   function closeMenu() {
-    setMenuOpen(false);
+    setMenuOpen(
+      false
+    );
   }
 
   return (
@@ -153,7 +212,9 @@ export default function SiteHeader() {
             className="hidden items-center gap-1 lg:flex"
           >
             {navigation.map(
-              (item) => {
+              (
+                item
+              ) => {
                 const active =
                   isActive(
                     item
@@ -238,6 +299,7 @@ export default function SiteHeader() {
                   strokeLinejoin="round"
                 >
                   <path d="M6 6l12 12" />
+
                   <path d="M18 6L6 18" />
                 </svg>
               ) : (
@@ -251,7 +313,9 @@ export default function SiteHeader() {
                   strokeLinecap="round"
                 >
                   <path d="M4 7h16" />
+
                   <path d="M4 12h16" />
+
                   <path d="M4 17h16" />
                 </svg>
               )}
@@ -280,7 +344,9 @@ export default function SiteHeader() {
                   className="grid gap-1"
                 >
                   {navigation.map(
-                    (item) => {
+                    (
+                      item
+                    ) => {
                       const active =
                         isActive(
                           item
@@ -353,14 +419,13 @@ export default function SiteHeader() {
                 </div>
 
                 <Link
-                  href="/okazje"
+                  href="/promocje-shein"
                   onClick={
                     closeMenu
                   }
                   className="mt-3 flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-5 font-black text-white shadow-sm transition hover:bg-rose-700"
                 >
-                  Zobacz wszystkie
-                  okazje
+                  🔥 Promocje SHEIN
                 </Link>
               </div>
             </div>
