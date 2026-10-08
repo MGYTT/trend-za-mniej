@@ -16,7 +16,7 @@ export default function ProductCard({
     <article className="group flex h-full overflow-hidden rounded-[22px] border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md">
       <Link
         href={`/produkt/${product.slug}`}
-        aria-label={`Zobacz produkt: ${product.shortName}`}
+        aria-label={`Zobacz szczegóły produktu: ${product.shortName}`}
         className="flex h-full w-full flex-col"
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
@@ -30,14 +30,18 @@ export default function ProductCard({
 
           {product.featured && (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black text-rose-700 shadow-sm backdrop-blur sm:text-[11px]">
-              🔥 Gorąca
+              🔥 Gorąca okazja
             </span>
           )}
+
+          <span className="absolute bottom-3 right-3 flex h-9 w-9 translate-y-2 items-center justify-center rounded-full bg-white/95 text-stone-700 opacity-0 shadow-sm backdrop-blur transition group-hover:translate-y-0 group-hover:opacity-100">
+            →
+          </span>
         </div>
 
         <div className="flex flex-1 flex-col p-4">
           <div className="flex min-h-6 items-center justify-between gap-2">
-            <span className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-rose-600">
+            <span className="truncate text-[10px] font-black uppercase tracking-[0.09em] text-rose-600 sm:text-[11px]">
               {product.category}
             </span>
 
@@ -71,21 +75,31 @@ export default function ProductCard({
             </div>
 
             <p className="mt-1 text-[10px] leading-5 text-stone-400">
-              Cena w chwili
+              Cena zapisana przy
               publikacji
             </p>
 
-            <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-3 text-sm font-black text-rose-600">
-              <span>
-                Zobacz produkt
-              </span>
+            <div className="mt-3 border-t border-stone-100 pt-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-rose-600 transition group-hover:text-rose-700">
+                    Sprawdź szczegóły
+                  </p>
 
-              <span
-                aria-hidden="true"
-                className="transition group-hover:translate-x-1"
-              >
-                →
-              </span>
+                  <p className="mt-0.5 text-[9px] leading-4 text-stone-400">
+                    Cena, opis
+                    i przejście do
+                    SHEIN
+                  </p>
+                </div>
+
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-sm font-black text-rose-600 transition group-hover:bg-rose-100 group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
+              </div>
             </div>
           </div>
         </div>

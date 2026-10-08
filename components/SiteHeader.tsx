@@ -16,12 +16,15 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 
 type NavigationItem = {
   label: string;
+
+  description: string;
+
   href: string;
+
   type:
     | "offers"
     | "promotions"
     | "categories"
-    | "latest"
     | "about";
 };
 
@@ -29,7 +32,10 @@ const navigation:
   NavigationItem[] = [
   {
     label:
-      "Okazje",
+      "Produkty",
+
+    description:
+      "Przeglądaj wszystkie okazje",
 
     href:
       "/okazje",
@@ -42,6 +48,9 @@ const navigation:
     label:
       "Promocje SHEIN",
 
+    description:
+      "Kupony, kody i kampanie",
+
     href:
       "/promocje-shein",
 
@@ -53,6 +62,9 @@ const navigation:
     label:
       "Kategorie",
 
+    description:
+      "Znajdź odpowiedni rodzaj produktu",
+
     href:
       "/#kategorie",
 
@@ -62,18 +74,10 @@ const navigation:
 
   {
     label:
-      "Najnowsze",
-
-    href:
-      "/#najnowsze",
-
-    type:
-      "latest",
-  },
-
-  {
-    label:
       "O nas",
+
+    description:
+      "Jak działa Trend za Mniej",
 
     href:
       "/o-nas",
@@ -104,7 +108,9 @@ export default function SiteHeader() {
   ]);
 
   useEffect(() => {
-    if (!menuOpen) {
+    if (
+      !menuOpen
+    ) {
       return;
     }
 
@@ -157,7 +163,10 @@ export default function SiteHeader() {
     ) {
       return (
         pathname ===
-        "/okazje"
+          "/okazje" ||
+        pathname.startsWith(
+          "/produkt/"
+        )
       );
     }
 
@@ -263,7 +272,7 @@ export default function SiteHeader() {
               href="/okazje"
               className="hidden min-h-10 items-center justify-center rounded-xl bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 sm:inline-flex"
             >
-              Znajdź okazję
+              Znajdź produkt
             </Link>
 
             <button
@@ -339,9 +348,22 @@ export default function SiteHeader() {
               className="absolute inset-x-0 top-full z-50 border-t border-stone-100 bg-white shadow-xl lg:hidden"
             >
               <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+                <div className="mb-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+                    Gdzie chcesz
+                    przejść?
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-stone-400">
+                    Wybierz to,
+                    czego teraz
+                    szukasz.
+                  </p>
+                </div>
+
                 <nav
                   aria-label="Menu mobilne"
-                  className="grid gap-1"
+                  className="grid gap-2"
                 >
                   {navigation.map(
                     (
@@ -363,28 +385,53 @@ export default function SiteHeader() {
                           onClick={
                             closeMenu
                           }
-                          className={[
-                            "flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-black transition",
+                          aria-current={
                             active
-                              ? "bg-rose-50 text-rose-700"
-                              : "text-stone-700 hover:bg-stone-50",
+                              ? "page"
+                              : undefined
+                          }
+                          className={[
+                            "flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition",
+                            active
+                              ? "border-rose-100 bg-rose-50"
+                              : "border-stone-100 bg-stone-50 hover:border-rose-100 hover:bg-rose-50",
                           ].join(
                             " "
                           )}
                         >
-                          <span>
-                            {
-                              item.label
-                            }
-                          </span>
+                          <div className="min-w-0">
+                            <p
+                              className={[
+                                "text-sm font-black",
+                                active
+                                  ? "text-rose-700"
+                                  : "text-stone-800",
+                              ].join(
+                                " "
+                              )}
+                            >
+                              {
+                                item.label
+                              }
+                            </p>
+
+                            <p className="mt-0.5 truncate text-[10px] leading-5 text-stone-400">
+                              {
+                                item.description
+                              }
+                            </p>
+                          </div>
 
                           <span
                             aria-hidden="true"
-                            className={
+                            className={[
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-sm shadow-sm",
                               active
-                                ? "text-rose-500"
-                                : "text-stone-300"
-                            }
+                                ? "text-rose-600"
+                                : "text-stone-400",
+                            ].join(
+                              " "
+                            )}
                           >
                             →
                           </span>
@@ -394,28 +441,52 @@ export default function SiteHeader() {
                   )}
                 </nav>
 
-                <div className="my-3 border-t border-stone-100" />
+                <div className="mt-4 border-t border-stone-100 pt-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-stone-400">
+                    Szybkie przejścia
+                  </p>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/afiliacja"
-                    onClick={
-                      closeMenu
-                    }
-                    className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-bold text-stone-600 transition hover:bg-stone-100"
-                  >
-                    Afiliacja
-                  </Link>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <Link
+                      href="/okazje?maxPrice=50"
+                      onClick={
+                        closeMenu
+                      }
+                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-black text-stone-600 transition hover:bg-rose-50 hover:text-rose-700"
+                    >
+                      💸 Do 50 zł
+                    </Link>
 
-                  <Link
-                    href="/kontakt"
-                    onClick={
-                      closeMenu
-                    }
-                    className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-bold text-stone-600 transition hover:bg-stone-100"
-                  >
-                    Kontakt
-                  </Link>
+                    <Link
+                      href="/okazje?sort=newest"
+                      onClick={
+                        closeMenu
+                      }
+                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-black text-stone-600 transition hover:bg-rose-50 hover:text-rose-700"
+                    >
+                      🆕 Najnowsze
+                    </Link>
+
+                    <Link
+                      href="/afiliacja"
+                      onClick={
+                        closeMenu
+                      }
+                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-bold text-stone-500 transition hover:bg-stone-100"
+                    >
+                      Afiliacja
+                    </Link>
+
+                    <Link
+                      href="/kontakt"
+                      onClick={
+                        closeMenu
+                      }
+                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-bold text-stone-500 transition hover:bg-stone-100"
+                    >
+                      Kontakt
+                    </Link>
+                  </div>
                 </div>
 
                 <Link
@@ -423,10 +494,24 @@ export default function SiteHeader() {
                   onClick={
                     closeMenu
                   }
-                  className="mt-3 flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-5 font-black text-white shadow-sm transition hover:bg-rose-700"
+                  className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700"
                 >
-                  🔥 Promocje SHEIN
+                  <span
+                    aria-hidden="true"
+                  >
+                    🔥
+                  </span>
+
+                  Zobacz promocje
+                  SHEIN
                 </Link>
+
+                <p className="mt-3 text-center text-[9px] leading-5 text-stone-400">
+                  Produkty,
+                  promocje
+                  i kody zebrane
+                  w jednym miejscu.
+                </p>
               </div>
             </div>
           </>

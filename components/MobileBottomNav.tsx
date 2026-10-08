@@ -38,7 +38,7 @@ const navigation:
 
   {
     label:
-      "Okazje",
+      "Produkty",
 
     href:
       "/okazje",
@@ -89,9 +89,7 @@ export default function MobileBottomNav() {
       "/promocje-shein" ||
     pathname.startsWith(
       "/kategoria/"
-    ) ||
-    pathname ===
-      "/o-nas";
+    );
 
   useEffect(() => {
     function updateHash() {
@@ -118,7 +116,9 @@ export default function MobileBottomNav() {
   ]);
 
   useEffect(() => {
-    if (!visible) {
+    if (
+      !visible
+    ) {
       document.body.classList.remove(
         "has-mobile-bottom-nav"
       );
@@ -139,7 +139,9 @@ export default function MobileBottomNav() {
     visible,
   ]);
 
-  if (!visible) {
+  if (
+    !visible
+  ) {
     return null;
   }
 
@@ -195,7 +197,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Nawigacja mobilna"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/97 shadow-[0_-5px_20px_rgba(28,25,23,0.06)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/97 shadow-[0_-5px_20px_rgba(28,25,23,0.07)] backdrop-blur-xl lg:hidden"
     >
       <div
         className="mx-auto grid max-w-lg grid-cols-4 px-2 pt-1.5"
@@ -237,7 +239,7 @@ export default function MobileBottomNav() {
                   }
                 }}
                 className={[
-                  "group relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl px-1",
+                  "group relative flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl px-1",
                   "text-[9px] font-black transition sm:text-[10px]",
                   active
                     ? "text-rose-700"
@@ -255,9 +257,9 @@ export default function MobileBottomNav() {
 
                 <span
                   className={[
-                    "flex h-7 w-7 items-center justify-center transition",
+                    "flex h-7 w-7 items-center justify-center rounded-lg transition",
                     active
-                      ? "text-rose-600"
+                      ? "bg-rose-50 text-rose-600"
                       : "text-stone-400",
                   ].join(
                     " "
@@ -301,7 +303,7 @@ function NavigationIcon({
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-[22px] w-[22px]"
+        className="h-[21px] w-[21px]"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -325,20 +327,16 @@ function NavigationIcon({
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-[22px] w-[22px]"
+        className="h-[21px] w-[21px]"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7" />
+        <path d="M6 8h12l1 12H5L6 8Z" />
 
-        <path d="M2 7h20" />
-
-        <path d="M5 3h14l3 4H2l3-4Z" />
-
-        <path d="M12 7v14" />
+        <path d="M9 8a3 3 0 0 1 6 0" />
       </svg>
     );
   }
@@ -351,7 +349,7 @@ function NavigationIcon({
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-[22px] w-[22px]"
+        className="h-[21px] w-[21px]"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -381,7 +379,7 @@ function NavigationIcon({
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-[22px] w-[22px]"
+      className="h-[21px] w-[21px]"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
