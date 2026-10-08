@@ -2,6 +2,7 @@ import type {
   Metadata,
 } from "next";
 
+import AdminPresenceHeartbeat from "@/components/admin/AdminPresenceHeartbeat";
 import SearchVisibilitySync from "@/components/admin/SearchVisibilitySync";
 
 import {
@@ -35,6 +36,8 @@ export default function AdminLayout({
 
   return (
     <>
+      <AdminPresenceHeartbeat />
+
       <SearchVisibilitySync
         enabled={
           indexNow.configured

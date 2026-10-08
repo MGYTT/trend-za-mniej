@@ -1,91 +1,175 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import type {
+  FormEvent,
+} from "react";
 
-import { createClient } from "@/lib/supabase/client";
+import {
+  useState,
+} from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  createClient,
+} from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] =
+  const [
+    email,
+    setEmail,
+  ] =
     useState("");
 
-  const [loading, setLoading] =
+  const [
+    password,
+    setPassword,
+  ] =
+    useState("");
+
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(false);
 
-  const [error, setError] = useState<
-    string | null
-  >(null);
+  const [
+    error,
+    setError,
+  ] =
+    useState<
+      string | null
+    >(null);
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    setLoading(true);
-    setError(null);
+    setLoading(
+      true
+    );
 
-    const supabase = createClient();
+    setError(
+      null
+    );
+
+    const supabase =
+      createClient();
 
     const {
-      data: signInData,
-      error: signInError,
+      data:
+        signInData,
+      error:
+        signInError,
     } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      await supabase.auth
+        .signInWithPassword({
+          email,
+          password,
+        });
 
-    if (signInError) {
+    if (
+      signInError
+    ) {
       setError(
         "Nieprawidłowy e-mail lub hasło."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
 
     const userId =
-      signInData.user?.id;
+      signInData.user
+        ?.id;
 
     if (!userId) {
-      await supabase.auth.signOut();
+      await supabase.auth
+        .signOut();
 
       setError(
         "Nie udało się potwierdzić konta administratora."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
 
     const {
-      data: admin,
-      error: adminError,
-    } = await supabase
-      .from("admins")
-      .select("user_id")
-      .eq("user_id", userId)
-      .maybeSingle();
+      data:
+        admin,
+      error:
+        adminError,
+    } =
+      await supabase
+        .from(
+          "admins"
+        )
+        .select(
+          "user_id"
+        )
+        .eq(
+          "user_id",
+          userId
+        )
+        .maybeSingle();
 
-    if (adminError || !admin) {
-      await supabase.auth.signOut();
+    if (
+      adminError ||
+      !admin
+    ) {
+      await supabase.auth
+        .signOut();
 
       setError(
         "To konto nie ma uprawnień administratora."
       );
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
       return;
     }
 
-    router.push("/admin");
+    const {
+      error:
+        activityError,
+    } =
+      await supabase.rpc(
+        "record_admin_login",
+        {
+          p_path:
+            "/admin",
+        }
+      );
+
+    if (
+      activityError
+    ) {
+      console.error(
+        "Nie udało się zapisać logowania administratora:",
+        activityError
+      );
+    }
+
+    router.push(
+      "/admin"
+    );
+
     router.refresh();
   }
 
@@ -107,7 +191,9 @@ export default function LoginPage() {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={
+            handleSubmit
+          }
           className="mt-8 space-y-5"
         >
           <div>
@@ -122,9 +208,16 @@ export default function LoginPage() {
               id="email"
               type="email"
               required
-              value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
+              value={
+                email
+              }
+              onChange={(
+                event
+              ) =>
+                setEmail(
+                  event.target
+                    .value
+                )
               }
               placeholder="twoj@email.pl"
               className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
@@ -143,9 +236,16 @@ export default function LoginPage() {
               id="password"
               type="password"
               required
-              value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
+              value={
+                password
+              }
+              onChange={(
+                event
+              ) =>
+                setPassword(
+                  event.target
+                    .value
+                )
               }
               placeholder="••••••••"
               className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
@@ -160,7 +260,9 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={
+              loading
+            }
             className="w-full rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-4 font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading

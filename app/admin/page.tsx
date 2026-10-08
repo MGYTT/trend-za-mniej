@@ -25,12 +25,6 @@ type ProductStatRow = {
     | string;
 };
 
-type IdentityStatus =
-  | "pending"
-  | "resolved"
-  | "unresolved"
-  | "conflict";
-
 type AdminRow = {
   user_id: string;
 
@@ -311,41 +305,37 @@ export default async function AdminPage({
     todayClicksResult.count ??
     0;
 
-  const identitySummary = {
-    pending: 0,
-    resolved: 0,
-    unresolved: 0,
-    conflict: 0,
+  const duplicateSummary = {
+    total:
+      products.length,
+
+    withIdentity:
+      products.filter(
+        (
+          product
+        ) =>
+          Boolean(
+            product.shein_product_key
+          )
+      ).length,
+
+    withoutIdentity:
+      products.filter(
+        (
+          product
+        ) =>
+          !product.shein_product_key
+      ).length,
+
+    conflicts:
+      products.filter(
+        (
+          product
+        ) =>
+          product.shein_identity_status ===
+          "conflict"
+      ).length,
   };
-
-  for (
-    const product
-    of products
-  ) {
-    const status =
-      product.shein_identity_status as
-        | IdentityStatus
-        | null
-        | undefined;
-
-    if (
-      status &&
-      status in
-        identitySummary
-    ) {
-      identitySummary[
-        status
-      ] += 1;
-    } else if (
-      product.shein_product_key
-    ) {
-      identitySummary.resolved +=
-        1;
-    } else {
-      identitySummary.pending +=
-        1;
-    }
-  }
 
   const productStats = (
     (
@@ -471,7 +461,7 @@ export default async function AdminPage({
 
         <DuplicateProtectionStatus
           initialSummary={
-            identitySummary
+            duplicateSummary
           }
         />
 

@@ -3,129 +3,48 @@ import {
   type SheinProductIdentity,
 } from "@/lib/product-duplicate";
 
-type ResolveResponse = {
-  identity?:
-    | SheinProductIdentity
-    | null;
-
-  method?:
-    | "input"
-    | "redirect"
-    | "html"
-    | "none";
-
-  error?: string;
-};
-
-function isCanonicalIdentity(
-  identity:
-    SheinProductIdentity | null
-) {
-  return Boolean(
-    identity &&
-      identity.source !==
-        "sku"
-  );
-}
-
 export async function resolveSheinProductIdentityForAdmin({
   sourceText,
   affiliateUrl,
 }: {
   sourceText: string;
   affiliateUrl: string;
-}) {
+}): Promise<
+  SheinProductIdentity | null
+> {
   /*
-   * Najpierw unikamy niepotrzebnego
-   * requestu do serwera, jeżeli
-   * pewne ID jest już widoczne
-   * lokalnie.
+   * Ochrona duplikatów działa
+   * wyłącznie na danych dostarczonych
+   * przez administratora.
+   *
+   * Nie pobieramy strony SHEIN,
+   * nie rozwijamy automatycznie
+   * OneLinków i nie wykonujemy
+   * żadnych requestów do SHEIN.
+   *
+   * Możemy rozpoznać:
+   * - ID produktu z wklejonego tekstu,
+   * - ID produktu z bezpośredniego URL,
+   * - SKU z wklejonych danych.
    */
-
-  const affiliateIdentity =
-    extractSheinProductIdentity(
-      affiliateUrl
-    );
-
-  if (
-    isCanonicalIdentity(
-      affiliateIdentity
-    )
-  ) {
-    return affiliateIdentity;
-  }
 
   const sourceIdentity =
     extractSheinProductIdentity(
       sourceText
     );
 
-  if (
-    isCanonicalIdentity(
-      sourceIdentity
-    )
-  ) {
+  if (sourceIdentity) {
     return sourceIdentity;
   }
 
-  if (
-    !affiliateUrl.trim()
-  ) {
-    return (
-      sourceIdentity ??
-      affiliateIdentity ??
-      null
-    );
-  }
-
-  const response =
-    await fetch(
-      "/api/admin/shein-product/resolve",
-      {
-        method:
-          "POST",
-
-        credentials:
-          "same-origin",
-
-        cache:
-          "no-store",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body:
-          JSON.stringify({
-            sourceText,
-            affiliateUrl,
-          }),
-      }
+  const affiliateIdentity =
+    extractSheinProductIdentity(
+      affiliateUrl
     );
 
-  let data:
-    ResolveResponse = {};
-
-  try {
-    data =
-      await response.json() as
-        ResolveResponse;
-  } catch {
-    // Obsłużymy niżej.
+  if (affiliateIdentity) {
+    return affiliateIdentity;
   }
 
-  if (!response.ok) {
-    throw new Error(
-      data.error ??
-        "Nie udało się rozpoznać produktu SHEIN."
-    );
-  }
-
-  return (
-    data.identity ??
-    sourceIdentity ??
-    affiliateIdentity ??
-    null
-  );
+  return null;
 }
