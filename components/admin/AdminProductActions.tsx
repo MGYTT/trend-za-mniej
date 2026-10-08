@@ -102,7 +102,9 @@ export default function AdminProductActions({
           id
         );
 
-    if (error) {
+    if (
+      error
+    ) {
       alert(
         "Nie udało się zmienić widoczności produktu."
       );
@@ -137,7 +139,9 @@ export default function AdminProductActions({
         "Czy na pewno chcesz usunąć tę ofertę? Produkt i jego zdjęcie zostaną usunięte. Tej operacji nie można cofnąć."
       );
 
-    if (!confirmed) {
+    if (
+      !confirmed
+    ) {
       return;
     }
 
@@ -158,7 +162,9 @@ export default function AdminProductActions({
           id
         );
 
-    if (error) {
+    if (
+      error
+    ) {
       alert(
         "Nie udało się usunąć produktu."
       );
@@ -179,7 +185,9 @@ export default function AdminProductActions({
         imageUrl
       );
 
-    if (storagePath) {
+    if (
+      storagePath
+    ) {
       const {
         error:
           storageError,
@@ -221,12 +229,47 @@ export default function AdminProductActions({
           </p>
 
           <p className="mt-1 text-[10px] leading-4 text-stone-400">
-            Możesz ją zobaczyć,
-            ale nie możesz zmieniać
-            jej danych ani linku
-            afiliacyjnego.
+            Możesz ją zobaczyć
+            i przygotować grafikę
+            social media, ale
+            nie możesz zmieniać
+            danych produktu.
           </p>
         </div>
+
+        <Link
+          href={`/admin/social/${id}`}
+          className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-violet-50 px-3 text-xs font-black text-violet-700 transition hover:bg-violet-100"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect
+              x="5"
+              y="2"
+              width="14"
+              height="20"
+              rx="3"
+            />
+
+            <path d="M9 6h6" />
+
+            <circle
+              cx="12"
+              cy="18"
+              r="1"
+            />
+          </svg>
+
+          Social media
+        </Link>
 
         {active && (
           <Link
@@ -247,7 +290,7 @@ export default function AdminProductActions({
     null;
 
   return (
-    <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
       <Link
         href={`/admin/edytuj/${id}`}
         className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-3 text-xs font-black text-white transition hover:bg-rose-700 sm:text-sm"
@@ -268,6 +311,40 @@ export default function AdminProductActions({
         </svg>
 
         Edytuj
+      </Link>
+
+      <Link
+        href={`/admin/social/${id}`}
+        className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-violet-50 px-3 text-xs font-black text-violet-700 transition hover:bg-violet-100 sm:text-sm"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect
+            x="5"
+            y="2"
+            width="14"
+            height="20"
+            rx="3"
+          />
+
+          <path d="M9 6h6" />
+
+          <circle
+            cx="12"
+            cy="18"
+            r="1"
+          />
+        </svg>
+
+        Social media
       </Link>
 
       <button
