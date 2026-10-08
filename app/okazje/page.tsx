@@ -19,6 +19,12 @@ import {
   type ProductSort,
 } from "@/lib/products";
 
+import {
+  getSiteUrl,
+  SITE_LANGUAGE,
+  SITE_NAME,
+} from "@/lib/site";
+
 type Props = {
   searchParams: Promise<{
     q?: string;
@@ -38,7 +44,8 @@ export async function generateMetadata({
     await searchParams;
 
   const query =
-    params.q?.trim() ?? "";
+    params.q?.trim() ??
+    "";
 
   const category =
     params.category &&
@@ -48,10 +55,12 @@ export async function generateMetadata({
       : "";
 
   const maxPrice =
-    params.maxPrice ?? "";
+    params.maxPrice ??
+    "";
 
   const sort =
-    params.sort ?? "";
+    params.sort ??
+    "";
 
   const hasFilters =
     Boolean(query) ||
@@ -59,7 +68,8 @@ export async function generateMetadata({
     Boolean(maxPrice) ||
     Boolean(
       sort &&
-        sort !== "newest"
+      sort !==
+        "newest"
     );
 
   let title =
@@ -86,6 +96,7 @@ export async function generateMetadata({
 
   return {
     title,
+
     description,
 
     alternates: {
@@ -97,15 +108,72 @@ export async function generateMetadata({
       index:
         !hasFilters,
 
-      follow: true,
+      follow:
+        true,
+
+      googleBot: {
+        index:
+          !hasFilters,
+
+        follow:
+          true,
+
+        "max-image-preview":
+          "large",
+
+        "max-snippet":
+          -1,
+
+        "max-video-preview":
+          -1,
+      },
     },
 
     openGraph: {
-      type: "website",
-      locale: "pl_PL",
-      url: "/okazje",
+      type:
+        "website",
+
+      locale:
+        "pl_PL",
+
+      url:
+        "/okazje",
+
+      siteName:
+        SITE_NAME,
+
       title,
+
       description,
+
+      images: [
+        {
+          url:
+            "/opengraph-image",
+
+          width:
+            1200,
+
+          height:
+            630,
+
+          alt:
+            "Trend za Mniej - wszystkie okazje",
+        },
+      ],
+    },
+
+    twitter: {
+      card:
+        "summary_large_image",
+
+      title,
+
+      description,
+
+      images: [
+        "/opengraph-image",
+      ],
     },
   };
 }
@@ -117,7 +185,8 @@ export default async function OffersPage({
     await searchParams;
 
   const query =
-    params.q?.trim() ?? "";
+    params.q?.trim() ??
+    "";
 
   const category =
     params.category &&
@@ -127,7 +196,8 @@ export default async function OffersPage({
       : "";
 
   const maxPrice =
-    params.maxPrice ?? "";
+    params.maxPrice ??
+    "";
 
   const parsedMaxPrice =
     maxPrice === ""
@@ -136,49 +206,64 @@ export default async function OffersPage({
           maxPrice
         );
 
-  const allowedSorts: ProductSort[] =
-    [
-      "newest",
-      "price-asc",
-      "price-desc",
-    ];
+  const safeMaxPrice =
+    typeof parsedMaxPrice ===
+        "number" &&
+      Number.isFinite(
+        parsedMaxPrice
+      ) &&
+      parsedMaxPrice >
+        0
+      ? parsedMaxPrice
+      : undefined;
 
-  const sort: ProductSort =
+  const allowedSorts:
+    ProductSort[] = [
+    "newest",
+    "price-asc",
+    "price-desc",
+  ];
+
+  const sort:
+    ProductSort =
     allowedSorts.includes(
-      params.sort as ProductSort
+      params.sort as
+        ProductSort
     )
       ? (
-          params.sort as ProductSort
+          params.sort as
+            ProductSort
         )
       : "newest";
 
   const [
     products,
     categories,
-  ] = await Promise.all([
-    getProducts({
-      query,
+  ] =
+    await Promise.all([
+      getProducts({
+        query,
 
-      category:
-        category ||
-        undefined,
+        category:
+          category ||
+          undefined,
 
-      maxPrice:
-        parsedMaxPrice,
+        maxPrice:
+          safeMaxPrice,
 
-      sort,
-    }),
+        sort,
+      }),
 
-    getCategories(),
-  ]);
+      getCategories(),
+    ]);
 
   const hasFilters =
     Boolean(
       query ||
-        category ||
-        maxPrice ||
-        sort !==
-          "newest"
+      category ||
+      maxPrice ||
+      sort !==
+        "newest"
     );
 
   const activeFilters =
@@ -190,8 +275,8 @@ export default async function OffersPage({
       category ||
         null,
 
-      maxPrice
-        ? `Do ${maxPrice} zł`
+      safeMaxPrice
+        ? `Do ${safeMaxPrice} zł`
         : null,
 
       sort ===
@@ -218,8 +303,158 @@ export default async function OffersPage({
       7
     );
 
+  const siteUrl =
+    getSiteUrl();
+
+  const pageUrl =
+    `${siteUrl}/okazje`;
+
+  const structuredData =
+    !hasFilters
+      ? {
+          "@context":
+            "https://schema.org",
+
+          "@graph": [
+            {
+              "@type":
+                "CollectionPage",
+
+              "@id":
+                `${pageUrl}#webpage`,
+
+              url:
+                pageUrl,
+
+              name:
+                "Wszystkie okazje",
+
+              description:
+                "Wybrane ubrania, dodatki i modne okazje w Trend za Mniej.",
+
+              inLanguage:
+                SITE_LANGUAGE,
+
+              isPartOf: {
+                "@id":
+                  `${siteUrl}/#website`,
+              },
+
+              breadcrumb: {
+                "@id":
+                  `${pageUrl}#breadcrumb`,
+              },
+
+              mainEntity: {
+                "@id":
+                  `${pageUrl}#products`,
+              },
+            },
+
+            {
+              "@type":
+                "BreadcrumbList",
+
+              "@id":
+                `${pageUrl}#breadcrumb`,
+
+              itemListElement: [
+                {
+                  "@type":
+                    "ListItem",
+
+                  position:
+                    1,
+
+                  name:
+                    "Strona główna",
+
+                  item:
+                    siteUrl,
+                },
+
+                {
+                  "@type":
+                    "ListItem",
+
+                  position:
+                    2,
+
+                  name:
+                    "Okazje",
+
+                  item:
+                    pageUrl,
+                },
+              ],
+            },
+
+            {
+              "@type":
+                "ItemList",
+
+              "@id":
+                `${pageUrl}#products`,
+
+              name:
+                "Najnowsze okazje",
+
+              numberOfItems:
+                products.length,
+
+              itemListOrder:
+                "https://schema.org/ItemListOrderDescending",
+
+              itemListElement:
+                products
+                  .slice(
+                    0,
+                    50
+                  )
+                  .map(
+                    (
+                      product,
+                      index
+                    ) => ({
+                      "@type":
+                        "ListItem",
+
+                      position:
+                        index +
+                        1,
+
+                      url:
+                        `${siteUrl}/produkt/${product.slug}`,
+
+                      name:
+                        product.name,
+
+                      image:
+                        product.image,
+                    })
+                  ),
+            },
+          ],
+        }
+      : null;
+
   return (
     <main className="min-h-screen bg-stone-50 text-stone-900">
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html:
+              JSON.stringify(
+                structuredData
+              ).replace(
+                /</g,
+                "\\u003c"
+              ),
+          }}
+        />
+      )}
+
       <SiteHeader />
 
       <section className="border-b border-stone-200 bg-white">
@@ -243,7 +478,9 @@ export default async function OffersPage({
             </div>
 
             <div className="w-fit rounded-full border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-bold text-stone-600">
-              {resultLabel}
+              {
+                resultLabel
+              }
             </div>
           </div>
 
@@ -265,7 +502,9 @@ export default async function OffersPage({
               </Link>
 
               {quickCategories.map(
-                (item) => (
+                (
+                  item
+                ) => (
                   <Link
                     key={
                       item
@@ -283,7 +522,9 @@ export default async function OffersPage({
                       " "
                     )}
                   >
-                    {item}
+                    {
+                      item
+                    }
                   </Link>
                 )
               )}
@@ -367,9 +608,12 @@ export default async function OffersPage({
                   href={`/kategoria/${slugifyCategory(
                     category
                   )}`}
-                  className="inline-flex w-fit min-h-10 items-center rounded-full bg-rose-50 px-4 text-sm font-black text-rose-700 transition hover:bg-rose-100"
+                  className="inline-flex min-h-10 w-fit items-center rounded-full bg-rose-50 px-4 text-sm font-black text-rose-700 transition hover:bg-rose-100"
                 >
-                  {category} →
+                  {
+                    category
+                  }{" "}
+                  →
                 </Link>
               )}
             </div>
@@ -387,7 +631,9 @@ export default async function OffersPage({
                       }
                       className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-bold text-stone-600"
                     >
-                      {filter}
+                      {
+                        filter
+                      }
                     </span>
                   )
                 )}
@@ -405,7 +651,9 @@ export default async function OffersPage({
             0 ? (
               <div className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {products.map(
-                  (product) => (
+                  (
+                    product
+                  ) => (
                     <ProductCard
                       key={
                         product.id
@@ -431,9 +679,9 @@ export default async function OffersPage({
                   </p>
 
                   <p className="mt-1 text-sm leading-6 text-stone-500">
-                    Usuń filtry i wróć
-                    do pełnej listy
-                    ofert.
+                    Usuń filtry i
+                    wróć do pełnej
+                    listy ofert.
                   </p>
                 </div>
 
@@ -484,26 +732,35 @@ function EmptyResults() {
 function getResultLabel(
   count: number
 ) {
-  if (count === 1) {
+  if (
+    count ===
+    1
+  ) {
     return "1 oferta";
   }
 
   const lastTwo =
-    count % 100;
+    count %
+    100;
 
   const last =
-    count % 10;
+    count %
+    10;
 
   if (
-    lastTwo >= 12 &&
-    lastTwo <= 14
+    lastTwo >=
+      12 &&
+    lastTwo <=
+      14
   ) {
     return `${count} ofert`;
   }
 
   if (
-    last >= 2 &&
-    last <= 4
+    last >=
+      2 &&
+    last <=
+      4
   ) {
     return `${count} oferty`;
   }

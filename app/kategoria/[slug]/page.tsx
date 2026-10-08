@@ -39,7 +39,9 @@ export const revalidate =
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
-  const { slug } =
+  const {
+    slug,
+  } =
     await params;
 
   const categories =
@@ -57,8 +59,11 @@ export async function generateMetadata({
         "Kategoria nie istnieje",
 
       robots: {
-        index: false,
-        follow: false,
+        index:
+          false,
+
+        follow:
+          false,
       },
     };
   }
@@ -78,15 +83,27 @@ export async function generateMetadata({
     },
 
     robots: {
-      index: true,
-      follow: true,
+      index:
+        true,
+
+      follow:
+        true,
 
       googleBot: {
-        index: true,
-        follow: true,
+        index:
+          true,
+
+        follow:
+          true,
+
         "max-image-preview":
           "large",
-        "max-snippet": -1,
+
+        "max-snippet":
+          -1,
+
+        "max-video-preview":
+          -1,
       },
     },
 
@@ -95,7 +112,7 @@ export async function generateMetadata({
         "website",
 
       locale:
-        SITE_LANGUAGE,
+        "pl_PL",
 
       url:
         canonical,
@@ -108,20 +125,6 @@ export async function generateMetadata({
 
       description:
         category.description,
-
-      images: [
-        {
-          url:
-            "/opengraph-image",
-
-          width: 1200,
-
-          height: 630,
-
-          alt:
-            `${category.name} - Trend za Mniej`,
-        },
-      ],
     },
 
     twitter: {
@@ -133,10 +136,6 @@ export async function generateMetadata({
 
       description:
         category.description,
-
-      images: [
-        "/opengraph-image",
-      ],
     },
   };
 }
@@ -144,7 +143,9 @@ export async function generateMetadata({
 export default async function CategoryPage({
   params,
 }: CategoryPageProps) {
-  const { slug } =
+  const {
+    slug,
+  } =
     await params;
 
   const categories =
@@ -170,7 +171,8 @@ export default async function CategoryPage({
     });
 
   if (
-    products.length === 0
+    products.length ===
+    0
   ) {
     notFound();
   }
@@ -217,6 +219,16 @@ export default async function CategoryPage({
           name:
             category.name,
         },
+
+        breadcrumb: {
+          "@id":
+            `${categoryUrl}#breadcrumb`,
+        },
+
+        mainEntity: {
+          "@id":
+            `${categoryUrl}#products`,
+        },
       },
 
       {
@@ -231,7 +243,8 @@ export default async function CategoryPage({
             "@type":
               "ListItem",
 
-            position: 1,
+            position:
+              1,
 
             name:
               "Strona główna",
@@ -244,7 +257,8 @@ export default async function CategoryPage({
             "@type":
               "ListItem",
 
-            position: 2,
+            position:
+              2,
 
             name:
               "Okazje",
@@ -257,7 +271,8 @@ export default async function CategoryPage({
             "@type":
               "ListItem",
 
-            position: 3,
+            position:
+              3,
 
             name:
               category.name,
@@ -266,6 +281,52 @@ export default async function CategoryPage({
               categoryUrl,
           },
         ],
+      },
+
+      {
+        "@type":
+          "ItemList",
+
+        "@id":
+          `${categoryUrl}#products`,
+
+        name:
+          `Produkty: ${category.name}`,
+
+        numberOfItems:
+          products.length,
+
+        itemListOrder:
+          "https://schema.org/ItemListOrderDescending",
+
+        itemListElement:
+          products
+            .slice(
+              0,
+              50
+            )
+            .map(
+              (
+                product,
+                index
+              ) => ({
+                "@type":
+                  "ListItem",
+
+                position:
+                  index +
+                  1,
+
+                url:
+                  `${siteUrl}/produkt/${product.slug}`,
+
+                name:
+                  product.name,
+
+                image:
+                  product.image,
+              })
+            ),
       },
     ],
   };
@@ -376,8 +437,7 @@ export default async function CategoryPage({
             </p>
 
             <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
-              Produkty:
-              {" "}
+              Produkty:{" "}
               {
                 category.name
               }
@@ -400,7 +460,9 @@ export default async function CategoryPage({
 
         <div className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {products.map(
-            (product) => (
+            (
+              product
+            ) => (
               <ProductCard
                 key={
                   product.id
@@ -483,7 +545,8 @@ export default async function CategoryPage({
                   >
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[11px] font-black text-rose-700 shadow-sm">
                       {
-                        index + 1
+                        index +
+                        1
                       }
                     </span>
 
@@ -535,26 +598,35 @@ export default async function CategoryPage({
 function getProductCountLabel(
   count: number
 ) {
-  if (count === 1) {
+  if (
+    count ===
+    1
+  ) {
     return "1 produkt";
   }
 
   const lastTwo =
-    count % 100;
+    count %
+    100;
 
   const last =
-    count % 10;
+    count %
+    10;
 
   if (
-    lastTwo >= 12 &&
-    lastTwo <= 14
+    lastTwo >=
+      12 &&
+    lastTwo <=
+      14
   ) {
     return `${count} produktów`;
   }
 
   if (
-    last >= 2 &&
-    last <= 4
+    last >=
+      2 &&
+    last <=
+      4
   ) {
     return `${count} produkty`;
   }
