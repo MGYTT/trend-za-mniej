@@ -25,10 +25,10 @@ const discoveryLinks = [
 
   {
     label:
-      "Kategorie",
+      "Kategorie produktów",
 
     href:
-      "/#kategorie",
+      "/kategorie",
   },
 
   {

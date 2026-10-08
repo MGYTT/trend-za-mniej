@@ -63,10 +63,10 @@ const navigation:
       "Kategorie",
 
     description:
-      "Znajdź odpowiedni rodzaj produktu",
+      "Przeglądaj wszystkie kategorie",
 
     href:
-      "/#kategorie",
+      "/kategorie",
 
     type:
       "categories",
@@ -184,8 +184,12 @@ export default function SiteHeader() {
       item.type ===
       "categories"
     ) {
-      return pathname.startsWith(
-        "/kategoria/"
+      return (
+        pathname ===
+          "/kategorie" ||
+        pathname.startsWith(
+          "/kategoria/"
+        )
       );
     }
 

@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import {
   useEffect,
-  useState,
 } from "react";
 
 import {
@@ -63,7 +62,7 @@ const navigation:
       "Kategorie",
 
     href:
-      "/#kategorie",
+      "/kategorie",
 
     type:
       "categories",
@@ -74,12 +73,6 @@ export default function MobileBottomNav() {
   const pathname =
     usePathname();
 
-  const [
-    currentHash,
-    setCurrentHash,
-  ] =
-    useState("");
-
   const visible =
     pathname ===
       "/" ||
@@ -87,33 +80,11 @@ export default function MobileBottomNav() {
       "/okazje" ||
     pathname ===
       "/promocje-shein" ||
+    pathname ===
+      "/kategorie" ||
     pathname.startsWith(
       "/kategoria/"
     );
-
-  useEffect(() => {
-    function updateHash() {
-      setCurrentHash(
-        window.location.hash
-      );
-    }
-
-    updateHash();
-
-    window.addEventListener(
-      "hashchange",
-      updateHash
-    );
-
-    return () => {
-      window.removeEventListener(
-        "hashchange",
-        updateHash
-      );
-    };
-  }, [
-    pathname,
-  ]);
 
   useEffect(() => {
     if (
@@ -151,6 +122,16 @@ export default function MobileBottomNav() {
   ) {
     if (
       item.type ===
+      "home"
+    ) {
+      return (
+        pathname ===
+        "/"
+      );
+    }
+
+    if (
+      item.type ===
       "offers"
     ) {
       return (
@@ -169,28 +150,12 @@ export default function MobileBottomNav() {
       );
     }
 
-    if (
-      item.type ===
-      "categories"
-    ) {
-      return (
-        pathname.startsWith(
-          "/kategoria/"
-        ) ||
-        (
-          pathname ===
-            "/" &&
-          currentHash ===
-            "#kategorie"
-        )
-      );
-    }
-
     return (
       pathname ===
-        "/" &&
-      currentHash !==
-        "#kategorie"
+        "/kategorie" ||
+      pathname.startsWith(
+        "/kategoria/"
+      )
     );
   }
 
@@ -228,16 +193,6 @@ export default function MobileBottomNav() {
                     ? "page"
                     : undefined
                 }
-                onClick={() => {
-                  if (
-                    item.type !==
-                    "categories"
-                  ) {
-                    setCurrentHash(
-                      ""
-                    );
-                  }
-                }}
                 className={[
                   "group relative flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl px-1",
                   "text-[9px] font-black transition sm:text-[10px]",

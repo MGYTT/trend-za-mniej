@@ -96,6 +96,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       {
         url:
+          `${siteUrl}/kategorie`,
+
+        changeFrequency:
+          "daily",
+
+        priority:
+          0.9,
+      },
+
+      {
+        url:
           `${siteUrl}/promocje-shein`,
 
         lastModified:
