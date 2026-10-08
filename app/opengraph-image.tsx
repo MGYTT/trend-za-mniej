@@ -3,7 +3,7 @@ import {
 } from "next/og";
 
 export const runtime =
-  "edge";
+  "nodejs";
 
 export const alt =
   "Trend za Mniej - Moda i okazje";
