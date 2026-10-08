@@ -160,6 +160,29 @@ img {
   display: none;
 }
 
+.filter-control {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
+  background: #ffffff;
+  padding-inline: 12px;
+  color: #44403c;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.filter-control:focus {
+  border-color: #fda4af;
+  box-shadow:
+    0 0 0 3px #ffe4e6;
+}
+
 @media (max-width: 1023px) {
   body.has-mobile-bottom-nav {
     padding-bottom:

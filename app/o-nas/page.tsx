@@ -4,8 +4,10 @@ import type {
 
 import Link from "next/link";
 
-import SiteFooter from "@/components/SiteFooter";
-import SiteHeader from "@/components/SiteHeader";
+import InfoPageLayout, {
+  InfoNotice,
+  InfoSection,
+} from "@/components/InfoPageLayout";
 
 import {
   getSiteUrl,
@@ -15,10 +17,10 @@ import {
 
 export const metadata: Metadata = {
   title:
-    "O nas – jak wybieramy okazje",
+    "O nas – poznaj Trend za Mniej",
 
   description:
-    "Dowiedz się, czym jest Trend za Mniej, jak wybieramy produkty, aktualizujemy ceny i oznaczamy linki afiliacyjne.",
+    "Dowiedz się, czym jest Trend za Mniej, jak wybieramy produkty, prezentujemy ceny i pomagamy szybciej znaleźć ciekawe okazje.",
 
   alternates: {
     canonical:
@@ -26,17 +28,23 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    type: "website",
-    locale: "pl_PL",
-    url: "/o-nas",
+    type:
+      "website",
+
+    locale:
+      "pl_PL",
+
+    url:
+      "/o-nas",
+
     siteName:
       SITE_NAME,
 
     title:
-      "O Trend za Mniej – jak wybieramy okazje",
+      "O nas – Trend za Mniej",
 
     description:
-      "Poznaj zasady wyboru produktów, aktualizacji cen oraz działania linków afiliacyjnych w Trend za Mniej.",
+      "Poznaj Trend za Mniej i zasady, według których wybieramy oraz prezentujemy produkty.",
   },
 };
 
@@ -64,7 +72,7 @@ export default function AboutPage() {
       "O Trend za Mniej",
 
     description:
-      "Informacje o Trend za Mniej, sposobie wyboru produktów, cenach i afiliacji.",
+      "Informacje o serwisie Trend za Mniej, wyborze produktów, cenach i zasadach działania.",
 
     inLanguage:
       SITE_LANGUAGE,
@@ -81,229 +89,221 @@ export default function AboutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html:
-            JSON.stringify(
-              structuredData
-            ).replace(
-              /</g,
-              "\\u003c"
-            ),
-        }}
-      />
-
-      <SiteHeader />
-
-      <section className="border-b border-rose-100 bg-gradient-to-br from-rose-50 via-white to-orange-50">
-        <div className="mx-auto max-w-4xl px-5 py-12 sm:px-6 sm:py-16">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-rose-600">
-            O Trend za Mniej
-          </p>
-
-          <h1 className="mt-3 text-balance text-4xl font-black tracking-[-0.04em] sm:text-5xl">
-            Pomagamy szybciej znaleźć
-            ciekawe modowe okazje
-          </h1>
-
-          <p className="mt-5 max-w-3xl text-pretty text-base leading-8 text-stone-600 sm:text-lg">
-            Trend za Mniej to serwis
-            zbierający wybrane ubrania,
-            dodatki i inne ciekawe
-            produkty w jednym miejscu.
-            Celem jest ograniczenie
-            czasu potrzebnego na
-            przeglądanie dużej liczby
-            ofert.
-          </p>
-        </div>
-      </section>
-
-      <article className="mx-auto max-w-4xl px-5 py-10 sm:px-6 sm:py-16">
-        <div className="space-y-12">
-          <ContentSection
-            number="01"
-            title="Jak wybieramy produkty?"
-          >
+    <InfoPageLayout
+      eyebrow="Poznaj nas"
+      title="Mniej szukania. Więcej ciekawych znalezisk."
+      lead="Trend za Mniej pomaga szybciej przeglądać wybrane ubrania, dodatki i inne ciekawe produkty bez konieczności przekopywania się przez ogromne katalogi sklepów."
+      activePath="/o-nas"
+      structuredData={
+        structuredData
+      }
+    >
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+        <article>
+          <InfoSection title="Czym jest Trend za Mniej?">
             <p>
-              Produkty prezentowane w
-              Trend za Mniej są wybierane
-              i dodawane ręcznie. Nie
-              publikujemy automatycznie
-              całego katalogu sklepu.
+              Trend za Mniej jest
+              serwisem
+              informacyjno-afiliacyjnym,
+              który zbiera wybrane
+              produkty w jednym
+              miejscu.
             </p>
 
             <p>
-              Przy wyborze zwracamy
-              uwagę między innymi na
-              wygląd produktu,
-              praktyczność, cenę oraz to,
-              czy dana oferta może być
+              Naszym celem nie jest
+              kopiowanie całego
+              katalogu sklepu.
+              Chcemy pokazywać
+              mniejszą, bardziej
+              uporządkowaną liczbę
+              produktów, które można
+              szybko przejrzeć,
+              porównać i sprawdzić
+              bezpośrednio w sklepie.
+            </p>
+          </InfoSection>
+
+          <InfoSection title="Jak wybieramy produkty?">
+            <p>
+              Produkty dodajemy
+              ręcznie. Przy wyborze
+              zwracamy uwagę między
+              innymi na wygląd,
+              praktyczność, kategorię,
+              cenę i to, czy dana
+              propozycja może być
               interesująca dla osób
-              szukających modnych rzeczy
+              szukających rzeczy
               w rozsądnym budżecie.
             </p>
-          </ContentSection>
 
-          <ContentSection
-            number="02"
-            title="Jak traktujemy ceny?"
-          >
             <p>
-              Cena prezentowana przy
+              Nie publikujemy
+              automatycznie całego
+              katalogu SHEIN ani nie
+              pobieramy automatycznie
+              ofert ze stron sklepu.
+            </p>
+          </InfoSection>
+
+          <InfoSection title="Jak prezentujemy ceny?">
+            <p>
+              Cena widoczna przy
               produkcie jest ceną
-              zaobserwowaną w chwili
-              publikacji lub aktualizacji
+              zapisaną w chwili
+              publikacji lub
+              aktualizacji danej
               oferty.
             </p>
 
             <p>
-              Sklepy internetowe mogą
-              zmieniać ceny, dostępność,
-              kupony i warunki promocji.
-              Dlatego przed zakupem
-              zawsze warto sprawdzić
-              aktualną cenę bezpośrednio
-              na stronie sklepu.
+              Ceny, dostępność,
+              warianty, kupony
+              i promocje w sklepie
+              mogą zmieniać się
+              w czasie. Dlatego
+              aktualne warunki należy
+              zawsze sprawdzić
+              bezpośrednio w sklepie
+              przed zakupem.
             </p>
 
             <p>
-              Nie pokazujemy starej ceny
-              ani informacji o obniżce,
-              jeśli nie mamy podstaw do
-              ich wiarygodnego
-              potwierdzenia.
+              Nie chcemy tworzyć
+              sztucznych promocji.
+              Informacje o poprzedniej
+              cenie lub obniżce
+              powinny być pokazywane
+              tylko wtedy, gdy mamy
+              podstawę do ich
+              wiarygodnego
+              przedstawienia.
             </p>
-          </ContentSection>
+          </InfoSection>
 
-          <ContentSection
-            number="03"
-            title="Linki afiliacyjne"
-          >
+          <InfoSection title="Transparentność afiliacji">
             <p>
-              Część odnośników
-              prowadzących do sklepów ma
-              charakter afiliacyjny.
-              Oznacza to, że możemy
-              otrzymać prowizję, jeśli
-              użytkownik dokona zakupu
-              po przejściu przez taki
-              link.
+              Część linków
+              prowadzących do sklepów
+              ma charakter
+              afiliacyjny. Oznacza to,
+              że możemy otrzymać
+              prowizję, jeśli
+              użytkownik przejdzie
+              przez taki link
+              i dokona zakupu.
             </p>
 
             <p>
-              Korzystanie z linku
-              afiliacyjnego nie powinno
-              powodować dodatkowych
-              kosztów dla kupującego.
-              Informację o afiliacji
-              pokazujemy również przy
-              ofertach oraz na osobnej
-              stronie informacyjnej.
+              Informujemy o tym
+              wprost, ponieważ
+              użytkownik powinien
+              wiedzieć, kiedy korzysta
+              z linku o charakterze
+              komercyjnym.
             </p>
 
             <Link
               href="/afiliacja"
-              className="mt-2 inline-flex font-black text-rose-600 hover:text-rose-700"
+              className="inline-flex font-black text-rose-600 transition hover:text-rose-700"
             >
-              Zobacz zasady afiliacji →
+              Dowiedz się więcej
+              o afiliacji →
             </Link>
-          </ContentSection>
+          </InfoSection>
 
-          <ContentSection
-            number="04"
-            title="Nie jesteśmy sprzedawcą"
-          >
+          <InfoSection title="Trend za Mniej nie jest sklepem">
             <p>
-              Trend za Mniej nie prowadzi
-              sprzedaży prezentowanych
-              produktów i nie obsługuje
-              płatności ani zamówień.
+              Nie sprzedajemy
+              prezentowanych
+              produktów, nie
+              przyjmujemy płatności
+              i nie realizujemy
+              zamówień.
             </p>
 
             <p>
-              Zakup, płatność, dostawa,
-              zwroty i reklamacje
-              odbywają się bezpośrednio
-              w sklepie, do którego
-              prowadzi dana oferta.
+              Po przejściu do oferty
+              zakupu dokonujesz
+              bezpośrednio
+              w zewnętrznym sklepie.
+              To sklep odpowiada
+              za płatność, realizację
+              zamówienia, dostawę,
+              zwroty i reklamacje.
             </p>
-          </ContentSection>
+          </InfoSection>
 
-          <ContentSection
-            number="05"
-            title="Aktualność i poprawki"
-          >
+          <InfoSection title="Pomóż nam utrzymywać aktualne informacje">
             <p>
-              Oferta internetowa zmienia
-              się szybko. Jeśli
-              zauważysz nieaktualną cenę,
-              niedziałający link albo
-              inną nieścisłość, możesz
-              nas o tym poinformować.
+              Oferty internetowe
+              zmieniają się szybko.
+              Jeżeli zauważysz
+              niedziałający link,
+              nieaktualną informację
+              albo inny problem,
+              możesz nam go zgłosić.
             </p>
 
             <Link
               href="/kontakt"
-              className="mt-2 inline-flex font-black text-rose-600 hover:text-rose-700"
+              className="inline-flex font-black text-rose-600 transition hover:text-rose-700"
             >
               Przejdź do kontaktu →
             </Link>
-          </ContentSection>
-        </div>
+          </InfoSection>
+        </article>
 
-        <div className="mt-14 rounded-[30px] border border-rose-100 bg-gradient-to-br from-rose-50 to-orange-50 p-6 sm:p-8">
-          <h2 className="text-2xl font-black">
-            Zacznij przeglądać okazje
-          </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
-            Zobacz najnowsze produkty,
-            przejdź do wybranej kategorii
-            albo skorzystaj z filtrów.
-          </p>
-
-          <Link
-            href="/okazje"
-            className="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 font-black text-white shadow-sm"
+        <aside className="space-y-4 lg:sticky lg:top-36">
+          <InfoNotice
+            title="Najważniejsze zasady"
+            tone="rose"
           >
-            Zobacz wszystkie okazje →
-          </Link>
-        </div>
-      </article>
+            <div className="space-y-3">
+              <p>
+                ✓ Produkty wybieramy
+                ręcznie.
+              </p>
 
-      <SiteFooter />
-    </main>
-  );
-}
+              <p>
+                ✓ Pokazujemy cenę
+                zapisaną przy
+                publikacji lub
+                aktualizacji.
+              </p>
 
-function ContentSection({
-  number,
-  title,
-  children,
-}: {
-  number: string;
-  title: string;
-  children:
-    React.ReactNode;
-}) {
-  return (
-    <section className="grid gap-4 sm:grid-cols-[60px_minmax(0,1fr)]">
-      <div className="text-sm font-black text-rose-500">
-        {number}
+              <p>
+                ✓ Jasno informujemy
+                o linkach
+                afiliacyjnych.
+              </p>
+
+              <p>
+                ✓ Zakup odbywa się
+                bezpośrednio
+                w sklepie.
+              </p>
+            </div>
+          </InfoNotice>
+
+          <InfoNotice title="Chcesz przejrzeć produkty?">
+            <p>
+              Przejdź do katalogu
+              i skorzystaj
+              z wyszukiwarki,
+              kategorii oraz filtrów.
+            </p>
+
+            <Link
+              href="/okazje"
+              className="mt-4 flex min-h-11 items-center justify-center rounded-xl bg-rose-600 px-5 font-black text-white transition hover:bg-rose-700"
+            >
+              Zobacz okazje
+            </Link>
+          </InfoNotice>
+        </aside>
       </div>
-
-      <div>
-        <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
-          {title}
-        </h2>
-
-        <div className="mt-4 space-y-4 text-base leading-8 text-stone-600">
-          {children}
-        </div>
-      </div>
-    </section>
+    </InfoPageLayout>
   );
 }

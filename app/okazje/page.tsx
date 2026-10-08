@@ -158,7 +158,7 @@ export async function generateMetadata({
             630,
 
           alt:
-            "Trend za Mniej - wszystkie okazje",
+            "Trend za Mniej - okazje",
         },
       ],
     },
@@ -200,11 +200,11 @@ export default async function OffersPage({
     "";
 
   const parsedMaxPrice =
-    maxPrice === ""
-      ? undefined
-      : Number(
+    maxPrice
+      ? Number(
           maxPrice
-        );
+        )
+      : undefined;
 
   const safeMaxPrice =
     typeof parsedMaxPrice ===
@@ -266,41 +266,9 @@ export default async function OffersPage({
         "newest"
     );
 
-  const activeFilters =
-    [
-      query
-        ? `Szukasz: ${query}`
-        : null,
-
-      category ||
-        null,
-
-      safeMaxPrice
-        ? `Do ${safeMaxPrice} zł`
-        : null,
-
-      sort ===
-      "price-asc"
-        ? "Cena: od najniższej"
-        : null,
-
-      sort ===
-      "price-desc"
-        ? "Cena: od najwyższej"
-        : null,
-    ].filter(
-      Boolean
-    ) as string[];
-
   const resultLabel =
     getResultLabel(
       products.length
-    );
-
-  const quickCategories =
-    categories.slice(
-      0,
-      7
     );
 
   const siteUrl =
@@ -438,6 +406,19 @@ export default async function OffersPage({
         }
       : null;
 
+  let pageTitle =
+    "Wszystkie okazje";
+
+  if (category) {
+    pageTitle =
+      category;
+  }
+
+  if (query) {
+    pageTitle =
+      `Wyniki dla „${query}”`;
+  }
+
   return (
     <main className="min-h-screen bg-stone-50 text-stone-900">
       {structuredData && (
@@ -457,85 +438,28 @@ export default async function OffersPage({
 
       <SiteHeader />
 
-      <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-10">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">
-                Trend za Mniej
-              </p>
+      <div className="border-b border-stone-200 bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6 sm:py-8">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
+            Okazje
+          </p>
 
-              <h1 className="mt-1 text-3xl font-black tracking-[-0.035em] sm:text-4xl">
-                Wszystkie okazje
-              </h1>
+          <h1 className="mt-1 text-3xl font-black tracking-[-0.035em] text-stone-900 sm:text-4xl">
+            Znajdź coś dla siebie
+          </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500 sm:text-base">
-                Wyszukuj, filtruj
-                i przeglądaj wybrane
-                produkty w jednym
-                miejscu.
-              </p>
-            </div>
-
-            <div className="w-fit rounded-full border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-bold text-stone-600">
-              {
-                resultLabel
-              }
-            </div>
-          </div>
-
-          {quickCategories.length >
-            0 && (
-            <div className="horizontal-scroll -mx-5 mt-6 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-              <Link
-                href="/okazje"
-                className={[
-                  "shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition",
-                  !category
-                    ? "border-rose-200 bg-rose-50 text-rose-700"
-                    : "border-stone-200 bg-white text-stone-600 hover:border-rose-200 hover:text-rose-700",
-                ].join(
-                  " "
-                )}
-              >
-                Wszystkie
-              </Link>
-
-              {quickCategories.map(
-                (
-                  item
-                ) => (
-                  <Link
-                    key={
-                      item
-                    }
-                    href={`/okazje?category=${encodeURIComponent(
-                      item
-                    )}`}
-                    className={[
-                      "shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition",
-                      category ===
-                      item
-                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                        : "border-stone-200 bg-white text-stone-600 hover:border-rose-200 hover:text-rose-700",
-                    ].join(
-                      " "
-                    )}
-                  >
-                    {
-                      item
-                    }
-                  </Link>
-                )
-              )}
-            </div>
-          )}
+          <p className="mt-2 max-w-xl text-sm leading-6 text-stone-500">
+            Przeglądaj wybrane
+            produkty i zawęź wyniki
+            tylko wtedy, gdy tego
+            potrzebujesz.
+          </p>
         </div>
-      </section>
+      </div>
 
       <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6 sm:py-8">
-        <div className="grid gap-7 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
-          <aside className="lg:sticky lg:top-24">
+        <div className="grid gap-6 lg:grid-cols-[230px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-24 lg:self-start">
             <ProductFilters
               categories={
                 categories
@@ -553,53 +477,21 @@ export default async function OffersPage({
                 sort
               }
             />
-
-            <div className="mt-4 hidden rounded-[22px] border border-stone-200 bg-white p-4 text-sm leading-6 text-stone-500 lg:block">
-              <p className="font-black text-stone-900">
-                Szukasz konkretnej
-                kategorii?
-              </p>
-
-              <p className="mt-1">
-                Dedykowane strony
-                kategorii zawierają
-                również dodatkowe
-                informacje i najnowsze
-                produkty.
-              </p>
-
-              {category && (
-                <Link
-                  href={`/kategoria/${slugifyCategory(
-                    category
-                  )}`}
-                  className="mt-3 inline-flex font-black text-rose-600 hover:text-rose-700"
-                >
-                  Zobacz stronę
-                  kategorii →
-                </Link>
-              )}
-            </div>
           </aside>
 
           <section className="min-w-0">
-            <div className="flex flex-col gap-4 border-b border-stone-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
-                  Wyniki
-                </p>
-
-                <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
-                  {hasFilters
-                    ? "Pasujące produkty"
-                    : "Najnowsze znaleziska"}
+            <div className="flex min-h-12 items-end justify-between gap-4 border-b border-stone-200 pb-4">
+              <div className="min-w-0">
+                <h2 className="truncate text-xl font-black tracking-[-0.025em] text-stone-900 sm:text-2xl">
+                  {
+                    pageTitle
+                  }
                 </h2>
 
-                <p className="mt-2 text-sm leading-6 text-stone-500">
-                  {products.length >
-                  0
-                    ? `${resultLabel}.`
-                    : "Brak produktów spełniających wybrane kryteria."}
+                <p className="mt-1 text-sm text-stone-400">
+                  {
+                    resultLabel
+                  }
                 </p>
               </div>
 
@@ -608,48 +500,16 @@ export default async function OffersPage({
                   href={`/kategoria/${slugifyCategory(
                     category
                   )}`}
-                  className="inline-flex min-h-10 w-fit items-center rounded-full bg-rose-50 px-4 text-sm font-black text-rose-700 transition hover:bg-rose-100"
+                  className="hidden shrink-0 text-xs font-black text-rose-600 transition hover:text-rose-700 sm:inline-flex"
                 >
-                  {
-                    category
-                  }{" "}
-                  →
+                  O kategorii →
                 </Link>
               )}
             </div>
 
-            {activeFilters.length >
-              0 && (
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {activeFilters.map(
-                  (
-                    filter
-                  ) => (
-                    <span
-                      key={
-                        filter
-                      }
-                      className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-bold text-stone-600"
-                    >
-                      {
-                        filter
-                      }
-                    </span>
-                  )
-                )}
-
-                <Link
-                  href="/okazje"
-                  className="rounded-full px-3 py-1.5 text-xs font-black text-rose-600 transition hover:bg-rose-50"
-                >
-                  Wyczyść
-                </Link>
-              </div>
-            )}
-
             {products.length >
             0 ? (
-              <div className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-5 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-3">
                 {products.map(
                   (
                     product
@@ -666,32 +526,11 @@ export default async function OffersPage({
                 )}
               </div>
             ) : (
-              <EmptyResults />
-            )}
-
-            {products.length >
-              0 && (
-              <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-[22px] border border-stone-200 bg-white p-5 text-center sm:flex-row sm:text-left">
-                <div>
-                  <p className="font-black">
-                    Chcesz zobaczyć
-                    więcej?
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-stone-500">
-                    Usuń filtry i
-                    wróć do pełnej
-                    listy ofert.
-                  </p>
-                </div>
-
-                <Link
-                  href="/okazje"
-                  className="flex min-h-11 w-full shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 px-5 text-sm font-black text-stone-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 sm:w-auto"
-                >
-                  Wszystkie okazje
-                </Link>
-              </div>
+              <EmptyResults
+                query={
+                  query
+                }
+              />
             )}
           </section>
         </div>
@@ -702,28 +541,32 @@ export default async function OffersPage({
   );
 }
 
-function EmptyResults() {
+function EmptyResults({
+  query,
+}: {
+  query: string;
+}) {
   return (
-    <div className="mt-6 rounded-[22px] border border-dashed border-stone-200 bg-white px-5 py-12 text-center sm:px-8 sm:py-16">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100 text-2xl">
+    <div className="mt-5 rounded-[20px] border border-stone-200 bg-white px-5 py-12 text-center sm:px-8">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-xl">
         🔎
       </div>
 
-      <h3 className="mt-4 text-xl font-black sm:text-2xl">
-        Nic nie znaleźliśmy
+      <h3 className="mt-4 text-xl font-black text-stone-900">
+        Brak wyników
       </h3>
 
-      <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-stone-500">
-        Spróbuj innej frazy,
-        kategorii albo zwiększ
-        maksymalną cenę.
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-stone-500">
+        {query
+          ? `Nie znaleźliśmy produktów dla „${query}”. Spróbuj krótszej frazy albo zmień filtry.`
+          : "Spróbuj zmienić kategorię, cenę lub pozostałe filtry."}
       </p>
 
       <Link
         href="/okazje"
-        className="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl bg-rose-600 px-6 font-black text-white transition hover:bg-rose-700"
+        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-900 px-5 text-sm font-black text-white transition hover:bg-rose-600"
       >
-        Wyczyść filtry
+        Pokaż wszystkie
       </Link>
     </div>
   );
