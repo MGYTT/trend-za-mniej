@@ -1,7 +1,9 @@
 import type {
   Metadata,
+  Viewport,
 } from "next";
 
+import AdminAppShell from "@/components/admin/AdminAppShell";
 import AdminPresenceHeartbeat from "@/components/admin/AdminPresenceHeartbeat";
 import SearchVisibilitySync from "@/components/admin/SearchVisibilitySync";
 
@@ -10,8 +12,58 @@ import {
 } from "@/lib/indexnow";
 
 export const metadata: Metadata = {
-  title:
-    "Panel administratora",
+  title: {
+    default:
+      "Trend Admin",
+
+    template:
+      "%s | Trend Admin",
+  },
+
+  description:
+    "Mobilny panel administratora Trend za Mniej.",
+
+  manifest:
+    "/admin/manifest.webmanifest",
+
+  appleWebApp: {
+    capable:
+      true,
+
+    title:
+      "Trend Admin",
+
+    statusBarStyle:
+      "default",
+  },
+
+  icons: {
+    icon: [
+      {
+        url:
+          "/icon",
+
+        type:
+          "image/png",
+
+        sizes:
+          "512x512",
+      },
+    ],
+
+    apple: [
+      {
+        url:
+          "/apple-icon",
+
+        type:
+          "image/png",
+
+        sizes:
+          "180x180",
+      },
+    ],
+  },
 
   robots: {
     index:
@@ -25,6 +77,17 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor:
+    "#fafaf9",
+
+  colorScheme:
+    "light",
+
+  viewportFit:
+    "cover",
+};
+
 export default function AdminLayout({
   children,
 }: {
@@ -35,7 +98,7 @@ export default function AdminLayout({
     getIndexNowConfig();
 
   return (
-    <>
+    <AdminAppShell>
       <AdminPresenceHeartbeat />
 
       <SearchVisibilitySync
@@ -45,6 +108,6 @@ export default function AdminLayout({
       />
 
       {children}
-    </>
+    </AdminAppShell>
   );
 }

@@ -41,16 +41,25 @@ body {
   overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
+
   font-family:
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+
+  -webkit-font-smoothing:
+    antialiased;
+
+  -moz-osx-font-smoothing:
+    grayscale;
+
+  -webkit-tap-highlight-color:
+    transparent;
 }
 
 * {
@@ -163,14 +172,32 @@ img {
 .filter-control {
   min-height: 44px;
   width: 100%;
-  border: 1px solid #e7e5e4;
-  border-radius: 12px;
-  background: #ffffff;
-  padding-inline: 12px;
-  color: #44403c;
-  font-size: 14px;
-  font-weight: 600;
-  outline: none;
+
+  border:
+    1px solid
+    #e7e5e4;
+
+  border-radius:
+    12px;
+
+  background:
+    #ffffff;
+
+  padding-inline:
+    12px;
+
+  color:
+    #44403c;
+
+  font-size:
+    14px;
+
+  font-weight:
+    600;
+
+  outline:
+    none;
+
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -178,10 +205,383 @@ img {
 }
 
 .filter-control:focus {
-  border-color: #fda4af;
+  border-color:
+    #fda4af;
+
   box-shadow:
-    0 0 0 3px #ffe4e6;
+    0 0 0 3px
+    #ffe4e6;
 }
+
+/*
+ * ============================================================
+ * TREND ADMIN APP
+ * ============================================================
+ */
+
+body.admin-app-shell {
+  background:
+    #f7f7f8;
+
+  overscroll-behavior-x:
+    none;
+}
+
+body.admin-app-shell button,
+body.admin-app-shell a {
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
+/*
+ * Tryby zadaniowe.
+ *
+ * Na tych ekranach własne przyciski
+ * formularza / studia zastępują
+ * główną dolną nawigację aplikacji.
+ */
+
+body.admin-new-offer-app,
+body.admin-edit-offer-app,
+body.admin-social-studio-app {
+  background:
+    #f7f7f8;
+}
+
+/*
+ * ============================================================
+ * DODAWANIE OFERTY — MOBILE APP MODE
+ * ============================================================
+ */
+
+@media (max-width: 1023px) {
+  body.admin-new-offer-app {
+    padding-bottom:
+      0 !important;
+
+    background:
+      #f4f4f6;
+  }
+
+  body.admin-new-offer-app main {
+    background:
+      #f4f4f6;
+  }
+
+  body.admin-new-offer-app header {
+    border-bottom-color:
+      rgba(
+        231,
+        229,
+        228,
+        0.7
+      );
+
+    background:
+      rgba(
+        255,
+        255,
+        255,
+        0.9
+      );
+
+    backdrop-filter:
+      blur(22px);
+
+    -webkit-backdrop-filter:
+      blur(22px);
+  }
+
+  body.admin-new-offer-app
+    .admin-form-shell {
+    padding-inline:
+      0.75rem;
+
+    padding-top:
+      1rem;
+
+    padding-bottom:
+      7rem;
+  }
+
+  body.admin-new-offer-app
+    .admin-form-heading {
+    margin-bottom:
+      1rem;
+
+    padding-inline:
+      0.25rem;
+  }
+
+  /*
+   * Pasek gotowości oferty wygląda
+   * bardziej jak element aplikacji.
+   */
+
+  body.admin-new-offer-app
+    .admin-form-shell
+    > section {
+    border-radius:
+      22px;
+
+    box-shadow:
+      0 1px 2px rgba(
+        28,
+        25,
+        23,
+        0.03
+      ),
+      0 8px 24px rgba(
+        28,
+        25,
+        23,
+        0.045
+      );
+  }
+
+  /*
+   * Główne cztery kroki formularza.
+   */
+
+  body.admin-new-offer-app
+    #section-basic,
+  body.admin-new-offer-app
+    #section-price,
+  body.admin-new-offer-app
+    #section-image,
+  body.admin-new-offer-app
+    #section-link {
+    scroll-margin-top:
+      88px;
+
+    border-color:
+      rgba(
+        231,
+        229,
+        228,
+        0.9
+      );
+
+    border-radius:
+      24px;
+
+    background:
+      #ffffff;
+
+    padding:
+      1rem;
+
+    box-shadow:
+      0 1px 2px rgba(
+        28,
+        25,
+        23,
+        0.025
+      ),
+      0 8px 24px rgba(
+        28,
+        25,
+        23,
+        0.035
+      );
+  }
+
+  /*
+   * Pola na telefonie mają minimum
+   * 48 px wysokości i font 16 px.
+   *
+   * 16 px zapobiega automatycznemu
+   * zoomowaniu formularza przez iOS.
+   */
+
+  body.admin-new-offer-app
+    #new-product-form
+    input:not(
+      [type="checkbox"]
+    ),
+  body.admin-new-offer-app
+    #new-product-form
+    select {
+    min-height:
+      50px;
+
+    border-radius:
+      14px;
+
+    font-size:
+      16px;
+  }
+
+  body.admin-new-offer-app
+    #new-product-form
+    textarea {
+    border-radius:
+      14px;
+
+    font-size:
+      16px;
+
+    line-height:
+      1.55;
+  }
+
+  body.admin-new-offer-app
+    #new-product-form
+    input:focus,
+  body.admin-new-offer-app
+    #new-product-form
+    textarea:focus,
+  body.admin-new-offer-app
+    #new-product-form
+    select:focus {
+    border-color:
+      #fda4af;
+
+    box-shadow:
+      0 0 0 4px
+      rgba(
+        255,
+        228,
+        230,
+        0.8
+      );
+  }
+
+  /*
+   * Przyciski w formularzu mają
+   * wygodniejszy obszar dotyku.
+   */
+
+  body.admin-new-offer-app
+    #new-product-form
+    button {
+    min-height:
+      44px;
+  }
+
+  /*
+   * Sticky pasek publikacji.
+   *
+   * Nie konkuruje już z główną
+   * nawigacją PWA, ponieważ ta jest
+   * wyłączona na tym ekranie.
+   */
+
+  body.admin-new-offer-app
+    main
+    > div.fixed.inset-x-0.bottom-0 {
+    border-top:
+      1px solid
+      rgba(
+        231,
+        229,
+        228,
+        0.75
+      );
+
+    background:
+      rgba(
+        255,
+        255,
+        255,
+        0.94
+      );
+
+    box-shadow:
+      0 -10px 40px
+      rgba(
+        28,
+        25,
+        23,
+        0.09
+      );
+
+    backdrop-filter:
+      blur(22px);
+
+    -webkit-backdrop-filter:
+      blur(22px);
+  }
+
+  body.admin-new-offer-app
+    main
+    > div.fixed.inset-x-0.bottom-0
+    button {
+    border-radius:
+      15px;
+  }
+
+  /*
+   * Zdjęcie zachowuje się bardziej
+   * jak typowy picker aplikacji.
+   */
+
+  body.admin-new-offer-app
+    #section-image
+    label {
+    -webkit-user-select:
+      none;
+
+    user-select:
+      none;
+  }
+
+  /*
+   * Zapobiega przypadkowemu
+   * zaznaczaniu elementów interfejsu
+   * przy dłuższym dotyku.
+   */
+
+  body.admin-new-offer-app
+    button,
+  body.admin-new-offer-app
+    a {
+    touch-action:
+      manipulation;
+  }
+
+  /*
+   * Sekcje formularza mają niewielki
+   * wizualny odstęp podobny do
+   * grouped forms w iOS.
+   */
+
+  body.admin-new-offer-app
+    #new-product-form {
+    gap:
+      0;
+  }
+
+  body.admin-new-offer-app
+    #new-product-form
+    > section
+    + section {
+    margin-top:
+      0.75rem;
+  }
+}
+
+/*
+ * iPhone / urządzenia z safe-area.
+ */
+
+@supports (
+  padding:
+    max(
+      0px
+    )
+) {
+  body.admin-app-shell {
+    min-height:
+      100dvh;
+  }
+}
+
+/*
+ * ============================================================
+ * DOTYCHCZASOWE MOBILE
+ * ============================================================
+ */
 
 @media (max-width: 1023px) {
   body.has-mobile-bottom-nav {
@@ -196,17 +596,20 @@ img {
 @media (min-width: 640px) {
   .site-container,
   .content-container {
-    padding-inline: 1.5rem;
+    padding-inline:
+      1.5rem;
   }
 
   .section-spacing {
-    padding-block: 4rem;
+    padding-block:
+      4rem;
   }
 }
 
 @media (min-width: 1024px) {
   .section-spacing {
-    padding-block: 5rem;
+    padding-block:
+      5rem;
   }
 }
 
@@ -219,22 +622,40 @@ img {
   }
 
   .interactive-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-hover);
+    transform:
+      translateY(
+        -4px
+      );
+
+    box-shadow:
+      var(
+        --shadow-hover
+      );
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
   html {
-    scroll-behavior: auto;
+    scroll-behavior:
+      auto;
   }
 
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    scroll-behavior:
+      auto !important;
+
+    transition-duration:
+      0.01ms !important;
+
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
   }
 }

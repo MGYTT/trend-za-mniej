@@ -64,11 +64,13 @@ type PresenceRow = {
     | string
     | null;
 
-  login_count: number;
+  login_count:
+    number;
 };
 
 type ActivityRow = {
-  id: number;
+  id:
+    number;
 
   actor_id:
     | string
@@ -91,10 +93,17 @@ type ActivityRow = {
 };
 
 type ProductSummary = {
-  total: number;
-  active: number;
-  added7: number;
-  added30: number;
+  total:
+    number;
+
+  active:
+    number;
+
+  added7:
+    number;
+
+  added30:
+    number;
 
   lastProductAt:
     | string
@@ -117,7 +126,9 @@ export default async function AdminTeamPage() {
       ?.claims
       ?.sub;
 
-  if (!userId) {
+  if (
+    !userId
+  ) {
     redirect(
       "/login"
     );
@@ -326,7 +337,9 @@ export default async function AdminTeamPage() {
         product.created_by
       );
 
-    if (!summary) {
+    if (
+      !summary
+    ) {
       continue;
     }
 
@@ -533,28 +546,110 @@ export default async function AdminTeamPage() {
       })
     );
 
+  const onlineNow =
+    activityMembers.filter(
+      (
+        member
+      ) => {
+        if (
+          !member.lastSeenAt
+        ) {
+          return false;
+        }
+
+        return (
+          serverNow.getTime() -
+          new Date(
+            member.lastSeenAt
+          ).getTime()
+        ) <=
+          2 *
+            60 *
+            1000;
+      }
+    ).length;
+
+  const displayName =
+    currentProfile.display_name
+      ?.trim() ||
+    "Administrator";
+
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
+    <main className="min-h-screen bg-[#f7f7f8] text-stone-900">
       <AdminHeader />
 
-      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
-        <section className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
-            Administratorzy
-          </p>
+      <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8">
+        <section className="relative overflow-hidden rounded-[28px] bg-stone-950 p-5 text-white shadow-[0_18px_50px_rgba(28,25,23,0.16)] sm:bg-white sm:p-7 sm:text-stone-900 sm:shadow-sm sm:ring-1 sm:ring-stone-200">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-violet-500/20 blur-3xl sm:hidden"
+          />
 
-          <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
-            Zespół i aktywność
-          </h1>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-20 -left-12 h-44 w-44 rounded-full bg-rose-500/20 blur-3xl sm:hidden"
+          />
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
-            Sprawdzaj aktywność
-            administratorów,
-            ostatnie logowania,
-            dodawane oferty oraz
-            historię pracy nad
-            katalogiem.
-          </p>
+          <div className="relative">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-rose-300 sm:text-xs sm:text-rose-600">
+                  Konto i zespół
+                </p>
+
+                <h1 className="mt-1 text-[28px] font-black leading-none tracking-[-0.05em] sm:text-4xl">
+                  Więcej
+                </h1>
+
+                <p className="mt-2 max-w-3xl text-xs leading-5 text-white/55 sm:text-base sm:leading-7 sm:text-stone-500">
+                  Profil,
+                  aktywność,
+                  administratorzy
+                  i uprawnienia
+                  projektu.
+                </p>
+              </div>
+
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[17px] border border-white/10 bg-white/10 text-sm font-black backdrop-blur-xl sm:bg-stone-100 sm:text-stone-700">
+                {displayName
+                  .slice(
+                    0,
+                    1
+                  )
+                  .toUpperCase()}
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <HeaderMetric
+                label="Rola"
+                value={
+                  currentProfile.role ===
+                  "owner"
+                    ? "Owner"
+                    : "Admin"
+                }
+              />
+
+              <HeaderMetric
+                label="Zespół"
+                value={
+                  String(
+                    admins.length
+                  )
+                }
+              />
+
+              <HeaderMetric
+                label="Online"
+                value={
+                  String(
+                    onlineNow
+                  )
+                }
+              />
+            </div>
+          </div>
         </section>
 
         <div className="mt-4">
@@ -593,5 +688,28 @@ export default async function AdminTeamPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function HeaderMetric({
+  label,
+  value,
+}: {
+  label:
+    string;
+
+  value:
+    string;
+}) {
+  return (
+    <div className="rounded-[16px] border border-white/10 bg-white/10 px-3 py-3 backdrop-blur-xl sm:border-stone-200 sm:bg-stone-50">
+      <p className="text-[8px] font-black uppercase tracking-[0.1em] text-white/40 sm:text-stone-400">
+        {label}
+      </p>
+
+      <p className="mt-1 truncate text-sm font-black text-white sm:text-stone-900">
+        {value}
+      </p>
+    </div>
   );
 }

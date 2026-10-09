@@ -5,10 +5,12 @@ import {
 } from "next/navigation";
 
 import AdminHeader from "@/components/admin/AdminHeader";
+import AdminMobileDashboard from "@/components/admin/AdminMobileDashboard";
 import AdminProductList from "@/components/admin/AdminProductList";
 import DuplicateProtectionStatus from "@/components/admin/DuplicateProtectionStatus";
 
 import {
+  canManageOffer,
   type AdminRole,
   type AdminTeamMember,
 } from "@/lib/admin-permissions";
@@ -62,7 +64,9 @@ export default async function AdminPage({
       ?.claims
       ?.sub;
 
-  if (!userId) {
+  if (
+    !userId
+  ) {
     redirect(
       "/login"
     );
@@ -180,7 +184,8 @@ export default async function AdminPage({
       supabase.rpc(
         "get_product_click_stats",
         {
-          p_days: 30,
+          p_days:
+            30,
         }
       ),
     ]);
@@ -364,11 +369,65 @@ export default async function AdminPage({
     {}
   );
 
+  const recentProducts =
+    products
+      .slice(
+        0,
+        4
+      )
+      .map(
+        (
+          product
+        ) => ({
+          id:
+            product.id,
+
+          slug:
+            product.slug,
+
+          shortName:
+            product.short_name,
+
+          category:
+            product.category,
+
+          imageUrl:
+            product.image_url,
+
+          price:
+            product.price,
+
+          active:
+            product.active,
+
+          featured:
+            product.featured,
+
+          canManage:
+            canManageOffer({
+              currentUserId:
+                userId,
+
+              currentRole,
+
+              ownerModeActive,
+
+              productOwnerId:
+                product.created_by,
+            }),
+        })
+      );
+
+  const displayName =
+    currentAdmin.display_name
+      ?.trim() ||
+    "Administrator";
+
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
+    <main className="min-h-screen bg-[#f7f7f8] text-stone-900">
       <AdminHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8">
         {params.notice ===
           "foreign-offer" && (
           <div className="mb-4 rounded-[18px] border border-amber-200 bg-amber-50 p-4">
@@ -380,8 +439,8 @@ export default async function AdminPage({
             <p className="mt-1 text-xs leading-5 text-amber-800 sm:text-sm">
               Ta oferta należy do
               innego administratora.
-              Możesz ją zobaczyć w
-              katalogu, ale nie
+              Możesz ją zobaczyć
+              w katalogu, ale nie
               możesz zmieniać jej
               danych ani linku
               afiliacyjnego.
@@ -389,166 +448,9 @@ export default async function AdminPage({
           </div>
         )}
 
-        <section className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
-                Centrum zarządzania
-              </p>
-
-              <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
-                Panel administratora
-              </h1>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span
-                  className={[
-                    "rounded-full px-3 py-1 text-[10px] font-black",
-                    currentRole ===
-                    "owner"
-                      ? "bg-amber-50 text-amber-800"
-                      : "bg-blue-50 text-blue-700",
-                  ].join(
-                    " "
-                  )}
-                >
-                  {currentRole ===
-                  "owner"
-                    ? "👑 Właściciel"
-                    : "Administrator"}
-                </span>
-
-                {ownerModeActive && (
-                  <span className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black text-green-700">
-                    ✓ Własność ofert
-                    aktywna
-                  </span>
-                )}
-              </div>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
-                Publikuj oferty,
-                kontroluj ich
-                widoczność i
-                zarządzaj produktami
-                zgodnie z
-                przypisanym
-                właścicielem.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:flex">
-              <Link
-                href="/admin/nowa-oferta"
-                className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 sm:px-6"
-              >
-                <span className="mr-1.5 text-lg">
-                  +
-                </span>
-
-                Dodaj ofertę
-              </Link>
-
-              <Link
-                href="/admin/zespol"
-                className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-700 transition hover:border-rose-200 hover:text-rose-700 sm:px-6"
-              >
-                Zespół
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <DuplicateProtectionStatus
-          initialSummary={
-            duplicateSummary
-          }
-        />
-
-        <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          <StatCard
-            icon="box"
-            title="Wszystkie"
-            value={
-              products.length
-            }
-          />
-
-          <StatCard
-            icon="active"
-            title="Aktywne"
-            value={
-              activeProducts
-            }
-          />
-
-          <StatCard
-            icon="hidden"
-            title="Ukryte"
-            value={
-              hiddenProducts
-            }
-          />
-
-          <StatCard
-            icon="hot"
-            title="Gorące"
-            value={
-              featuredProducts
-            }
-          />
-
-          <StatCard
-            icon="click"
-            title="Kliknięcia"
-            value={
-              totalClicks
-            }
-            subtitle="łącznie"
-          />
-
-          <StatCard
-            icon="today"
-            title="Dzisiaj"
-            value={
-              todayClicks
-            }
-            subtitle="kliknięć"
-          />
-        </section>
-
-        <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <QuickAction
-            href="/admin/nowa-oferta"
-            icon="add"
-            title="Nowa oferta"
-            description="Dodaj produkt"
-          />
-
-          <QuickAction
-            href="/admin/statystyki"
-            icon="stats"
-            title="Analityka"
-            description="Sprawdź wyniki"
-          />
-
-          <QuickAction
-            href="/admin/zespol"
-            icon="team"
-            title="Zespół"
-            description="Role i właściciele"
-          />
-        </section>
-
-        <AdminProductList
-          products={
-            products
-          }
-          productStats={
-            productStats
-          }
-          currentUserId={
-            userId
+        <AdminMobileDashboard
+          displayName={
+            displayName
           }
           currentRole={
             currentRole
@@ -556,10 +458,209 @@ export default async function AdminPage({
           ownerModeActive={
             ownerModeActive
           }
-          teamMembers={
-            teamMembers
+          totalProducts={
+            products.length
+          }
+          activeProducts={
+            activeProducts
+          }
+          hiddenProducts={
+            hiddenProducts
+          }
+          featuredProducts={
+            featuredProducts
+          }
+          totalClicks={
+            totalClicks
+          }
+          todayClicks={
+            todayClicks
+          }
+          duplicateConflicts={
+            duplicateSummary.conflicts
+          }
+          recentProducts={
+            recentProducts
           }
         />
+
+        <div className="hidden lg:block">
+          <section className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
+                  Centrum zarządzania
+                </p>
+
+                <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
+                  Panel administratora
+                </h1>
+
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span
+                    className={[
+                      "rounded-full px-3 py-1 text-[10px] font-black",
+                      currentRole ===
+                      "owner"
+                        ? "bg-amber-50 text-amber-800"
+                        : "bg-blue-50 text-blue-700",
+                    ].join(
+                      " "
+                    )}
+                  >
+                    {currentRole ===
+                    "owner"
+                      ? "👑 Właściciel"
+                      : "Administrator"}
+                  </span>
+
+                  {ownerModeActive && (
+                    <span className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black text-green-700">
+                      ✓ Własność ofert
+                      aktywna
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
+                  Publikuj oferty,
+                  kontroluj ich
+                  widoczność
+                  i zarządzaj produktami
+                  zgodnie z przypisanym
+                  właścicielem.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <Link
+                  href="/admin/nowa-oferta"
+                  className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 sm:px-6"
+                >
+                  <span className="mr-1.5 text-lg">
+                    +
+                  </span>
+
+                  Dodaj ofertę
+                </Link>
+
+                <Link
+                  href="/admin/zespol"
+                  className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-700 transition hover:border-rose-200 hover:text-rose-700 sm:px-6"
+                >
+                  Zespół
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <DuplicateProtectionStatus
+            initialSummary={
+              duplicateSummary
+            }
+          />
+
+          <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+            <StatCard
+              icon="box"
+              title="Wszystkie"
+              value={
+                products.length
+              }
+            />
+
+            <StatCard
+              icon="active"
+              title="Aktywne"
+              value={
+                activeProducts
+              }
+            />
+
+            <StatCard
+              icon="hidden"
+              title="Ukryte"
+              value={
+                hiddenProducts
+              }
+            />
+
+            <StatCard
+              icon="hot"
+              title="Gorące"
+              value={
+                featuredProducts
+              }
+            />
+
+            <StatCard
+              icon="click"
+              title="Kliknięcia"
+              value={
+                totalClicks
+              }
+              subtitle="łącznie"
+            />
+
+            <StatCard
+              icon="today"
+              title="Dzisiaj"
+              value={
+                todayClicks
+              }
+              subtitle="kliknięć"
+            />
+          </section>
+
+          <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <QuickAction
+              href="/admin/nowa-oferta"
+              icon="add"
+              title="Nowa oferta"
+              description="Dodaj produkt"
+            />
+
+            <QuickAction
+              href="/admin/statystyki"
+              icon="stats"
+              title="Analityka"
+              description="Sprawdź wyniki"
+            />
+
+            <QuickAction
+              href="/admin/zespol"
+              icon="team"
+              title="Zespół"
+              description="Role i właściciele"
+            />
+          </section>
+        </div>
+
+        <div
+          id="admin-offers"
+          className="scroll-mt-24"
+        >
+          <AdminProductList
+            products={
+              products
+            }
+            productStats={
+              productStats
+            }
+            currentUserId={
+              userId
+            }
+            currentRole={
+              currentRole
+            }
+            ownerModeActive={
+              ownerModeActive
+            }
+            teamMembers={
+              teamMembers
+            }
+          />
+        </div>
       </div>
     </main>
   );
@@ -579,9 +680,14 @@ function StatCard({
     | "click"
     | "today";
 
-  title: string;
-  value: number;
-  subtitle?: string;
+  title:
+    string;
+
+  value:
+    number;
+
+  subtitle?:
+    string;
 }) {
   return (
     <div className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm">
@@ -618,15 +724,19 @@ function QuickAction({
   title,
   description,
 }: {
-  href: string;
+  href:
+    string;
 
   icon:
     | "add"
     | "stats"
     | "team";
 
-  title: string;
-  description: string;
+  title:
+    string;
+
+  description:
+    string;
 }) {
   return (
     <Link
@@ -766,9 +876,7 @@ function StatIcon({
         />
 
         <path d="M16 3v4" />
-
         <path d="M8 3v4" />
-
         <path d="M3 10h18" />
       </svg>
     );
@@ -785,9 +893,7 @@ function StatIcon({
       strokeLinejoin="round"
     >
       <path d="M4 7 12 3l8 4-8 4Z" />
-
       <path d="M4 7v10l8 4 8-4V7" />
-
       <path d="M12 11v10" />
     </svg>
   );
@@ -815,7 +921,6 @@ function QuickIcon({
         strokeLinecap="round"
       >
         <path d="M12 5v14" />
-
         <path d="M5 12h14" />
       </svg>
     );
@@ -864,9 +969,7 @@ function QuickIcon({
       strokeLinecap="round"
     >
       <path d="M5 20V10" />
-
       <path d="M12 20V4" />
-
       <path d="M19 20v-7" />
     </svg>
   );

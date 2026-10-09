@@ -18,9 +18,9 @@ export default function AdminFormShell({
   children,
 }: Props) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
-      <div className="mb-5 sm:mb-7">
-        <div className="flex items-center gap-2 text-xs font-bold text-stone-400">
+    <section className="admin-form-shell mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
+      <div className="admin-form-heading mb-4 sm:mb-7">
+        <div className="hidden items-center gap-2 text-xs font-bold text-stone-400 sm:flex">
           <Link
             href="/admin"
             className="transition hover:text-rose-600"
@@ -37,20 +37,34 @@ export default function AdminFormShell({
           </span>
         </div>
 
-        <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
-              {eyebrow}
-            </p>
+        <div className="flex items-start justify-between gap-4 sm:mt-3 sm:items-end">
+          <div className="min-w-0 max-w-3xl">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex rounded-full bg-rose-50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.13em] text-rose-600 sm:bg-transparent sm:p-0 sm:text-xs sm:tracking-[0.15em]">
+                {eyebrow}
+              </span>
 
-            <h1 className="mt-1 text-2xl font-black tracking-[-0.035em] text-stone-900 sm:text-4xl">
+              <span className="inline-flex rounded-full bg-stone-100 px-2.5 py-1.5 text-[9px] font-black text-stone-500 sm:hidden">
+                Autozapis
+              </span>
+            </div>
+
+            <h1 className="mt-2 text-[28px] font-black leading-none tracking-[-0.05em] text-stone-950 sm:mt-1 sm:text-4xl">
               {title}
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
+            <p className="mt-2 max-w-2xl text-xs leading-5 text-stone-500 sm:text-base sm:leading-7">
               {description}
             </p>
           </div>
+
+          <Link
+            href="/admin"
+            aria-label="Wróć do panelu"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white text-xl font-medium text-stone-500 shadow-sm transition active:scale-95 sm:hidden"
+          >
+            ×
+          </Link>
 
           <Link
             href="/admin"

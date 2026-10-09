@@ -63,7 +63,8 @@ export type AdminActivityEntry = {
     | string
     | null;
 
-  productName: string;
+  productName:
+    string;
 
   action:
     | "created"
@@ -73,7 +74,8 @@ export type AdminActivityEntry = {
   changedFields:
     string[];
 
-  createdAt: string;
+  createdAt:
+    string;
 };
 
 type Props = {
@@ -110,42 +112,45 @@ export default function AdminActivityPanel({
         ).getTime()
     );
 
-  useEffect(() => {
-    const clock =
-      window.setInterval(
-        () => {
-          setNow(
-            Date.now()
-          );
-        },
-        30_000
-      );
+  useEffect(
+    () => {
+      const clock =
+        window.setInterval(
+          () => {
+            setNow(
+              Date.now()
+            );
+          },
+          30_000
+        );
 
-    const refresh =
-      window.setInterval(
-        () => {
-          if (
-            document.visibilityState ===
-            "visible"
-          ) {
-            router.refresh();
-          }
-        },
-        60_000
-      );
+      const refresh =
+        window.setInterval(
+          () => {
+            if (
+              document.visibilityState ===
+              "visible"
+            ) {
+              router.refresh();
+            }
+          },
+          60_000
+        );
 
-    return () => {
-      window.clearInterval(
-        clock
-      );
+      return () => {
+        window.clearInterval(
+          clock
+        );
 
-      window.clearInterval(
-        refresh
-      );
-    };
-  }, [
-    router,
-  ]);
+        window.clearInterval(
+          refresh
+        );
+      };
+    },
+    [
+      router,
+    ]
+  );
 
   const onlineCount =
     members.filter(
@@ -177,21 +182,44 @@ export default function AdminActivityPanel({
         )
     );
 
+  const added7 =
+    members.reduce(
+      (
+        total,
+        member
+      ) =>
+        total +
+        member.addedLast7Days,
+      0
+    );
+
+  const added30 =
+    members.reduce(
+      (
+        total,
+        member
+      ) =>
+        total +
+        member.addedLast30Days,
+      0
+    );
+
   return (
     <div className="space-y-4">
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard
+          icon="people"
           label={
             canSeeTeam
-              ? "Administratorzy"
-              : "Twoje konto"
+              ? "Zespół"
+              : "Konto"
           }
           value={
             members.length
           }
           detail={
             canSeeTeam
-              ? `${onlineCount} aktywnych teraz`
+              ? `${onlineCount} aktywnych`
               : onlineCount >
                   0
                 ? "Aktywny teraz"
@@ -200,35 +228,26 @@ export default function AdminActivityPanel({
         />
 
         <SummaryCard
-          label="Oferty 7 dni"
-          value={members.reduce(
-            (
-              total,
-              member
-            ) =>
-              total +
-              member.addedLast7Days,
-            0
-          )}
-          detail="nowo dodane"
+          icon="week"
+          label="7 dni"
+          value={
+            added7
+          }
+          detail="nowych ofert"
         />
 
         <SummaryCard
-          label="Oferty 30 dni"
-          value={members.reduce(
-            (
-              total,
-              member
-            ) =>
-              total +
-              member.addedLast30Days,
-            0
-          )}
-          detail="nowo dodane"
+          icon="month"
+          label="30 dni"
+          value={
+            added30
+          }
+          detail="nowych ofert"
         />
 
         <SummaryCard
-          label="Ostatnia oferta"
+          icon="recent"
+          label="Ostatnia"
           value="—"
           detail={
             lastProduct
@@ -242,26 +261,41 @@ export default function AdminActivityPanel({
         />
       </section>
 
-      <section className="rounded-[22px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-600">
-            Aktywność
-          </p>
+      <section className="overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm">
+        <div className="border-b border-stone-100 p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+                Online
+              </p>
 
-          <h2 className="mt-1 text-xl font-black text-stone-900 sm:text-2xl">
-            {canSeeTeam
-              ? "Aktywność administratorów"
-              : "Twoja aktywność"}
-          </h2>
+              <h2 className="mt-1 text-xl font-black tracking-[-0.035em] text-stone-900 sm:text-2xl">
+                {canSeeTeam
+                  ? "Aktywność zespołu"
+                  : "Twoja aktywność"}
+              </h2>
 
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6">
-            Status jest aktualizowany,
-            gdy administrator aktywnie
-            korzysta z panelu.
-          </p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-stone-400">
+                Status odświeża się
+                automatycznie podczas
+                korzystania z panelu.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+
+              <span className="text-[10px] font-black text-emerald-700">
+                {
+                  onlineCount
+                }{" "}
+                online
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-5 grid gap-3 xl:grid-cols-2">
+        <div className="grid gap-3 p-3 sm:p-4 xl:grid-cols-2">
           {members.map(
             (
               member
@@ -282,20 +316,20 @@ export default function AdminActivityPanel({
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-600">
+      <section className="overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm">
+        <div className="border-b border-stone-100 p-4 sm:p-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
             Historia
           </p>
 
-          <h2 className="mt-1 text-xl font-black text-stone-900 sm:text-2xl">
+          <h2 className="mt-1 text-xl font-black tracking-[-0.035em] text-stone-900 sm:text-2xl">
             Ostatnie działania
           </h2>
         </div>
 
         {recentActivity.length >
         0 ? (
-          <div className="mt-4 divide-y divide-stone-100">
+          <div className="divide-y divide-stone-100 px-4">
             {recentActivity.map(
               (
                 activity
@@ -314,9 +348,22 @@ export default function AdminActivityPanel({
                     key={
                       activity.id
                     }
-                    className="flex gap-3 py-3 first:pt-0 last:pb-0"
+                    className="flex gap-3 py-4"
                   >
-                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-50 text-rose-600">
+                    <div
+                      className={[
+                        "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]",
+                        activity.action ===
+                        "created"
+                          ? "bg-emerald-50 text-emerald-600"
+                          : activity.action ===
+                              "deleted"
+                            ? "bg-red-50 text-red-600"
+                            : "bg-blue-50 text-blue-600",
+                      ].join(
+                        " "
+                      )}
+                    >
                       <ActivityIcon
                         action={
                           activity.action
@@ -325,7 +372,7 @@ export default function AdminActivityPanel({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-black text-stone-800">
                             {getActivityLabel(
@@ -333,14 +380,14 @@ export default function AdminActivityPanel({
                             )}
                           </p>
 
-                          <p className="mt-0.5 truncate text-xs text-stone-500">
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500">
                             {
                               activity.productName
                             }
                           </p>
                         </div>
 
-                        <span className="shrink-0 text-[10px] font-semibold text-stone-400 sm:text-xs">
+                        <span className="shrink-0 text-[9px] font-semibold text-stone-400 sm:text-xs">
                           {formatRelativeTime(
                             activity.createdAt,
                             now
@@ -348,11 +395,26 @@ export default function AdminActivityPanel({
                         </span>
                       </div>
 
-                      <p className="mt-1 text-[10px] text-stone-400 sm:text-xs">
-                        {actor
-                          ?.displayName ??
-                          "Administrator"}
-                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-stone-100 text-[8px] font-black text-stone-500">
+                          {(
+                            actor
+                              ?.displayName ??
+                            "A"
+                          )
+                            .slice(
+                              0,
+                              1
+                            )
+                            .toUpperCase()}
+                        </span>
+
+                        <p className="text-[10px] font-bold text-stone-400">
+                          {actor
+                            ?.displayName ??
+                            "Administrator"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -360,8 +422,15 @@ export default function AdminActivityPanel({
             )}
           </div>
         ) : (
-          <div className="mt-4 rounded-xl bg-stone-50 p-4 text-sm text-stone-500">
-            Brak zapisanych działań.
+          <div className="p-8 text-center">
+            <p className="text-sm font-black text-stone-700">
+              Brak działań
+            </p>
+
+            <p className="mt-1 text-xs text-stone-400">
+              Historia pojawi się
+              po zmianach w katalogu.
+            </p>
           </div>
         )}
       </section>
@@ -376,7 +445,8 @@ function MemberCard({
   member:
     AdminActivityMember;
 
-  now: number;
+  now:
+    number;
 }) {
   const status =
     getPresenceStatus(
@@ -396,87 +466,77 @@ function MemberCard({
       : null;
 
   return (
-    <article className="rounded-[18px] border border-stone-200 bg-stone-50 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-base font-black text-stone-900">
-              {
-                member.displayName
-              }
-            </h3>
+    <article className="rounded-[20px] border border-stone-200 bg-[#f8f8f9] p-4">
+      <div className="flex items-start gap-3">
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-stone-950 text-sm font-black text-white">
+          {member.displayName
+            .slice(
+              0,
+              1
+            )
+            .toUpperCase()}
 
-            <span
-              className={[
-                "rounded-full px-2.5 py-1 text-[9px] font-black",
-                member.role ===
+          <span
+            className={[
+              "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#f8f8f9]",
+              status.online
+                ? "bg-emerald-500"
+                : status.recent
+                  ? "bg-amber-500"
+                  : "bg-stone-300",
+            ].join(
+              " "
+            )}
+          />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-black text-stone-900">
+                {
+                  member.displayName
+                }
+              </h3>
+
+              <p className="mt-1 text-[10px] font-bold text-stone-400">
+                {member.role ===
                 "owner"
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-blue-100 text-blue-700",
-              ].join(
-                " "
-              )}
-            >
-              {member.role ===
-              "owner"
-                ? "👑 Właściciel"
-                : "Administrator"}
-            </span>
-          </div>
+                  ? "👑 Właściciel"
+                  : "Administrator"}
+              </p>
+            </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2">
             <span
               className={[
-                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black",
+                "shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black",
                 status.online
                   ? "bg-emerald-100 text-emerald-800"
                   : status.recent
                     ? "bg-amber-100 text-amber-800"
-                    : "bg-stone-200 text-stone-600",
+                    : "bg-stone-200 text-stone-500",
               ].join(
                 " "
               )}
             >
-              <span
-                className={[
-                  "h-1.5 w-1.5 rounded-full",
-                  status.online
-                    ? "bg-emerald-500"
-                    : status.recent
-                      ? "bg-amber-500"
-                      : "bg-stone-400",
-                ].join(
-                  " "
-                )}
-              />
-
               {
                 status.label
               }
             </span>
-
-            {member.lastSeenAt && (
-              <span className="text-[10px] font-semibold text-stone-400">
-                {formatRelativeTime(
-                  member.lastSeenAt,
-                  now
-                )}
-              </span>
-            )}
           </div>
-        </div>
 
-        {status.online &&
-          member.currentPath && (
-          <span className="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[9px] font-black text-stone-500 shadow-sm">
-            {getPageLabel(
-              member.currentPath
-            )}
-          </span>
-        )}
+          {status.online &&
+            member.currentPath && (
+            <p className="mt-2 text-[10px] font-black text-rose-600">
+              {getPageLabel(
+                member.currentPath
+              )}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-4 gap-1.5">
         <MiniStat
           value={
             member.totalProducts
@@ -506,94 +566,125 @@ function MemberCard({
         />
       </div>
 
-      <div className="mt-4 grid gap-2 border-t border-stone-200 pt-3 sm:grid-cols-2">
-        <InfoRow
-          label="Ostatnie logowanie"
-          value={
-            member.lastLoginAt
-              ? formatDateTime(
-                  member.lastLoginAt
-                )
-              : "Brak danych"
-          }
-        />
+      <details className="mt-3 overflow-hidden rounded-[14px] border border-stone-200 bg-white">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-3 text-[10px] font-black text-stone-500">
+          Szczegóły aktywności
 
-        <InfoRow
-          label="Liczba logowań"
-          value={
-            String(
-              member.loginCount
-            )
-          }
-        />
+          <span className="text-base text-stone-300">
+            ›
+          </span>
+        </summary>
 
-        <InfoRow
-          label="Ostatnia oferta"
-          value={
-            member.lastProductAt
-              ? formatDateTime(
-                  member.lastProductAt
-                )
-              : "Brak danych"
-          }
-        />
-
-        <InfoRow
-          label={
-            status.online
-              ? "Bieżąca sesja"
-              : "Ostatnie wylogowanie"
-          }
-          value={
-            status.online
-              ? sessionDuration
-                ? `od ${sessionDuration}`
-                : "Aktywna"
-              : member.lastLogoutAt
+        <div className="grid gap-2 border-t border-stone-100 p-2 sm:grid-cols-2">
+          <InfoRow
+            label="Ostatnie logowanie"
+            value={
+              member.lastLoginAt
                 ? formatDateTime(
-                    member.lastLogoutAt
+                    member.lastLoginAt
                   )
                 : "Brak danych"
-          }
-        />
-      </div>
+            }
+          />
+
+          <InfoRow
+            label="Liczba logowań"
+            value={
+              String(
+                member.loginCount
+              )
+            }
+          />
+
+          <InfoRow
+            label="Ostatnia oferta"
+            value={
+              member.lastProductAt
+                ? formatDateTime(
+                    member.lastProductAt
+                  )
+                : "Brak danych"
+            }
+          />
+
+          <InfoRow
+            label={
+              status.online
+                ? "Bieżąca sesja"
+                : "Ostatnie wylogowanie"
+            }
+            value={
+              status.online
+                ? sessionDuration
+                  ? `od ${sessionDuration}`
+                  : "Aktywna"
+                : member.lastLogoutAt
+                  ? formatDateTime(
+                      member.lastLogoutAt
+                    )
+                  : "Brak danych"
+            }
+          />
+        </div>
+      </details>
     </article>
   );
 }
 
 function SummaryCard({
+  icon,
   label,
   value,
   detail,
   compact = false,
 }: {
-  label: string;
+  icon:
+    | "people"
+    | "week"
+    | "month"
+    | "recent";
+
+  label:
+    string;
 
   value:
     | number
     | string;
 
-  detail: string;
+  detail:
+    string;
 
-  compact?: boolean;
+  compact?:
+    boolean;
 }) {
   return (
-    <div className="rounded-[18px] border border-stone-200 bg-white p-4 shadow-sm">
-      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-stone-400">
+    <div className="rounded-[22px] border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <span className="flex h-9 w-9 items-center justify-center rounded-[13px] bg-stone-100 text-stone-600">
+          <SummaryIcon
+            type={
+              icon
+            }
+          />
+        </span>
+
+        {!compact && (
+          <p className="text-2xl font-black tracking-[-0.05em] text-stone-950">
+            {value}
+          </p>
+        )}
+      </div>
+
+      <p className="mt-3 text-xs font-black text-stone-700">
         {label}
       </p>
 
-      {!compact && (
-        <p className="mt-2 text-2xl font-black tracking-[-0.04em] text-stone-900">
-          {value}
-        </p>
-      )}
-
       <p
         className={[
+          "mt-1 font-semibold",
           compact
-            ? "mt-2 text-sm font-black text-stone-800"
-            : "mt-1 text-[10px] text-stone-400",
+            ? "text-xs text-stone-700"
+            : "text-[10px] text-stone-400",
         ].join(
           " "
         )}
@@ -604,20 +695,113 @@ function SummaryCard({
   );
 }
 
+function SummaryIcon({
+  type,
+}: {
+  type:
+    | "people"
+    | "week"
+    | "month"
+    | "recent";
+}) {
+  if (
+    type ===
+    "people"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle
+          cx="9"
+          cy="8"
+          r="3"
+        />
+
+        <path d="M3 20a6 6 0 0 1 12 0" />
+
+        <circle
+          cx="17"
+          cy="9"
+          r="2"
+        />
+      </svg>
+    );
+  }
+
+  if (
+    type ===
+    "recent"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="9"
+        />
+
+        <path d="M12 7v5l3 2" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect
+        x="3"
+        y="5"
+        width="18"
+        height="16"
+        rx="2"
+      />
+
+      <path d="M8 3v4" />
+      <path d="M16 3v4" />
+      <path d="M3 10h18" />
+    </svg>
+  );
+}
+
 function MiniStat({
   value,
   label,
 }: {
-  value: number;
-  label: string;
+  value:
+    number;
+
+  label:
+    string;
 }) {
   return (
-    <div className="rounded-xl bg-white p-3">
-      <p className="text-lg font-black tracking-[-0.03em] text-stone-900">
+    <div className="rounded-[12px] bg-white px-2 py-2.5 text-center">
+      <p className="text-base font-black tracking-[-0.03em] text-stone-900">
         {value}
       </p>
 
-      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-stone-400">
+      <p className="mt-0.5 truncate text-[7px] font-black uppercase tracking-[0.04em] text-stone-400 sm:text-[9px]">
         {label}
       </p>
     </div>
@@ -628,16 +812,19 @@ function InfoRow({
   label,
   value,
 }: {
-  label: string;
-  value: string;
+  label:
+    string;
+
+  value:
+    string;
 }) {
   return (
-    <div className="rounded-xl bg-white p-3">
-      <p className="text-[9px] font-black uppercase tracking-[0.07em] text-stone-400">
+    <div className="rounded-xl bg-stone-50 p-3">
+      <p className="text-[8px] font-black uppercase tracking-[0.07em] text-stone-400">
         {label}
       </p>
 
-      <p className="mt-1 text-xs font-bold text-stone-700">
+      <p className="mt-1 text-[11px] font-bold leading-4 text-stone-700">
         {value}
       </p>
     </div>
@@ -648,14 +835,19 @@ function getPresenceStatus(
   lastSeenAt:
     | string
     | null,
-  now: number
+  now:
+    number
 ) {
-  if (!lastSeenAt) {
+  if (
+    !lastSeenAt
+  ) {
     return {
       online:
         false,
+
       recent:
         false,
+
       label:
         "Brak danych",
     };
@@ -672,45 +864,57 @@ function getPresenceStatus(
 
   if (
     age <=
-    2 * 60 * 1000
+    2 *
+      60 *
+      1000
   ) {
     return {
       online:
         true,
+
       recent:
         true,
+
       label:
-        "Aktywny teraz",
+        "Online",
     };
   }
 
   if (
     age <=
-    15 * 60 * 1000
+    15 *
+      60 *
+      1000
   ) {
     return {
       online:
         false,
+
       recent:
         true,
+
       label:
-        "Ostatnio aktywny",
+        "Niedawno",
     };
   }
 
   return {
     online:
       false,
+
     recent:
       false,
+
     label:
       "Offline",
   };
 }
 
 function formatRelativeTime(
-  value: string,
-  now: number
+  value:
+    string,
+  now:
+    number
 ) {
   const timestamp =
     new Date(
@@ -771,7 +975,8 @@ function formatRelativeTime(
 }
 
 function formatDateTime(
-  value: string
+  value:
+    string
 ) {
   const date =
     new Date(
@@ -799,8 +1004,10 @@ function formatDateTime(
 }
 
 function formatDuration(
-  start: number,
-  now: number
+  start:
+    number,
+  now:
+    number
 ) {
   const minutes =
     Math.max(
@@ -849,7 +1056,8 @@ function formatDuration(
 }
 
 function getNewestDate(
-  values: string[]
+  values:
+    string[]
 ) {
   if (
     values.length ===
@@ -875,7 +1083,8 @@ function getNewestDate(
 }
 
 function getPageLabel(
-  path: string
+  path:
+    string
 ) {
   if (
     path ===
@@ -885,29 +1094,33 @@ function getPageLabel(
   }
 
   if (
-    path ===
-    "/admin/statystyki"
+    path.startsWith(
+      "/admin/social"
+    )
+  ) {
+    return "Social Media";
+  }
+
+  if (
+    path.startsWith(
+      "/admin/statystyki"
+    )
   ) {
     return "Statystyki";
   }
 
   if (
-    path ===
-    "/admin/zespol"
+    path.startsWith(
+      "/admin/zespol"
+    )
   ) {
     return "Zespół";
   }
 
   if (
-    path ===
-    "/admin/widocznosc"
-  ) {
-    return "Widoczność";
-  }
-
-  if (
-    path ===
-    "/admin/edytuj"
+    path.startsWith(
+      "/admin/edytuj"
+    )
   ) {
     return "Edytuje ofertę";
   }
@@ -938,7 +1151,7 @@ function getActivityLabel(
       "active"
     )
   ) {
-    return "Zmieniono widoczność oferty";
+    return "Zmieniono widoczność";
   }
 
   if (
@@ -949,7 +1162,7 @@ function getActivityLabel(
       "old_price"
     )
   ) {
-    return "Zmieniono cenę oferty";
+    return "Zmieniono cenę";
   }
 
   return "Edytowano ofertę";
@@ -970,7 +1183,6 @@ function ActivityIcon({
     return (
       <svg
         viewBox="0 0 24 24"
-        aria-hidden="true"
         className="h-4 w-4"
         fill="none"
         stroke="currentColor"
@@ -991,7 +1203,6 @@ function ActivityIcon({
     return (
       <svg
         viewBox="0 0 24 24"
-        aria-hidden="true"
         className="h-4 w-4"
         fill="none"
         stroke="currentColor"
@@ -1006,7 +1217,6 @@ function ActivityIcon({
   return (
     <svg
       viewBox="0 0 24 24"
-      aria-hidden="true"
       className="h-4 w-4"
       fill="none"
       stroke="currentColor"
