@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -44,11 +45,55 @@ type ImageFit =
   | "cover"
   | "contain";
 
+type SlideTitles =
+  Record<
+    SlideType,
+    string
+  >;
+
+type StudioDraft = {
+  version: 2;
+
+  template:
+    TemplateType;
+
+  imageFit:
+    ImageFit;
+
+  showPrice:
+    boolean;
+
+  showOldPrice:
+    boolean;
+
+  showSheinSource:
+    boolean;
+
+  showCategory:
+    boolean;
+
+  titles:
+    SlideTitles;
+};
+
+type ExportState = {
+  active: boolean;
+  message: string;
+  error: string | null;
+};
+
 const DEFAULT_COVER_TITLE =
   "Trendowe ubrania w niższych cenach";
 
 const DEFAULT_OUTRO_TITLE =
   "Więcej okazji i promocji znajdziesz na Trend za Mniej ✨";
+
+const EXPORT_ORDER:
+  SlideType[] = [
+    "cover",
+    "product",
+    "outro",
+  ];
 
 function formatPrice(
   value:
@@ -69,6 +114,216 @@ function formatPrice(
       value
     )
   );
+}
+
+function getDefaultTitles(
+  product:
+    SocialProduct
+): SlideTitles {
+  return {
+    cover:
+      DEFAULT_COVER_TITLE,
+
+    product:
+      product.shortName,
+
+    outro:
+      DEFAULT_OUTRO_TITLE,
+  };
+}
+
+function getStorageKey(
+  productId: string
+) {
+  return `trend-za-mniej:social-studio:v2:${productId}`;
+}
+
+function getSlideFileName(
+  product:
+    SocialProduct,
+  slideType:
+    SlideType
+) {
+  const prefix =
+    slideType ===
+    "cover"
+      ? "01-okladka"
+      : slideType ===
+          "product"
+        ? "02-produkt"
+        : "03-koniec";
+
+  const safeSlug =
+    product.slug
+      .trim()
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9-]+/g,
+        "-"
+      )
+      .replace(
+        /^-+|-+$/g,
+        ""
+      ) ||
+    "produkt";
+
+  return `trend-za-mniej-${safeSlug}-${prefix}.png`;
+}
+
+function dataUrlFromBlob(
+  blob: Blob
+) {
+  return new Promise<string>(
+    (
+      resolve,
+      reject
+    ) => {
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        () => {
+          if (
+            typeof reader.result ===
+            "string"
+          ) {
+            resolve(
+              reader.result
+            );
+
+            return;
+          }
+
+          reject(
+            new Error(
+              "Nie udało się przygotować zdjęcia."
+            )
+          );
+        };
+
+      reader.onerror =
+        () => {
+          reject(
+            new Error(
+              "Nie udało się odczytać zdjęcia."
+            )
+          );
+        };
+
+      reader.readAsDataURL(
+        blob
+      );
+    }
+  );
+}
+
+async function waitForImages(
+  node:
+    HTMLElement
+) {
+  const images =
+    Array.from(
+      node.querySelectorAll(
+        "img"
+      )
+    );
+
+  await Promise.all(
+    images.map(
+      (
+        image
+      ) => {
+        if (
+          image.complete &&
+          image.naturalWidth >
+            0
+        ) {
+          return Promise.resolve();
+        }
+
+        return new Promise<void>(
+          (
+            resolve
+          ) => {
+            const finish =
+              () => {
+                image.removeEventListener(
+                  "load",
+                  finish
+                );
+
+                image.removeEventListener(
+                  "error",
+                  finish
+                );
+
+                resolve();
+              };
+
+            image.addEventListener(
+              "load",
+              finish,
+              {
+                once:
+                  true,
+              }
+            );
+
+            image.addEventListener(
+              "error",
+              finish,
+              {
+                once:
+                  true,
+              }
+            );
+          }
+        );
+      }
+    )
+  );
+}
+
+function waitForPaint() {
+  return new Promise<void>(
+    (
+      resolve
+    ) => {
+      requestAnimationFrame(
+        () => {
+          requestAnimationFrame(
+            () => {
+              resolve();
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
+function triggerDownload(
+  dataUrl: string,
+  fileName: string
+) {
+  const link =
+    document.createElement(
+      "a"
+    );
+
+  link.href =
+    dataUrl;
+
+  link.download =
+    fileName;
+
+  document.body.appendChild(
+    link
+  );
+
+  link.click();
+
+  link.remove();
 }
 
 export default function SocialMediaStudio({
@@ -142,11 +397,14 @@ export default function SocialMediaStudio({
     );
 
   const [
-    customTitle,
-    setCustomTitle,
+    titles,
+    setTitles,
   ] =
-    useState(
-      product.shortName
+    useState<SlideTitles>(
+      () =>
+        getDefaultTitles(
+          product
+        )
     );
 
   const [
@@ -157,72 +415,298 @@ export default function SocialMediaStudio({
       false
     );
 
-  const title =
+  const [
+    draftReady,
+    setDraftReady,
+  ] =
+    useState(
+      false
+    );
+
+  const [
+    draftSaved,
+    setDraftSaved,
+  ] =
+    useState(
+      false
+    );
+
+  const [
+    exportImageUrl,
+    setExportImageUrl,
+  ] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    exportState,
+    setExportState,
+  ] =
+    useState<ExportState>({
+      active:
+        false,
+
+      message:
+        "",
+
+      error:
+        null,
+    });
+
+  const exportNodes =
+    useRef<
+      Record<
+        SlideType,
+        HTMLDivElement | null
+      >
+    >({
+      cover:
+        null,
+
+      product:
+        null,
+
+      outro:
+        null,
+    });
+
+  const currentTitle =
+    titles[
+      slideType
+    ];
+
+  const currentSlideLabel =
+    slideType ===
+    "cover"
+      ? "Okładka"
+      : slideType ===
+          "product"
+        ? "Produkt"
+        : "Zakończenie";
+
+  const exportProduct =
     useMemo(
-      () => {
-        const cleaned =
-          customTitle.trim();
+      () => ({
+        ...product,
 
-        if (
-          cleaned
-        ) {
-          return cleaned;
-        }
-
-        if (
-          slideType ===
-          "cover"
-        ) {
-          return DEFAULT_COVER_TITLE;
-        }
-
-        if (
-          slideType ===
-          "outro"
-        ) {
-          return DEFAULT_OUTRO_TITLE;
-        }
-
-        return product.shortName;
-      },
+        imageUrl:
+          exportImageUrl ??
+          product.imageUrl,
+      }),
       [
-        customTitle,
-        product.shortName,
-        slideType,
+        exportImageUrl,
+        product,
       ]
     );
 
   useEffect(
     () => {
-      if (
-        slideType ===
-        "product"
+      try {
+        const saved =
+          window.localStorage
+            .getItem(
+              getStorageKey(
+                product.id
+              )
+            );
+
+        if (
+          !saved
+        ) {
+          return;
+        }
+
+        const parsed =
+          JSON.parse(
+            saved
+          ) as Partial<StudioDraft>;
+
+        if (
+          parsed.version !==
+          2
+        ) {
+          return;
+        }
+
+        if (
+          parsed.template ===
+            "fashion" ||
+          parsed.template ===
+            "minimal" ||
+          parsed.template ===
+            "deal"
+        ) {
+          setTemplate(
+            parsed.template
+          );
+        }
+
+        if (
+          parsed.imageFit ===
+            "cover" ||
+          parsed.imageFit ===
+            "contain"
+        ) {
+          setImageFit(
+            parsed.imageFit
+          );
+        }
+
+        if (
+          typeof parsed.showPrice ===
+          "boolean"
+        ) {
+          setShowPrice(
+            parsed.showPrice
+          );
+        }
+
+        if (
+          typeof parsed.showOldPrice ===
+          "boolean"
+        ) {
+          setShowOldPrice(
+            parsed.showOldPrice
+          );
+        }
+
+        if (
+          typeof parsed.showSheinSource ===
+          "boolean"
+        ) {
+          setShowSheinSource(
+            parsed.showSheinSource
+          );
+        }
+
+        if (
+          typeof parsed.showCategory ===
+          "boolean"
+        ) {
+          setShowCategory(
+            parsed.showCategory
+          );
+        }
+
+        if (
+          parsed.titles
+        ) {
+          setTitles({
+            cover:
+              parsed.titles.cover ??
+              DEFAULT_COVER_TITLE,
+
+            product:
+              parsed.titles.product ??
+              product.shortName,
+
+            outro:
+              parsed.titles.outro ??
+              DEFAULT_OUTRO_TITLE,
+          });
+        }
+      } catch (
+        error
       ) {
-        setCustomTitle(
-          product.shortName
+        console.warn(
+          "Nie udało się przywrócić ustawień Social Media Studio:",
+          error
         );
-
-        return;
-      }
-
-      if (
-        slideType ===
-        "cover"
-      ) {
-        setCustomTitle(
-          DEFAULT_COVER_TITLE
+      } finally {
+        setDraftReady(
+          true
         );
-
-        return;
       }
-
-      setCustomTitle(
-        DEFAULT_OUTRO_TITLE
-      );
     },
     [
+      product.id,
       product.shortName,
-      slideType,
+    ]
+  );
+
+  useEffect(
+    () => {
+      if (
+        !draftReady
+      ) {
+        return;
+      }
+
+      const timeout =
+        window.setTimeout(
+          () => {
+            const draft:
+              StudioDraft = {
+              version:
+                2,
+
+              template,
+
+              imageFit,
+
+              showPrice,
+
+              showOldPrice,
+
+              showSheinSource,
+
+              showCategory,
+
+              titles,
+            };
+
+            try {
+              window.localStorage
+                .setItem(
+                  getStorageKey(
+                    product.id
+                  ),
+                  JSON.stringify(
+                    draft
+                  )
+                );
+
+              setDraftSaved(
+                true
+              );
+
+              window.setTimeout(
+                () => {
+                  setDraftSaved(
+                    false
+                  );
+                },
+                1200
+              );
+            } catch (
+              error
+            ) {
+              console.warn(
+                "Nie udało się zapisać ustawień Social Media Studio:",
+                error
+              );
+            }
+          },
+          350
+        );
+
+      return () => {
+        window.clearTimeout(
+          timeout
+        );
+      };
+    },
+    [
+      draftReady,
+      imageFit,
+      product.id,
+      showCategory,
+      showOldPrice,
+      showPrice,
+      showSheinSource,
+      template,
+      titles,
     ]
   );
 
@@ -277,6 +761,90 @@ export default function SocialMediaStudio({
     []
   );
 
+  function updateCurrentTitle(
+    value: string
+  ) {
+    setTitles(
+      (
+        current
+      ) => ({
+        ...current,
+
+        [slideType]:
+          value,
+      })
+    );
+  }
+
+  function resetStudio() {
+    const confirmed =
+      window.confirm(
+        "Przywrócić domyślne ustawienia tego projektu?"
+      );
+
+    if (
+      !confirmed
+    ) {
+      return;
+    }
+
+    setTemplate(
+      "fashion"
+    );
+
+    setImageFit(
+      "contain"
+    );
+
+    setShowPrice(
+      true
+    );
+
+    setShowOldPrice(
+      false
+    );
+
+    setShowSheinSource(
+      true
+    );
+
+    setShowCategory(
+      true
+    );
+
+    setShowSafeArea(
+      false
+    );
+
+    setTitles(
+      getDefaultTitles(
+        product
+      )
+    );
+
+    setExportState({
+      active:
+        false,
+
+      message:
+        "",
+
+      error:
+        null,
+    });
+
+    try {
+      window.localStorage
+        .removeItem(
+          getStorageKey(
+            product.id
+          )
+        );
+    } catch {
+      // localStorage może być niedostępny
+    }
+  }
+
   async function enterScreenshotMode() {
     setScreenshotMode(
       true
@@ -321,6 +889,290 @@ export default function SocialMediaStudio({
     }
   }
 
+  async function prepareImageForExport() {
+    if (
+      exportImageUrl
+    ) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          product.imageUrl,
+          {
+            cache:
+              "no-store",
+          }
+        );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          "Nie udało się pobrać zdjęcia produktu."
+        );
+      }
+
+      const blob =
+        await response.blob();
+
+      const dataUrl =
+        await dataUrlFromBlob(
+          blob
+        );
+
+      setExportImageUrl(
+        dataUrl
+      );
+
+      await waitForPaint();
+    } catch (
+      error
+    ) {
+      console.warn(
+        "Nie udało się osadzić zdjęcia przed eksportem. Spróbujemy użyć oryginalnego adresu.",
+        error
+      );
+    }
+  }
+
+  async function renderSlideToPng(
+    type:
+      SlideType
+  ) {
+    const node =
+      exportNodes.current[
+        type
+      ];
+
+    if (
+      !node
+    ) {
+      throw new Error(
+        "Nie udało się przygotować slajdu do eksportu."
+      );
+    }
+
+    await waitForImages(
+      node
+    );
+
+    if (
+      document.fonts
+    ) {
+      await document.fonts.ready;
+    }
+
+    await waitForPaint();
+
+    const {
+      toPng,
+    } =
+      await import(
+        "html-to-image"
+      );
+
+    return toPng(
+      node,
+      {
+        width:
+          360,
+
+        height:
+          640,
+
+        pixelRatio:
+          3,
+
+        cacheBust:
+          true,
+
+        backgroundColor:
+          template ===
+          "deal"
+            ? "#0c0a09"
+            : template ===
+                "minimal"
+              ? "#f4f5f7"
+              : "#f3ebe5",
+      }
+    );
+  }
+
+  async function exportSingleSlide(
+    type:
+      SlideType
+  ) {
+    if (
+      exportState.active
+    ) {
+      return;
+    }
+
+    setExportState({
+      active:
+        true,
+
+      message:
+        "Przygotowuję PNG 1080 × 1920...",
+
+      error:
+        null,
+    });
+
+    try {
+      await prepareImageForExport();
+
+      await waitForPaint();
+
+      const dataUrl =
+        await renderSlideToPng(
+          type
+        );
+
+      triggerDownload(
+        dataUrl,
+        getSlideFileName(
+          product,
+          type
+        )
+      );
+
+      setExportState({
+        active:
+          false,
+
+        message:
+          "✓ PNG 1080 × 1920 gotowy",
+
+        error:
+          null,
+      });
+    } catch (
+      error
+    ) {
+      console.error(
+        "Błąd eksportu Social Media Studio:",
+        error
+      );
+
+      setExportState({
+        active:
+          false,
+
+        message:
+          "",
+
+        error:
+          "Nie udało się utworzyć PNG. Sprawdź zdjęcie produktu i spróbuj ponownie.",
+      });
+    }
+  }
+
+  async function exportFullPack() {
+    if (
+      exportState.active
+    ) {
+      return;
+    }
+
+    setExportState({
+      active:
+        true,
+
+      message:
+        "Przygotowuję zestaw 1/3...",
+
+      error:
+        null,
+    });
+
+    try {
+      await prepareImageForExport();
+
+      await waitForPaint();
+
+      for (
+        let index =
+          0;
+        index <
+          EXPORT_ORDER.length;
+        index +=
+          1
+      ) {
+        const type =
+          EXPORT_ORDER[
+            index
+          ];
+
+        setExportState({
+          active:
+            true,
+
+          message:
+            `Eksport ${index + 1}/3...`,
+
+          error:
+            null,
+        });
+
+        const dataUrl =
+          await renderSlideToPng(
+            type
+          );
+
+        triggerDownload(
+          dataUrl,
+          getSlideFileName(
+            product,
+            type
+          )
+        );
+
+        await new Promise<void>(
+          (
+            resolve
+          ) => {
+            window.setTimeout(
+              resolve,
+              250
+            );
+          }
+        );
+      }
+
+      setExportState({
+        active:
+          false,
+
+        message:
+          "✓ Zestaw 3 slajdów gotowy",
+
+        error:
+          null,
+      });
+    } catch (
+      error
+    ) {
+      console.error(
+        "Błąd eksportu zestawu Social Media Studio:",
+        error
+      );
+
+      setExportState({
+        active:
+          false,
+
+        message:
+          "",
+
+        error:
+          "Nie udało się utworzyć całego zestawu. Spróbuj wyeksportować slajdy pojedynczo.",
+      });
+    }
+  }
+
   const slide = (
     <SocialSlide
       product={
@@ -352,7 +1204,9 @@ export default function SocialMediaStudio({
         !screenshotMode
       }
       title={
-        title
+        titles[
+          slideType
+        ]
       }
     />
   );
@@ -391,256 +1245,408 @@ export default function SocialMediaStudio({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-stone-600 shadow-sm">
-              Social Media Studio
-            </span>
+    <>
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-stone-600 shadow-sm">
+                Social Media Studio 2.0
+              </span>
 
-            <span className="rounded-full bg-stone-900 px-3 py-1.5 text-[10px] font-black text-white">
-              9:16
-            </span>
+              <span className="rounded-full bg-stone-900 px-3 py-1.5 text-[10px] font-black text-white">
+                1080 × 1920
+              </span>
+
+              <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-black text-emerald-700">
+                PNG
+              </span>
+            </div>
+
+            <h1 className="mt-4 text-2xl font-black tracking-[-0.04em] text-stone-900 sm:text-4xl">
+              Studio social media
+            </h1>
+
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500">
+              Przygotuj cały zestaw
+              publikacyjny i eksportuj
+              gotowe grafiki bez
+              robienia ręcznych
+              screenshotów.
+            </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-bold text-stone-400">
+              <span>
+                Okładka
+              </span>
+
+              <span>
+                •
+              </span>
+
+              <span>
+                Produkt
+              </span>
+
+              <span>
+                •
+              </span>
+
+              <span>
+                Zakończenie
+              </span>
+
+              <span>
+                •
+              </span>
+
+              <span>
+                9:16
+              </span>
+
+              {draftSaved && (
+                <>
+                  <span>
+                    •
+                  </span>
+
+                  <span className="text-emerald-600">
+                    ✓ zapisano
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
-          <h1 className="mt-4 text-2xl font-black tracking-[-0.04em] text-stone-900 sm:text-4xl">
-            Studio social media
-          </h1>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={
+                resetStudio
+              }
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-500 shadow-sm transition hover:border-stone-300 hover:bg-stone-50 hover:text-stone-800"
+            >
+              Reset
+            </button>
 
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-500">
-            Przygotuj okładkę,
-            slajd produktu
-            i zakończenie
-            w jednym spójnym
-            stylu.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/admin"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-600 shadow-sm transition hover:border-stone-300 hover:bg-stone-50"
-          >
-            ← Oferty
-          </Link>
-
-          {product.active && (
             <Link
-              href={`/produkt/${product.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/admin"
               className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-600 shadow-sm transition hover:border-stone-300 hover:bg-stone-50"
             >
-              Produkt ↗
+              ← Oferty
             </Link>
-          )}
+
+            {product.active && (
+              <Link
+                href={`/produkt/${product.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-600 shadow-sm transition hover:border-stone-300 hover:bg-stone-50"
+              >
+                Produkt ↗
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-7 grid gap-5 xl:grid-cols-[350px_minmax(0,1fr)] xl:items-start">
-        <aside className="space-y-3 xl:sticky xl:top-24">
-          <ControlCard
-            title="Rodzaj slajdu"
-          >
-            <div className="grid grid-cols-3 gap-2">
-              <ChoiceButton
-                active={
-                  slideType ===
-                  "product"
-                }
-                onClick={() =>
-                  setSlideType(
-                    "product"
-                  )
-                }
-              >
-                Produkt
-              </ChoiceButton>
-
-              <ChoiceButton
-                active={
-                  slideType ===
-                  "cover"
-                }
-                onClick={() =>
-                  setSlideType(
-                    "cover"
-                  )
-                }
-              >
-                Okładka
-              </ChoiceButton>
-
-              <ChoiceButton
-                active={
-                  slideType ===
-                  "outro"
-                }
-                onClick={() =>
-                  setSlideType(
-                    "outro"
-                  )
-                }
-              >
-                Koniec
-              </ChoiceButton>
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <SlideStep
-                active={
-                  slideType ===
-                  "cover"
-                }
-                number="1"
-                label="Start"
-              />
-
-              <SlideStep
-                active={
-                  slideType ===
-                  "product"
-                }
-                number="2"
-                label="Produkt"
-              />
-
-              <SlideStep
-                active={
-                  slideType ===
-                  "outro"
-                }
-                number="3"
-                label="CTA"
-              />
-            </div>
-          </ControlCard>
-
-          <ControlCard
-            title="Wygląd"
-          >
-            <div className="grid grid-cols-3 gap-2">
-              <TemplateButton
-                active={
-                  template ===
-                  "fashion"
-                }
-                onClick={() =>
-                  setTemplate(
-                    "fashion"
-                  )
-                }
-                name="Warm"
-                description="Ciepły"
-              />
-
-              <TemplateButton
-                active={
-                  template ===
-                  "minimal"
-                }
-                onClick={() =>
-                  setTemplate(
-                    "minimal"
-                  )
-                }
-                name="Light"
-                description="Jasny"
-              />
-
-              <TemplateButton
-                active={
-                  template ===
-                  "deal"
-                }
-                onClick={() =>
-                  setTemplate(
-                    "deal"
-                  )
-                }
-                name="Dark"
-                description="Ciemny"
-              />
-            </div>
-          </ControlCard>
-
-          <ControlCard
-            title="Nagłówek"
-          >
-            <textarea
-              value={
-                customTitle
-              }
-              onChange={(
-                event
-              ) =>
-                setCustomTitle(
-                  event.target.value
-                )
-              }
-              rows={
-                3
-              }
-              maxLength={
-                80
-              }
-              className="w-full resize-none rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 outline-none transition focus:border-stone-300 focus:bg-white focus:ring-4 focus:ring-stone-100"
-            />
-
-            <div className="mt-2 flex items-center justify-between">
-              <p className="text-[10px] text-stone-400">
-                Krótki tekst wygląda
-                najlepiej.
-              </p>
-
-              <p className="text-[10px] font-bold text-stone-400">
-                {
-                  customTitle.length
-                }
-                /80
-              </p>
-            </div>
-          </ControlCard>
-
-          {slideType ===
-            "product" && (
+        <div className="mt-7 grid gap-5 xl:grid-cols-[350px_minmax(0,1fr)] xl:items-start">
+          <aside className="space-y-3 xl:sticky xl:top-24">
             <ControlCard
-              title="Elementy produktu"
+              title="Rodzaj slajdu"
             >
-              <div className="grid grid-cols-2 gap-2">
-                <ToggleButton
+              <div className="grid grid-cols-3 gap-2">
+                <ChoiceButton
                   active={
-                    showPrice
+                    slideType ===
+                    "cover"
                   }
                   onClick={() =>
-                    setShowPrice(
-                      (
-                        current
-                      ) =>
-                        !current
+                    setSlideType(
+                      "cover"
                     )
                   }
                 >
-                  Cena
-                </ToggleButton>
+                  Okładka
+                </ChoiceButton>
 
-                <ToggleButton
+                <ChoiceButton
                   active={
-                    showCategory
+                    slideType ===
+                    "product"
                   }
                   onClick={() =>
-                    setShowCategory(
-                      (
-                        current
-                      ) =>
-                        !current
+                    setSlideType(
+                      "product"
                     )
                   }
                 >
-                  Kategoria
-                </ToggleButton>
+                  Produkt
+                </ChoiceButton>
 
+                <ChoiceButton
+                  active={
+                    slideType ===
+                    "outro"
+                  }
+                  onClick={() =>
+                    setSlideType(
+                      "outro"
+                    )
+                  }
+                >
+                  Koniec
+                </ChoiceButton>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <SlideStep
+                  active={
+                    slideType ===
+                    "cover"
+                  }
+                  number="1"
+                  label="Start"
+                />
+
+                <SlideStep
+                  active={
+                    slideType ===
+                    "product"
+                  }
+                  number="2"
+                  label="Produkt"
+                />
+
+                <SlideStep
+                  active={
+                    slideType ===
+                    "outro"
+                  }
+                  number="3"
+                  label="CTA"
+                />
+              </div>
+            </ControlCard>
+
+            <ControlCard
+              title="Wygląd"
+            >
+              <div className="grid grid-cols-3 gap-2">
+                <TemplateButton
+                  active={
+                    template ===
+                    "fashion"
+                  }
+                  onClick={() =>
+                    setTemplate(
+                      "fashion"
+                    )
+                  }
+                  name="Warm"
+                  description="Ciepły"
+                />
+
+                <TemplateButton
+                  active={
+                    template ===
+                    "minimal"
+                  }
+                  onClick={() =>
+                    setTemplate(
+                      "minimal"
+                    )
+                  }
+                  name="Light"
+                  description="Jasny"
+                />
+
+                <TemplateButton
+                  active={
+                    template ===
+                    "deal"
+                  }
+                  onClick={() =>
+                    setTemplate(
+                      "deal"
+                    )
+                  }
+                  name="Dark"
+                  description="Ciemny"
+                />
+              </div>
+
+              <p className="mt-3 text-[10px] leading-5 text-stone-400">
+                Wybrany styl jest
+                wspólny dla wszystkich
+                trzech slajdów.
+              </p>
+            </ControlCard>
+
+            <ControlCard
+              title={`Tekst: ${currentSlideLabel}`}
+            >
+              <textarea
+                value={
+                  currentTitle
+                }
+                onChange={(
+                  event
+                ) =>
+                  updateCurrentTitle(
+                    event.target.value
+                  )
+                }
+                rows={
+                  3
+                }
+                maxLength={
+                  80
+                }
+                className="w-full resize-none rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 outline-none transition focus:border-stone-300 focus:bg-white focus:ring-4 focus:ring-stone-100"
+              />
+
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-[10px] text-stone-400">
+                  Każdy slajd ma
+                  własny tekst.
+                </p>
+
+                <p className="text-[10px] font-bold text-stone-400">
+                  {
+                    currentTitle.length
+                  }
+                  /80
+                </p>
+              </div>
+            </ControlCard>
+
+            {slideType ===
+              "product" && (
+              <ControlCard
+                title="Elementy produktu"
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  <ToggleButton
+                    active={
+                      showPrice
+                    }
+                    onClick={() =>
+                      setShowPrice(
+                        (
+                          current
+                        ) =>
+                          !current
+                      )
+                    }
+                  >
+                    Cena
+                  </ToggleButton>
+
+                  <ToggleButton
+                    active={
+                      showCategory
+                    }
+                    onClick={() =>
+                      setShowCategory(
+                        (
+                          current
+                        ) =>
+                          !current
+                      )
+                    }
+                  >
+                    Kategoria
+                  </ToggleButton>
+
+                  <ToggleButton
+                    active={
+                      showSheinSource
+                    }
+                    onClick={() =>
+                      setShowSheinSource(
+                        (
+                          current
+                        ) =>
+                          !current
+                      )
+                    }
+                  >
+                    SHEIN
+                  </ToggleButton>
+
+                  <ToggleButton
+                    active={
+                      showOldPrice
+                    }
+                    disabled={
+                      product.oldPrice ===
+                      null
+                    }
+                    onClick={() =>
+                      setShowOldPrice(
+                        (
+                          current
+                        ) =>
+                          !current
+                      )
+                    }
+                  >
+                    Stara cena
+                  </ToggleButton>
+                </div>
+
+                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400">
+                  Zdjęcie
+                </p>
+
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <ChoiceButton
+                    active={
+                      imageFit ===
+                      "contain"
+                    }
+                    onClick={() =>
+                      setImageFit(
+                        "contain"
+                      )
+                    }
+                  >
+                    Całe
+                  </ChoiceButton>
+
+                  <ChoiceButton
+                    active={
+                      imageFit ===
+                      "cover"
+                    }
+                    onClick={() =>
+                      setImageFit(
+                        "cover"
+                      )
+                    }
+                  >
+                    Wypełnij
+                  </ChoiceButton>
+                </div>
+
+                {showPrice && (
+                  <p className="mt-3 text-[10px] leading-5 text-stone-400">
+                    Cena pochodzi
+                    z danych zapisanych
+                    przy produkcie.
+                    Przed publikacją
+                    sprawdź jej
+                    aktualność.
+                  </p>
+                )}
+              </ControlCard>
+            )}
+
+            {slideType ===
+              "cover" && (
+              <ControlCard
+                title="Okładka"
+              >
                 <ToggleButton
                   active={
                     showSheinSource
@@ -654,79 +1660,27 @@ export default function SocialMediaStudio({
                     )
                   }
                 >
-                  SHEIN
+                  Pokazuj SHEIN
                 </ToggleButton>
 
-                <ToggleButton
-                  active={
-                    showOldPrice
-                  }
-                  disabled={
-                    product.oldPrice ===
-                    null
-                  }
-                  onClick={() =>
-                    setShowOldPrice(
-                      (
-                        current
-                      ) =>
-                        !current
-                    )
-                  }
-                >
-                  Stara cena
-                </ToggleButton>
-              </div>
+                <p className="mt-2 text-[10px] leading-5 text-stone-400">
+                  Na okładce pojawia
+                  się subtelne
+                  „Znaleziska z SHEIN”,
+                  bez dużego logo.
+                </p>
+              </ControlCard>
+            )}
 
-              <p className="mt-4 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400">
-                Zdjęcie
-              </p>
-
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <ChoiceButton
-                  active={
-                    imageFit ===
-                    "contain"
-                  }
-                  onClick={() =>
-                    setImageFit(
-                      "contain"
-                    )
-                  }
-                >
-                  Całe
-                </ChoiceButton>
-
-                <ChoiceButton
-                  active={
-                    imageFit ===
-                    "cover"
-                  }
-                  onClick={() =>
-                    setImageFit(
-                      "cover"
-                    )
-                  }
-                >
-                  Wypełnij
-                </ChoiceButton>
-              </div>
-            </ControlCard>
-          )}
-
-          {(slideType ===
-            "cover" ||
-            slideType ===
-              "product") && (
             <ControlCard
-              title="Źródło oferty"
+              title="Bezpieczna strefa"
             >
               <ToggleButton
                 active={
-                  showSheinSource
+                  showSafeArea
                 }
                 onClick={() =>
-                  setShowSheinSource(
+                  setShowSafeArea(
                     (
                       current
                     ) =>
@@ -734,133 +1688,302 @@ export default function SocialMediaStudio({
                   )
                 }
               >
-                Pokazuj SHEIN
+                Podgląd TikTok
               </ToggleButton>
 
               <p className="mt-2 text-[10px] leading-5 text-stone-400">
-                Używamy tekstu
-                „Znalezisko z SHEIN”
-                zamiast dużego logo.
+                Linie są tylko
+                pomocą w edytorze.
+                Nigdy nie trafiają
+                do eksportowanego PNG.
               </p>
             </ControlCard>
-          )}
 
-          <ControlCard
-            title="Podgląd TikTok"
-          >
-            <ToggleButton
-              active={
-                showSafeArea
-              }
-              onClick={() =>
-                setShowSafeArea(
-                  (
-                    current
-                  ) =>
-                    !current
-                )
-              }
+            <ControlCard
+              title="Eksport 2.0"
             >
-              Bezpieczna strefa
-            </ToggleButton>
+              <button
+                type="button"
+                disabled={
+                  exportState.active
+                }
+                onClick={() =>
+                  void exportSingleSlide(
+                    slideType
+                  )
+                }
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-stone-950 px-4 text-sm font-black text-white shadow-sm transition hover:bg-black disabled:cursor-wait disabled:opacity-50"
+              >
+                <DownloadIcon />
 
-            <p className="mt-2 text-[10px] leading-5 text-stone-400">
-              Pokazuje obszar,
-              w którym warto trzymać
-              najważniejsze elementy.
-              Nie pojawi się
-              na screenshotcie.
-            </p>
-          </ControlCard>
+                {exportState.active
+                  ? "Przygotowuję..."
+                  : "Pobierz ten slajd"}
+              </button>
 
-          <button
-            type="button"
-            onClick={() =>
-              void enterScreenshotMode()
-            }
-            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-stone-950 px-5 text-sm font-black text-white shadow-lg shadow-stone-300/40 transition hover:bg-black"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 7h3l2-2h6l2 2h3v12H4Z" />
+              <button
+                type="button"
+                disabled={
+                  exportState.active
+                }
+                onClick={() =>
+                  void exportFullPack()
+                }
+                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-800 transition hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
+              >
+                <StackIcon />
 
-              <circle
-                cx="12"
-                cy="13"
-                r="3"
-              />
-            </svg>
+                Pobierz cały zestaw
+              </button>
 
-            Tryb screenshot
-          </button>
+              <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-stone-50 px-3 py-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
 
-          <p className="text-center text-[10px] leading-5 text-stone-400">
-            ESC zamyka
-            tryb pełnoekranowy.
-          </p>
-        </aside>
+                <p className="text-[10px] font-black text-stone-500">
+                  PNG • 1080 × 1920
+                </p>
+              </div>
 
-        <section className="rounded-[28px] border border-stone-200 bg-[#f4f4f6] p-4 shadow-sm sm:p-6 lg:p-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-stone-400">
-                Podgląd
-              </p>
+              {exportState.message && (
+                <p
+                  aria-live="polite"
+                  className="mt-3 text-center text-[10px] font-black text-emerald-600"
+                >
+                  {
+                    exportState.message
+                  }
+                </p>
+              )}
 
-              <p className="mt-1 text-sm font-black text-stone-900">
-                TikTok / Reels / Shorts
-              </p>
-            </div>
+              {exportState.error && (
+                <p
+                  aria-live="polite"
+                  className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-center text-[10px] font-bold leading-5 text-red-700"
+                >
+                  {
+                    exportState.error
+                  }
+                </p>
+              )}
+            </ControlCard>
 
-            <div className="flex items-center gap-1.5 rounded-full border border-white bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-xl">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <details className="rounded-[22px] border border-stone-200/80 bg-white/90 shadow-[0_8px_30px_rgba(28,25,23,0.05)]">
+              <summary className="cursor-pointer list-none px-4 py-4 text-xs font-black uppercase tracking-[0.1em] text-stone-500">
+                Screenshot awaryjny
+              </summary>
 
-              <span className="text-[10px] font-black text-stone-500">
-                9:16
-              </span>
-            </div>
-          </div>
+              <div className="border-t border-stone-100 p-4">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void enterScreenshotMode()
+                  }
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-4 text-xs font-black text-stone-600 transition hover:bg-stone-100"
+                >
+                  <CameraIcon />
 
-          <div className="mt-5 flex justify-center">
-            <div className="w-full max-w-[390px] overflow-hidden rounded-[34px] border border-white/80 shadow-[0_24px_70px_rgba(28,25,23,0.16)]">
-              {slide}
-            </div>
-          </div>
+                  Tryb screenshot
+                </button>
 
-          <div className="mx-auto mt-5 max-w-[390px] rounded-[20px] border border-white bg-white/80 p-4 shadow-sm backdrop-blur-xl">
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-100">
-                <span className="text-xs">
-                  ✓
+                <p className="mt-2 text-center text-[10px] leading-5 text-stone-400">
+                  PNG jest teraz
+                  zalecaną metodą.
+                  Screenshot zostaje
+                  jako zapas.
+                </p>
+              </div>
+            </details>
+          </aside>
+
+          <section className="rounded-[28px] border border-stone-200 bg-[#f4f4f6] p-4 shadow-sm sm:p-6 lg:p-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.12em] text-stone-400">
+                  Podgląd
+                </p>
+
+                <p className="mt-1 text-sm font-black text-stone-900">
+                  {
+                    currentSlideLabel
+                  }
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-full border border-white bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-xl">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+                <span className="text-[10px] font-black text-stone-500">
+                  9:16
                 </span>
               </div>
+            </div>
 
-              <div>
-                <p className="text-xs font-black text-stone-800">
-                  Gotowe pod pionowy
-                  format
-                </p>
-
-                <p className="mt-1 text-[10px] leading-5 text-stone-400">
-                  Najważniejsze elementy
-                  są odsunięte od
-                  krawędzi i skalują
-                  się razem z płótnem.
-                </p>
+            <div className="mt-5 flex justify-center">
+              <div className="w-full max-w-[390px] overflow-hidden rounded-[34px] border border-white/80 shadow-[0_24px_70px_rgba(28,25,23,0.16)]">
+                {slide}
               </div>
             </div>
-          </div>
-        </section>
+
+            <div className="mx-auto mt-5 grid max-w-[390px] grid-cols-3 gap-2">
+              {EXPORT_ORDER.map(
+                (
+                  type,
+                  index
+                ) => {
+                  const active =
+                    slideType ===
+                    type;
+
+                  const label =
+                    type ===
+                    "cover"
+                      ? "Okładka"
+                      : type ===
+                          "product"
+                        ? "Produkt"
+                        : "Koniec";
+
+                  return (
+                    <button
+                      key={
+                        type
+                      }
+                      type="button"
+                      onClick={() =>
+                        setSlideType(
+                          type
+                        )
+                      }
+                      className={[
+                        "rounded-[18px] border px-2 py-3 text-center transition",
+                        active
+                          ? "border-stone-900 bg-stone-900 text-white"
+                          : "border-white bg-white/80 text-stone-500 hover:bg-white",
+                      ].join(
+                        " "
+                      )}
+                    >
+                      <span
+                        className={[
+                          "mx-auto flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-black",
+                          active
+                            ? "bg-white/15 text-white"
+                            : "bg-stone-100 text-stone-500",
+                        ].join(
+                          " "
+                        )}
+                      >
+                        {
+                          index +
+                          1
+                        }
+                      </span>
+
+                      <span className="mt-1.5 block text-[10px] font-black">
+                        {
+                          label
+                        }
+                      </span>
+                    </button>
+                  );
+                }
+              )}
+            </div>
+
+            <div className="mx-auto mt-4 max-w-[390px] rounded-[20px] border border-white bg-white/80 p-4 shadow-sm backdrop-blur-xl">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-black text-emerald-600">
+                  ✓
+                </div>
+
+                <div>
+                  <p className="text-xs font-black text-stone-800">
+                    Eksport w pełnej
+                    jakości
+                  </p>
+
+                  <p className="mt-1 text-[10px] leading-5 text-stone-400">
+                    Podgląd jest
+                    pomniejszony.
+                    Plik PNG powstaje
+                    bezpośrednio
+                    w rozdzielczości
+                    1080 × 1920 px.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed left-[-10000px] top-0"
+      >
+        {EXPORT_ORDER.map(
+          (
+            type
+          ) => (
+            <div
+              key={
+                type
+              }
+              ref={(
+                node
+              ) => {
+                exportNodes.current[
+                  type
+                ] =
+                  node;
+              }}
+              style={{
+                width:
+                  "360px",
+
+                height:
+                  "640px",
+              }}
+            >
+              <SocialSlide
+                product={
+                  exportProduct
+                }
+                slideType={
+                  type
+                }
+                template={
+                  template
+                }
+                imageFit={
+                  imageFit
+                }
+                showPrice={
+                  showPrice
+                }
+                showOldPrice={
+                  showOldPrice
+                }
+                showSheinSource={
+                  showSheinSource
+                }
+                showCategory={
+                  showCategory
+                }
+                showSafeArea={
+                  false
+                }
+                title={
+                  titles[
+                    type
+                  ]
+                }
+              />
+            </div>
+          )
+        )}
+      </div>
+    </>
   );
 }
 
@@ -909,7 +2032,7 @@ function SocialSlide({
   return (
     <div
       className={[
-        "relative aspect-[9/16] w-full overflow-hidden [container-type:size]",
+        "relative aspect-[9/16] h-full w-full overflow-hidden [container-type:size]",
         getSlideBackground(
           template
         ),
@@ -1575,7 +2698,7 @@ function IOSHeader({
 function SafeAreaOverlay() {
   return (
     <div className="pointer-events-none absolute inset-0 z-50 [container-type:size]">
-      <div className="absolute left-[5cqw] right-[15cqw] top-[8cqh] bottom-[18cqh] rounded-[4cqw] border border-dashed border-rose-500/60">
+      <div className="absolute bottom-[18cqh] left-[5cqw] right-[15cqw] top-[8cqh] rounded-[4cqw] border border-dashed border-rose-500/60">
         <span className="absolute left-[2cqw] top-[2cqw] rounded-full bg-rose-500/80 px-[2cqw] py-[0.8cqw] text-[1.8cqw] font-black text-white">
           safe area
         </span>
@@ -1953,5 +3076,78 @@ function ToggleButton({
         <span className="h-4 w-4 rounded-full bg-white shadow-sm" />
       </span>
     </button>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3v12" />
+
+      <path d="m7 10 5 5 5-5" />
+
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
+function StackIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect
+        x="5"
+        y="3"
+        width="14"
+        height="18"
+        rx="2"
+      />
+
+      <path d="M9 7h6" />
+
+      <path d="M9 11h6" />
+
+      <path d="M9 15h4" />
+    </svg>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 7h3l2-2h6l2 2h3v12H4Z" />
+
+      <circle
+        cx="12"
+        cy="13"
+        r="3"
+      />
+    </svg>
   );
 }
