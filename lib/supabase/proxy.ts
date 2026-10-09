@@ -1,94 +1,165 @@
-import { createServerClient } from "@supabase/ssr";
+import {
+  createServerClient,
+} from "@supabase/ssr";
+
 import {
   NextResponse,
   type NextRequest,
 } from "next/server";
 
-export async function updateSession(
-  request: NextRequest
+function isAdminPath(
+  pathname:
+    string
 ) {
-  let response = NextResponse.next({
-    request,
-  });
+  return (
+    pathname ===
+      "/admin" ||
+    pathname.startsWith(
+      "/admin/"
+    )
+  );
+}
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
+export async function updateSession(
+  request:
+    NextRequest
+) {
+  let response =
+    NextResponse.next({
+      request,
+    });
 
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(
-            ({ name, value }) => {
-              request.cookies.set(name, value);
-            }
-          );
+  const supabase =
+    createServerClient(
+      process.env
+        .NEXT_PUBLIC_SUPABASE_URL!,
 
-          response = NextResponse.next({
-            request,
-          });
+      process.env
+        .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
 
-          cookiesToSet.forEach(
-            ({ name, value, options }) => {
-              response.cookies.set(
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+
+          setAll(
+            cookiesToSet
+          ) {
+            cookiesToSet.forEach(
+              ({
                 name,
                 value,
-                options
-              );
-            }
-          );
+              }) => {
+                request.cookies.set(
+                  name,
+                  value
+                );
+              }
+            );
+
+            response =
+              NextResponse.next({
+                request,
+              });
+
+            cookiesToSet.forEach(
+              ({
+                name,
+                value,
+                options,
+              }) => {
+                response.cookies.set(
+                  name,
+                  value,
+                  options
+                );
+              }
+            );
+          },
         },
-      },
-    }
-  );
-
-  const { data } =
-    await supabase.auth.getClaims();
-
-  const isAdminRoute =
-    request.nextUrl.pathname.startsWith(
-      "/admin"
+      }
     );
 
-  if (!isAdminRoute) {
+  const {
+    data,
+  } =
+    await supabase.auth
+      .getClaims();
+
+  const isAdminRoute =
+    isAdminPath(
+      request.nextUrl.pathname
+    );
+
+  if (
+    !isAdminRoute
+  ) {
     return response;
   }
 
   const userId =
-    data?.claims?.sub;
+    data
+      ?.claims
+      ?.sub;
 
-  if (!userId) {
-    const url = request.nextUrl.clone();
+  if (
+    !userId
+  ) {
+    const url =
+      request.nextUrl.clone();
 
-    url.pathname = "/login";
-    url.search = "";
+    url.pathname =
+      "/login";
 
-    return NextResponse.redirect(url);
+    url.search =
+      "";
+
+    return NextResponse.redirect(
+      url
+    );
   }
 
   const {
-    data: admin,
-    error: adminError,
-  } = await supabase
-    .from("admins")
-    .select("user_id")
-    .eq("user_id", userId)
-    .maybeSingle();
+    data:
+      admin,
+    error:
+      adminError,
+  } =
+    await supabase
+      .from(
+        "admins"
+      )
+      .select(
+        "user_id"
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .maybeSingle();
 
-  if (adminError || !admin) {
-    const url = request.nextUrl.clone();
+  if (
+    adminError ||
+    !admin
+  ) {
+    const url =
+      request.nextUrl.clone();
 
-    url.pathname = "/login";
-    url.search = "";
+    url.pathname =
+      "/login";
+
+    url.search =
+      "";
+
     url.searchParams.set(
       "error",
       "access-denied"
     );
 
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(
+      url
+    );
   }
 
   return response;

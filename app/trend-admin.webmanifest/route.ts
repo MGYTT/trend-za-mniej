@@ -4,7 +4,7 @@ export const dynamic =
 export function GET() {
   const manifest = {
     id:
-      "/admin/",
+      "/admin",
 
     name:
       "Trend za Mniej Admin",
@@ -13,13 +13,31 @@ export function GET() {
       "Trend Admin",
 
     description:
-      "Panel administratora Trend za Mniej do zarządzania ofertami, Social Media Studio i statystykami.",
+      "Mobilny panel administratora Trend za Mniej do zarządzania ofertami, Social Media Studio i statystykami.",
+
+    lang:
+      "pl-PL",
+
+    dir:
+      "ltr",
 
     start_url:
-      "/admin?source=app",
+      "/admin?source=pwa",
 
+    /*
+     * Bez końcowego "/".
+     *
+     * Dzięki temu zarówno:
+     * /admin
+     * jak i:
+     * /admin/social
+     * /admin/statystyki
+     * /admin/nowa-oferta
+     *
+     * należą do zakresu aplikacji.
+     */
     scope:
-      "/admin/",
+      "/admin",
 
     display:
       "standalone",
@@ -29,13 +47,16 @@ export function GET() {
     ],
 
     background_color:
-      "#fafaf9",
+      "#f7f7f8",
 
     theme_color:
       "#fafaf9",
 
     orientation:
       "portrait-primary",
+
+    prefer_related_applications:
+      false,
 
     categories: [
       "business",
@@ -45,10 +66,10 @@ export function GET() {
     icons: [
       {
         src:
-          "/icon",
+          "/pwa/admin-icon-192",
 
         sizes:
-          "512x512",
+          "192x192",
 
         type:
           "image/png",
@@ -59,10 +80,10 @@ export function GET() {
 
       {
         src:
-          "/apple-icon",
+          "/icon",
 
         sizes:
-          "180x180",
+          "512x512",
 
         type:
           "image/png",
@@ -95,7 +116,7 @@ export function GET() {
           "Social",
 
         description:
-          "Przygotuj grafikę produktu do social media.",
+          "Otwórz Social Media Studio.",
 
         url:
           "/admin/social",
@@ -109,7 +130,7 @@ export function GET() {
           "Statystyki",
 
         description:
-          "Otwórz statystyki administratora.",
+          "Sprawdź statystyki kliknięć.",
 
         url:
           "/admin/statystyki",
@@ -126,8 +147,13 @@ export function GET() {
         "Content-Type":
           "application/manifest+json; charset=utf-8",
 
+        /*
+         * Na etapie PWA nie chcemy,
+         * żeby Android długo trzymał
+         * starą, błędną wersję.
+         */
         "Cache-Control":
-          "public, max-age=3600",
+          "no-cache, must-revalidate",
       },
     }
   );

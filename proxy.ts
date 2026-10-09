@@ -19,7 +19,9 @@ function getCanonicalOrigin() {
       .NEXT_PUBLIC_SITE_URL
       ?.trim();
 
-  if (!value) {
+  if (
+    !value
+  ) {
     return null;
   }
 
@@ -32,13 +34,30 @@ function getCanonicalOrigin() {
   }
 }
 
+function isAdminPath(
+  pathname: string
+) {
+  return (
+    pathname ===
+      "/admin" ||
+    pathname.startsWith(
+      "/admin/"
+    )
+  );
+}
+
 export async function proxy(
-  request: NextRequest
+  request:
+    NextRequest
 ) {
   const host =
     request.headers
-      .get("host")
-      ?.split(":")[0]
+      .get(
+        "host"
+      )
+      ?.split(
+        ":"
+      )[0]
       .toLowerCase();
 
   const canonicalOrigin =
@@ -65,8 +84,8 @@ export async function proxy(
   }
 
   if (
-    request.nextUrl.pathname.startsWith(
-      "/admin"
+    isAdminPath(
+      request.nextUrl.pathname
     )
   ) {
     return updateSession(

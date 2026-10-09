@@ -23,8 +23,16 @@ export const metadata: Metadata = {
   description:
     "Mobilny panel administratora Trend za Mniej.",
 
+  /*
+   * Manifest jest publiczny.
+   *
+   * Nie może być za autoryzacją,
+   * ponieważ Android / Chromium
+   * musi móc pobrać go niezależnie
+   * podczas procesu instalacji.
+   */
   manifest:
-    "/admin/manifest.webmanifest",
+    "/trend-admin.webmanifest",
 
   appleWebApp: {
     capable:

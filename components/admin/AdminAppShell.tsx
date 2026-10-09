@@ -199,10 +199,24 @@ export default function AdminAppShell({
 
       navigator.serviceWorker
         .register(
-          "/admin-sw.js",
+          "/admin-sw.js?v=2",
           {
+            /*
+             * "/admin", a nie
+             * "/admin/".
+             *
+             * Dzięki temu worker
+             * obejmuje zarówno:
+             * /admin
+             *
+             * jak i wszystkie
+             * /admin/...
+             */
             scope:
-              "/admin/",
+              "/admin",
+
+            updateViaCache:
+              "none",
           }
         )
         .catch(
