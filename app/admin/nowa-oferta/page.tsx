@@ -62,9 +62,7 @@ import {
 } from "@/lib/supabase/client";
 
 const MAX_FILE_SIZE =
-  5 *
-  1024 *
-  1024;
+  5 * 1024 * 1024;
 
 const DRAFT_KEY =
   "trend-za-mniej:new-offer-draft:v3";
@@ -150,34 +148,16 @@ type ParsedFormField =
   | "affiliateUrl"
   | "soldText";
 
-const INITIAL_FORM:
-  FormState = {
-  name:
-    "",
-
-  shortName:
-    "",
-
-  description:
-    "",
-
-  price:
-    "",
-
-  oldPrice:
-    "",
-
-  category:
-    "",
-
-  affiliateUrl:
-    "",
-
-  soldText:
-    "",
-
-  featured:
-    true,
+const INITIAL_FORM: FormState = {
+  name: "",
+  shortName: "",
+  description: "",
+  price: "",
+  oldPrice: "",
+  category: "",
+  affiliateUrl: "",
+  soldText: "",
+  featured: true,
 };
 
 function hasDraftContent(
@@ -198,39 +178,21 @@ function hasDraftContent(
 }
 
 function toComparableProduct(
-  row:
-    DuplicateProductRow
+  row: DuplicateProductRow
 ): ComparableProduct {
   return {
-    id:
-      row.id,
-
-    slug:
-      row.slug,
-
-    name:
-      row.name,
-
-    shortName:
-      row.short_name,
-
-    category:
-      row.category,
-
-    imageUrl:
-      row.image_url,
-
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    shortName: row.short_name,
+    category: row.category,
+    imageUrl: row.image_url,
     affiliateUrl:
       row.affiliate_url,
-
     sheinProductKey:
       row.shein_product_key,
-
-    price:
-      row.price,
-
-    active:
-      row.active,
+    price: row.price,
+    active: row.active,
   };
 }
 
@@ -250,25 +212,19 @@ export default function NewProductPage() {
     loading,
     setLoading,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     checking,
     setChecking,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     clipboardLoading,
     setClipboardLoading,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     error,
@@ -277,9 +233,7 @@ export default function NewProductPage() {
     useState<
       string |
       null
-    >(
-      null
-    );
+    >(null);
 
   const [
     successSlug,
@@ -288,17 +242,13 @@ export default function NewProductPage() {
     useState<
       string |
       null
-    >(
-      null
-    );
+    >(null);
 
   const [
     rawOffer,
     setRawOffer,
   ] =
-    useState(
-      ""
-    );
+    useState("");
 
   const [
     analysis,
@@ -307,9 +257,7 @@ export default function NewProductPage() {
     useState<
       ParsedOffer |
       null
-    >(
-      null
-    );
+    >(null);
 
   const [
     parserMessage,
@@ -318,9 +266,7 @@ export default function NewProductPage() {
     useState<
       string |
       null
-    >(
-      null
-    );
+    >(null);
 
   const [
     parserWarnings,
@@ -328,9 +274,7 @@ export default function NewProductPage() {
   ] =
     useState<
       string[]
-    >(
-      []
-    );
+    >([]);
 
   const [
     parserConfidence,
@@ -341,9 +285,7 @@ export default function NewProductPage() {
       | "medium"
       | "low"
       | null
-    >(
-      null
-    );
+    >(null);
 
   const [
     duplicateCheck,
@@ -358,17 +300,13 @@ export default function NewProductPage() {
     confirmOpen,
     setConfirmOpen,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     mobilePreviewOpen,
     setMobilePreviewOpen,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     form,
@@ -385,9 +323,7 @@ export default function NewProductPage() {
     useState<
       File |
       null
-    >(
-      null
-    );
+    >(null);
 
   const [
     previewUrl,
@@ -396,25 +332,19 @@ export default function NewProductPage() {
     useState<
       string |
       null
-    >(
-      null
-    );
+    >(null);
 
   const [
     draftReady,
     setDraftReady,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     draftRestored,
     setDraftRestored,
   ] =
-    useState(
-      false
-    );
+    useState(false);
 
   const [
     draftSavedAt,
@@ -423,9 +353,26 @@ export default function NewProductPage() {
     useState<
       string |
       null
-    >(
+    >(null);
+
+  /*
+   * Zapisany szkic istnieje
+   * niezależnie od bieżącego
+   * formularza.
+   *
+   * Najważniejsza zmiana:
+   * NIE przywracamy go
+   * automatycznie po wejściu
+   * na stronę.
+   */
+  const [
+    savedDraft,
+    setSavedDraft,
+  ] =
+    useState<
+      SavedDraft |
       null
-    );
+    >(null);
 
   useEffect(
     () => {
@@ -444,60 +391,70 @@ export default function NewProductPage() {
           return;
         }
 
-        const draft =
+        const stored =
           JSON.parse(
             saved
           ) as
             Partial<SavedDraft>;
 
-        if (
-          !draft.form &&
-          !draft.rawOffer
-        ) {
-          return;
-        }
-
-        const restoredForm:
-          FormState = {
+        const restoredForm: FormState = {
           ...INITIAL_FORM,
-          ...(
-            draft.form ??
-            {}
-          ),
+          ...(stored.form ?? {}),
         };
 
         const restoredRawOffer =
-          draft.rawOffer ??
-          "";
+          typeof stored.rawOffer ===
+          "string"
+            ? stored.rawOffer
+            : "";
 
         if (
-          hasDraftContent(
+          !hasDraftContent(
             restoredForm,
             restoredRawOffer
           )
         ) {
-          setForm(
-            restoredForm
+          window.localStorage.removeItem(
+            DRAFT_KEY
           );
 
-          setRawOffer(
-            restoredRawOffer
+          window.localStorage.removeItem(
+            LEGACY_DRAFT_KEY
           );
 
-          setDraftSavedAt(
-            draft.updatedAt ??
-              null
-          );
-
-          setDraftRestored(
-            true
-          );
+          return;
         }
+
+        const updatedAt =
+          typeof stored.updatedAt ===
+          "string"
+            ? stored.updatedAt
+            : new Date()
+                .toISOString();
+
+        /*
+         * Zapamiętujemy szkic,
+         * ale pozostawiamy formularz
+         * pusty.
+         */
+        setSavedDraft({
+          form:
+            restoredForm,
+
+          rawOffer:
+            restoredRawOffer,
+
+          updatedAt,
+        });
+
+        setDraftSavedAt(
+          updatedAt
+        );
       } catch (
         draftError
       ) {
         console.error(
-          "Nie udało się przywrócić szkicu:",
+          "Nie udało się odczytać szkicu:",
           draftError
         );
 
@@ -509,14 +466,20 @@ export default function NewProductPage() {
           LEGACY_DRAFT_KEY
         );
       } finally {
-        setDraftReady(
-          true
-        );
+        setDraftReady(true);
       }
     },
     []
   );
 
+  /*
+   * Autozapis pozostaje.
+   *
+   * Różnica jest taka, że zapis
+   * NIE jest już automatycznie
+   * wczytywany przy następnym
+   * wejściu.
+   */
   useEffect(
     () => {
       if (
@@ -525,36 +488,23 @@ export default function NewProductPage() {
         return;
       }
 
+      if (
+        !hasDraftContent(
+          form,
+          rawOffer
+        )
+      ) {
+        return;
+      }
+
       const timeout =
         window.setTimeout(
           () => {
-            if (
-              !hasDraftContent(
-                form,
-                rawOffer
-              )
-            ) {
-              window.localStorage.removeItem(
-                DRAFT_KEY
-              );
-
-              window.localStorage.removeItem(
-                LEGACY_DRAFT_KEY
-              );
-
-              setDraftSavedAt(
-                null
-              );
-
-              return;
-            }
-
             const updatedAt =
               new Date()
                 .toISOString();
 
-            const draft:
-              SavedDraft = {
+            const draft: SavedDraft = {
               form,
               rawOffer,
               updatedAt,
@@ -570,6 +520,10 @@ export default function NewProductPage() {
 
               window.localStorage.removeItem(
                 LEGACY_DRAFT_KEY
+              );
+
+              setSavedDraft(
+                draft
               );
 
               setDraftSavedAt(
@@ -632,8 +586,7 @@ export default function NewProductPage() {
         "hidden";
 
       function handleKeyDown(
-        event:
-          KeyboardEvent
+        event: KeyboardEvent
       ) {
         if (
           event.key ===
@@ -706,9 +659,7 @@ export default function NewProductPage() {
   ) {
     return value
       .toLowerCase()
-      .normalize(
-        "NFD"
-      )
+      .normalize("NFD")
       .replace(
         /[\u0300-\u036f]/g,
         ""
@@ -810,13 +761,15 @@ export default function NewProductPage() {
       FormState[Key]
   ) {
     setForm(
-      (
-        current
-      ) => ({
+      (current) => ({
         ...current,
         [key]:
           value,
       })
+    );
+
+    setDraftRestored(
+      false
     );
 
     if (
@@ -832,13 +785,8 @@ export default function NewProductPage() {
       resetDuplicateCheck();
     }
 
-    setError(
-      null
-    );
-
-    setSuccessSlug(
-      null
-    );
+    setError(null);
+    setSuccessSlug(null);
   }
 
   async function createUniqueSlug(
@@ -859,12 +807,8 @@ export default function NewProductPage() {
           slugError,
       } =
         await supabase
-          .from(
-            "products"
-          )
-          .select(
-            "id"
-          )
+          .from("products")
+          .select("id")
           .eq(
             "slug",
             candidate
@@ -899,14 +843,6 @@ export default function NewProductPage() {
     affiliateUrl: string;
   }) {
     try {
-      /*
-       * Analizujemy wyłącznie dane
-       * podane przez administratora.
-       *
-       * Nie pobieramy stron SHEIN
-       * i nie rozwijamy OneLinków
-       * przez request do sklepu.
-       */
       return await resolveSheinProductIdentityForAdmin({
         sourceText,
         affiliateUrl,
@@ -937,23 +873,22 @@ export default function NewProductPage() {
       );
 
     const checkingState:
-      ProductDuplicateCheck =
-      {
-        status:
-          "checking",
+      ProductDuplicateCheck = {
+      status:
+        "checking",
 
-        identity:
-          immediateIdentity,
+      identity:
+        immediateIdentity,
 
-        exactMatch:
-          null,
+      exactMatch:
+        null,
 
-        similarMatches:
-          [],
+      similarMatches:
+        [],
 
-        blockingReason:
-          null,
-      };
+      blockingReason:
+        null,
+    };
 
     setDuplicateCheck(
       checkingState
@@ -984,9 +919,7 @@ export default function NewProductPage() {
             identityError,
         } =
           await supabase
-            .from(
-              "products"
-            )
+            .from("products")
             .select(
               DUPLICATE_SELECT
             )
@@ -994,9 +927,7 @@ export default function NewProductPage() {
               "shein_product_key",
               identity.key
             )
-            .limit(
-              1
-            );
+            .limit(1);
 
         if (
           identityError
@@ -1005,10 +936,7 @@ export default function NewProductPage() {
         }
 
         const row =
-          (
-            data ??
-            []
-          )[0] as
+          (data ?? [])[0] as
             | DuplicateProductRow
             | undefined;
 
@@ -1016,26 +944,25 @@ export default function NewProductPage() {
           row
         ) {
           const result:
-            ProductDuplicateCheck =
-            {
-              status:
-                "blocked",
+            ProductDuplicateCheck = {
+            status:
+              "blocked",
 
-              identity,
+            identity,
 
-              exactMatch:
-                createDuplicateCandidate(
-                  toComparableProduct(
-                    row
-                  )
-                ),
+            exactMatch:
+              createDuplicateCandidate(
+                toComparableProduct(
+                  row
+                )
+              ),
 
-              similarMatches:
-                [],
+            similarMatches:
+              [],
 
-              blockingReason:
-                "shein-key",
-            };
+            blockingReason:
+              "shein-key",
+          };
 
           setDuplicateCheck(
             result
@@ -1060,9 +987,7 @@ export default function NewProductPage() {
             affiliateError,
         } =
           await supabase
-            .from(
-              "products"
-            )
+            .from("products")
             .select(
               DUPLICATE_SELECT
             )
@@ -1070,9 +995,7 @@ export default function NewProductPage() {
               "affiliate_url",
               cleanAffiliateUrl
             )
-            .limit(
-              1
-            );
+            .limit(1);
 
         if (
           affiliateError
@@ -1081,10 +1004,7 @@ export default function NewProductPage() {
         }
 
         const row =
-          (
-            data ??
-            []
-          )[0] as
+          (data ?? [])[0] as
             | DuplicateProductRow
             | undefined;
 
@@ -1092,26 +1012,25 @@ export default function NewProductPage() {
           row
         ) {
           const result:
-            ProductDuplicateCheck =
-            {
-              status:
-                "blocked",
+            ProductDuplicateCheck = {
+            status:
+              "blocked",
 
-              identity,
+            identity,
 
-              exactMatch:
-                createDuplicateCandidate(
-                  toComparableProduct(
-                    row
-                  )
-                ),
+            exactMatch:
+              createDuplicateCandidate(
+                toComparableProduct(
+                  row
+                )
+              ),
 
-              similarMatches:
-                [],
+            similarMatches:
+              [],
 
-              blockingReason:
-                "affiliate-url",
-            };
+            blockingReason:
+              "affiliate-url",
+          };
 
           setDuplicateCheck(
             result
@@ -1128,9 +1047,7 @@ export default function NewProductPage() {
           candidatesError,
       } =
         await supabase
-          .from(
-            "products"
-          )
+          .from("products")
           .select(
             DUPLICATE_SELECT
           )
@@ -1141,9 +1058,7 @@ export default function NewProductPage() {
                 false,
             }
           )
-          .limit(
-            300
-          );
+          .limit(300);
 
       if (
         candidatesError
@@ -1153,10 +1068,8 @@ export default function NewProductPage() {
 
       const comparable =
         (
-          (
-            candidatesData ??
-            []
-          ) as
+          (candidatesData ??
+            []) as
             DuplicateProductRow[]
         ).map(
           toComparableProduct
@@ -1167,11 +1080,10 @@ export default function NewProductPage() {
       ) {
         const historicalMatch =
           comparable.find(
-            (
-              product
-            ) => {
+            (product) => {
               if (
-                product.sheinProductKey ===
+                product
+                  .sheinProductKey ===
                 identity.key
               ) {
                 return true;
@@ -1193,24 +1105,23 @@ export default function NewProductPage() {
           historicalMatch
         ) {
           const result:
-            ProductDuplicateCheck =
-            {
-              status:
-                "blocked",
+            ProductDuplicateCheck = {
+            status:
+              "blocked",
 
-              identity,
+            identity,
 
-              exactMatch:
-                createDuplicateCandidate(
-                  historicalMatch
-                ),
+            exactMatch:
+              createDuplicateCandidate(
+                historicalMatch
+              ),
 
-              similarMatches:
-                [],
+            similarMatches:
+              [],
 
-              blockingReason:
-                "shein-key",
-            };
+            blockingReason:
+              "shein-key",
+          };
 
           setDuplicateCheck(
             result
@@ -1227,29 +1138,27 @@ export default function NewProductPage() {
           category,
           products:
             comparable,
-          limit:
-            3,
+          limit: 3,
         });
 
       const result:
-        ProductDuplicateCheck =
-        {
-          status:
-            similarMatches.length >
-            0
-              ? "warning"
-              : "clear",
+        ProductDuplicateCheck = {
+        status:
+          similarMatches.length >
+          0
+            ? "warning"
+            : "clear",
 
-          identity,
+        identity,
 
-          exactMatch:
-            null,
+        exactMatch:
+          null,
 
-          similarMatches,
+        similarMatches,
 
-          blockingReason:
-            null,
-        };
+        blockingReason:
+          null,
+      };
 
       setDuplicateCheck(
         result
@@ -1265,22 +1174,21 @@ export default function NewProductPage() {
       );
 
       const result:
-        ProductDuplicateCheck =
-        {
-          status:
-            "error",
+        ProductDuplicateCheck = {
+        status:
+          "error",
 
-          identity,
+        identity,
 
-          exactMatch:
-            null,
+        exactMatch:
+          null,
 
-          similarMatches:
-            [],
+        similarMatches:
+          [],
 
-          blockingReason:
-            null,
-        };
+        blockingReason:
+          null,
+      };
 
       setDuplicateCheck(
         result
@@ -1304,8 +1212,7 @@ export default function NewProductPage() {
       !current ||
       Boolean(
         previous &&
-        current ===
-          previous
+        current === previous
       )
     );
   }
@@ -1316,21 +1223,11 @@ export default function NewProductPage() {
     const cleanText =
       sourceText.trim();
 
-    setError(
-      null
-    );
-
-    setParserMessage(
-      null
-    );
-
-    setParserWarnings(
-      []
-    );
-
-    setParserConfidence(
-      null
-    );
+    setError(null);
+    setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
+    setDraftRestored(false);
 
     if (
       !cleanText
@@ -1342,11 +1239,6 @@ export default function NewProductPage() {
       return;
     }
 
-    /*
-     * Najpierw działa Szybki start 2.0,
-     * następnie dokładniejszy system
-     * kategorii.
-     */
     const parsed =
       enhanceParsedOfferCategory(
         parseOfferText(
@@ -1375,8 +1267,7 @@ export default function NewProductPage() {
     };
 
     function applyParsed(
-      key:
-        ParsedFormField,
+      key: ParsedFormField,
       newValue: string,
       previousValue: string
     ) {
@@ -1552,6 +1443,10 @@ export default function NewProductPage() {
       value
     );
 
+    setDraftRestored(
+      false
+    );
+
     setParserMessage(
       null
     );
@@ -1585,7 +1480,9 @@ export default function NewProductPage() {
       }
 
       const text =
-        await navigator.clipboard.readText();
+        await navigator
+          .clipboard
+          .readText();
 
       if (
         !text.trim()
@@ -1662,13 +1559,9 @@ export default function NewProductPage() {
     event:
       ChangeEvent<HTMLInputElement>
   ) {
-    setError(
-      null
-    );
-
-    setSuccessSlug(
-      null
-    );
+    setError(null);
+    setSuccessSlug(null);
+    setDraftRestored(false);
 
     const file =
       event.target
@@ -1741,30 +1634,117 @@ export default function NewProductPage() {
       );
     }
 
-    setImageFile(
-      null
-    );
-
-    setPreviewUrl(
-      null
-    );
-
-    setError(
-      null
-    );
+    setImageFile(null);
+    setPreviewUrl(null);
+    setDraftRestored(false);
+    setError(null);
   }
 
-  function clearOffer() {
+  function restoreSavedDraft() {
+    if (
+      !savedDraft
+    ) {
+      return;
+    }
+
     if (
       hasDraftContent(
         form,
         rawOffer
-      ) &&
-      !window.confirm(
-        "Wyczyścić obecną ofertę i rozpocząć od nowa?"
-      )
+      ) ||
+      imageFile
     ) {
-      return;
+      const confirmed =
+        window.confirm(
+          "Bieżący formularz zawiera dane. Przywrócić zapisany szkic i zastąpić obecne informacje?"
+        );
+
+      if (
+        !confirmed
+      ) {
+        return;
+      }
+    }
+
+    if (
+      previewUrl
+    ) {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    }
+
+    setForm({
+      ...INITIAL_FORM,
+      ...savedDraft.form,
+    });
+
+    setRawOffer(
+      savedDraft.rawOffer
+    );
+
+    setAnalysis(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
+
+    setParserMessage(
+      "Przywrócono zapisany szkic. Możesz kontynuować pracę albo ponownie uruchomić analizę."
+    );
+
+    resetDuplicateCheck();
+
+    setImageFile(null);
+    setPreviewUrl(null);
+
+    setError(null);
+    setSuccessSlug(null);
+
+    setDraftRestored(true);
+
+    setDraftSavedAt(
+      savedDraft.updatedAt
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function clearOffer() {
+    const currentHasContent =
+      hasDraftContent(
+        form,
+        rawOffer
+      ) ||
+      Boolean(
+        imageFile
+      ) ||
+      Boolean(
+        analysis
+      );
+
+    const hasAnything =
+      currentHasContent ||
+      Boolean(
+        savedDraft
+      );
+
+    if (
+      hasAnything
+    ) {
+      const confirmed =
+        window.confirm(
+          savedDraft
+            ? "Rozpocząć nowy produkt? Formularz zostanie wyczyszczony, a zapisany szkic usunięty."
+            : "Wyczyścić obecną ofertę i rozpocząć nowy produkt?"
+        );
+
+      if (
+        !confirmed
+      ) {
+        return;
+      }
     }
 
     if (
@@ -1779,51 +1759,23 @@ export default function NewProductPage() {
       INITIAL_FORM
     );
 
-    setRawOffer(
-      ""
-    );
-
-    setAnalysis(
-      null
-    );
-
-    setParserMessage(
-      null
-    );
-
-    setParserWarnings(
-      []
-    );
-
-    setParserConfidence(
-      null
-    );
+    setRawOffer("");
+    setAnalysis(null);
+    setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
 
     resetDuplicateCheck();
 
-    setImageFile(
-      null
-    );
+    setImageFile(null);
+    setPreviewUrl(null);
 
-    setPreviewUrl(
-      null
-    );
+    setError(null);
+    setSuccessSlug(null);
 
-    setError(
-      null
-    );
-
-    setSuccessSlug(
-      null
-    );
-
-    setDraftRestored(
-      false
-    );
-
-    setDraftSavedAt(
-      null
-    );
+    setDraftRestored(false);
+    setDraftSavedAt(null);
+    setSavedDraft(null);
 
     window.localStorage.removeItem(
       DRAFT_KEY
@@ -1834,11 +1786,8 @@ export default function NewProductPage() {
     );
 
     window.scrollTo({
-      top:
-        0,
-
-      behavior:
-        "smooth",
+      top: 0,
+      behavior: "smooth",
     });
   }
 
@@ -1856,9 +1805,7 @@ export default function NewProductPage() {
       !imageFile
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Dodaj zdjęcie produktu.",
       };
@@ -1899,9 +1846,7 @@ export default function NewProductPage() {
       !shortName
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Uzupełnij pełną i krótką nazwę produktu.",
       };
@@ -1911,9 +1856,7 @@ export default function NewProductPage() {
       !description
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Dodaj opis produktu.",
       };
@@ -1926,9 +1869,7 @@ export default function NewProductPage() {
       )
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Wybierz poprawną kategorię produktu.",
       };
@@ -1941,9 +1882,7 @@ export default function NewProductPage() {
         0
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Podaj poprawną cenę większą od 0.",
       };
@@ -1959,9 +1898,7 @@ export default function NewProductPage() {
       )
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Stara cena jest niepoprawna.",
       };
@@ -1974,9 +1911,7 @@ export default function NewProductPage() {
         price
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Stara cena powinna być wyższa od aktualnej ceny.",
       };
@@ -1989,9 +1924,7 @@ export default function NewProductPage() {
       )
     ) {
       return {
-        data:
-          null,
-
+        data: null,
         error:
           "Podaj poprawny link afiliacyjny rozpoczynający się od https://",
       };
@@ -2007,13 +1940,11 @@ export default function NewProductPage() {
         category,
         affiliateUrl,
         soldText,
-
         featured:
           form.featured,
       },
 
-      error:
-        null,
+      error: null,
     };
   }
 
@@ -2023,13 +1954,8 @@ export default function NewProductPage() {
   ) {
     event.preventDefault();
 
-    setError(
-      null
-    );
-
-    setSuccessSlug(
-      null
-    );
+    setError(null);
+    setSuccessSlug(null);
 
     const validation =
       validateProduct();
@@ -2046,9 +1972,7 @@ export default function NewProductPage() {
       return;
     }
 
-    setChecking(
-      true
-    );
+    setChecking(true);
 
     const duplicateResult =
       await runDuplicateCheck({
@@ -2072,9 +1996,7 @@ export default function NewProductPage() {
             .category,
       });
 
-    setChecking(
-      false
-    );
+    setChecking(false);
 
     if (
       duplicateResult.status ===
@@ -2098,9 +2020,7 @@ export default function NewProductPage() {
       return;
     }
 
-    setConfirmOpen(
-      true
-    );
+    setConfirmOpen(true);
   }
 
   const closeConfirmation =
@@ -2109,9 +2029,7 @@ export default function NewProductPage() {
         if (
           !loading
         ) {
-          setConfirmOpen(
-            false
-          );
+          setConfirmOpen(false);
         }
       },
       [
@@ -2128,9 +2046,7 @@ export default function NewProductPage() {
       !validation.data ||
       !imageFile
     ) {
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         validation.error ??
@@ -2143,9 +2059,7 @@ export default function NewProductPage() {
     const product =
       validation.data;
 
-    setLoading(
-      true
-    );
+    setLoading(true);
 
     const duplicateResult =
       await runDuplicateCheck({
@@ -2169,17 +2083,13 @@ export default function NewProductPage() {
       duplicateResult.status ===
       "blocked"
     ) {
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         "Publikacja została zatrzymana, ponieważ ten produkt znajduje się już w bazie."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
@@ -2188,17 +2098,13 @@ export default function NewProductPage() {
       duplicateResult.status ===
       "error"
     ) {
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         "Nie udało się ponownie sprawdzić duplikatów. Produkt nie został opublikowany — spróbuj ponownie."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
@@ -2217,23 +2123,18 @@ export default function NewProductPage() {
     if (
       !baseSlug
     ) {
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         "Nie udało się utworzyć adresu produktu."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
 
-    let slug:
-      string;
+    let slug: string;
 
     try {
       slug =
@@ -2241,17 +2142,13 @@ export default function NewProductPage() {
           baseSlug
         );
     } catch {
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         "Nie udało się przygotować adresu produktu."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
@@ -2287,17 +2184,13 @@ export default function NewProductPage() {
     if (
       uploadError
     ) {
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         "Nie udało się przesłać zdjęcia."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
@@ -2322,9 +2215,7 @@ export default function NewProductPage() {
         insertError,
     } =
       await supabase
-        .from(
-          "products"
-        )
+        .from("products")
         .insert({
           slug,
 
@@ -2385,12 +2276,8 @@ export default function NewProductPage() {
           insertError.details,
           insertError.hint,
         ]
-          .filter(
-            Boolean
-          )
-          .join(
-            " "
-          );
+          .filter(Boolean)
+          .join(" ");
 
       const duplicateViolation =
         insertError.code ===
@@ -2419,17 +2306,13 @@ export default function NewProductPage() {
             product.category,
         });
 
-        setConfirmOpen(
-          false
-        );
+        setConfirmOpen(false);
 
         setError(
           "Inny administrator opublikował już ten produkt. Publikacja duplikatu została automatycznie zablokowana."
         );
 
-        setLoading(
-          false
-        );
+        setLoading(false);
 
         return;
       }
@@ -2439,17 +2322,13 @@ export default function NewProductPage() {
         insertError
       );
 
-      setConfirmOpen(
-        false
-      );
+      setConfirmOpen(false);
 
       setError(
         "Nie udało się dodać produktu."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
@@ -2470,72 +2349,40 @@ export default function NewProductPage() {
       LEGACY_DRAFT_KEY
     );
 
-    setConfirmOpen(
-      false
-    );
+    setSavedDraft(null);
 
-    setMobilePreviewOpen(
-      false
-    );
+    setConfirmOpen(false);
+    setMobilePreviewOpen(false);
 
     setForm(
       INITIAL_FORM
     );
 
-    setRawOffer(
-      ""
-    );
-
-    setAnalysis(
-      null
-    );
-
-    setParserMessage(
-      null
-    );
-
-    setParserWarnings(
-      []
-    );
-
-    setParserConfidence(
-      null
-    );
+    setRawOffer("");
+    setAnalysis(null);
+    setParserMessage(null);
+    setParserWarnings([]);
+    setParserConfidence(null);
 
     resetDuplicateCheck();
 
-    setImageFile(
-      null
-    );
+    setImageFile(null);
+    setPreviewUrl(null);
 
-    setPreviewUrl(
-      null
-    );
-
-    setDraftRestored(
-      false
-    );
-
-    setDraftSavedAt(
-      null
-    );
+    setDraftRestored(false);
+    setDraftSavedAt(null);
 
     setSuccessSlug(
       slug
     );
 
-    setLoading(
-      false
-    );
+    setLoading(false);
 
     router.refresh();
 
     window.scrollTo({
-      top:
-        0,
-
-      behavior:
-        "smooth",
+      top: 0,
+      behavior: "smooth",
     });
   }
 
@@ -2587,13 +2434,10 @@ export default function NewProductPage() {
       priceComplete,
       imageComplete,
       linkComplete,
-    ].filter(
-      Boolean
-    ).length;
+    ].filter(Boolean).length;
 
   const completionPercent =
-    completedSections *
-    25;
+    completedSections * 25;
 
   const assistantFields =
     useMemo(
@@ -2653,6 +2497,17 @@ export default function NewProductPage() {
                   "link",
               }
             : null;
+
+  const draftAvailable =
+    Boolean(
+      savedDraft
+    ) &&
+    !hasDraftContent(
+      form,
+      rawOffer
+    ) &&
+    !imageFile &&
+    !analysis;
 
   function goToMissing() {
     if (
@@ -2770,6 +2625,16 @@ export default function NewProductPage() {
                     Zobacz produkt ↗
                   </Link>
 
+                  <button
+                    type="button"
+                    onClick={
+                      clearOffer
+                    }
+                    className="inline-flex min-h-10 items-center rounded-xl border border-green-200 bg-white px-4 text-xs font-black text-green-800 sm:text-sm"
+                  >
+                    + Nowy produkt
+                  </button>
+
                   <Link
                     href="/admin"
                     className="inline-flex min-h-10 items-center rounded-xl border border-green-200 bg-white px-4 text-xs font-black text-green-800 sm:text-sm"
@@ -2799,8 +2664,7 @@ export default function NewProductPage() {
             <span className="font-black">
               Nie można
               kontynuować:
-            </span>
-            {" "}
+            </span>{" "}
             {error}
           </div>
         )}
@@ -2872,8 +2736,14 @@ export default function NewProductPage() {
               draftRestored={
                 draftRestored
               }
+              draftAvailable={
+                draftAvailable
+              }
               draftSavedAt={
                 draftSavedAt
+              }
+              onRestoreDraft={
+                restoreSavedDraft
               }
             />
 
@@ -2882,6 +2752,7 @@ export default function NewProductPage() {
               onSubmit={
                 handleSubmit
               }
+              autoComplete="off"
               className="mt-4 space-y-3"
             >
               <FormSection
@@ -2895,7 +2766,7 @@ export default function NewProductPage() {
               >
                 <Input
                   label="Pełna nazwa"
-                  name="name"
+                  name="new-product-name"
                   value={
                     form.name
                   }
@@ -2915,7 +2786,7 @@ export default function NewProductPage() {
                 <div>
                   <Input
                     label="Krótka nazwa"
-                    name="shortName"
+                    name="new-product-short-name"
                     value={
                       form.shortName
                     }
@@ -2935,9 +2806,7 @@ export default function NewProductPage() {
                   {slugPreview && (
                     <p className="mt-1.5 truncate px-1 text-[10px] text-stone-400 sm:text-xs">
                       /produkt/
-                      {
-                        slugPreview
-                      }
+                      {slugPreview}
                     </p>
                   )}
                 </div>
@@ -2964,9 +2833,11 @@ export default function NewProductPage() {
 
                   <textarea
                     required
-                    rows={
-                      5
-                    }
+                    name="new-product-description"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    rows={5}
                     value={
                       form.description
                     }
@@ -3008,6 +2879,7 @@ export default function NewProductPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     label="Cena"
+                    name="new-product-price"
                     type="text"
                     inputMode="decimal"
                     value={
@@ -3029,6 +2901,7 @@ export default function NewProductPage() {
                   <Input
                     label="Stara cena"
                     optional
+                    name="new-product-old-price"
                     type="text"
                     inputMode="decimal"
                     value={
@@ -3176,6 +3049,7 @@ export default function NewProductPage() {
               >
                 <Input
                   label="Link afiliacyjny SHEIN"
+                  name="new-product-affiliate-url"
                   type="url"
                   inputMode="url"
                   value={
@@ -3197,6 +3071,7 @@ export default function NewProductPage() {
                 <Input
                   label="Informacja o sprzedaży"
                   optional
+                  name="new-product-sold-text"
                   value={
                     form.soldText
                   }
@@ -3386,11 +3261,8 @@ function ProgressCard({
   completedSections,
   completionPercent,
 }: {
-  completedSections:
-    number;
-
-  completionPercent:
-    number;
+  completedSections: number;
+  completionPercent: number;
 }) {
   return (
     <div className="rounded-[18px] border border-stone-200 bg-white p-3.5 shadow-sm sm:p-4">
@@ -3401,19 +3273,13 @@ function ProgressCard({
           </p>
 
           <p className="mt-1 text-[10px] text-stone-400 sm:text-xs">
-            {
-              completedSections
-            }{" "}
-            z 4 sekcji
-            gotowych
+            {completedSections} z 4
+            sekcji gotowych
           </p>
         </div>
 
         <p className="text-xl font-black tracking-[-0.04em] text-rose-600">
-          {
-            completionPercent
-          }
-          %
+          {completionPercent}%
         </p>
       </div>
 
@@ -3459,9 +3325,7 @@ function FormSection({
             complete
               ? "bg-green-100 text-green-700"
               : "bg-stone-100 text-stone-500",
-          ].join(
-            " "
-          )}
+          ].join(" ")}
         >
           {complete
             ? "✓"
@@ -3489,8 +3353,7 @@ function FormSection({
 function FieldLabel({
   children,
 }: {
-  children:
-    ReactNode;
+  children: ReactNode;
 }) {
   return (
     <label className="mb-1.5 block text-xs font-black text-stone-700 sm:text-sm">
@@ -3503,6 +3366,7 @@ function Input({
   label,
   optional = false,
   className = "",
+  autoComplete,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -3522,12 +3386,14 @@ function Input({
 
       <input
         {...props}
+        autoComplete={
+          autoComplete ??
+          "off"
+        }
         className={[
           "min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm",
           className,
-        ].join(
-          " "
-        )}
+        ].join(" ")}
       />
     </label>
   );
@@ -3541,11 +3407,9 @@ function ToggleCard({
 }: {
   checked: boolean;
 
-  onChange:
-    (
-      checked:
-        boolean
-    ) => void;
+  onChange: (
+    checked: boolean
+  ) => void;
 
   title: string;
 
@@ -3593,8 +3457,7 @@ function MobilePreview({
     | string
     | null;
 
-  onClose:
-    () => void;
+  onClose: () => void;
 }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-end bg-stone-950/45 backdrop-blur-sm xl:hidden">

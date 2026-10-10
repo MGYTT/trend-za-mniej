@@ -17,46 +17,35 @@ import {
 } from "@/lib/product-duplicate";
 
 type Props = {
-  rawOffer:
-    string;
+  rawOffer: string;
 
-  onRawOfferChange:
-    (
-      value:
-        string
-    ) => void;
+  onRawOfferChange: (
+    value: string
+  ) => void;
 
-  onAnalyze:
-    () => void;
+  onAnalyze: () => void;
 
-  onPasteAndAnalyze:
-    () => void;
+  onPasteAndAnalyze: () => void;
 
-  clipboardLoading:
-    boolean;
+  clipboardLoading: boolean;
 
   analysis:
     | ParsedOffer
     | null;
 
-  fields:
-    OfferAssistantField[];
+  fields: OfferAssistantField[];
 
-  detectedFields:
-    number;
+  detectedFields: number;
 
-  totalFields:
-    number;
+  totalFields: number;
 
-  analysisPercent:
-    number;
+  analysisPercent: number;
 
   parserMessage:
     | string
     | null;
 
-  parserWarnings:
-    string[];
+  parserWarnings: string[];
 
   parserConfidence:
     | ParserConfidence
@@ -65,25 +54,25 @@ type Props = {
   duplicateCheck:
     ProductDuplicateCheck;
 
-  onGenerateDescription:
-    () => void;
+  onGenerateDescription: () => void;
 
-  onGoToMissing:
-    () => void;
+  onGoToMissing: () => void;
 
   nextMissingLabel:
     | string
     | null;
 
-  onClear:
-    () => void;
+  onClear: () => void;
 
-  draftRestored:
-    boolean;
+  draftRestored: boolean;
+
+  draftAvailable: boolean;
 
   draftSavedAt:
     | string
     | null;
+
+  onRestoreDraft: () => void;
 };
 
 type DuplicateCandidate =
@@ -113,37 +102,27 @@ export default function QuickStartAssistant({
   nextMissingLabel,
   onClear,
   draftRestored,
+  draftAvailable,
   draftSavedAt,
+  onRestoreDraft,
 }: Props) {
-  const hasCurrentOffer =
-    Boolean(
-      rawOffer.trim() ||
-        analysis
-    );
-
   const readyFields =
     fields.filter(
-      (
-        field
-      ) =>
+      (field) =>
         field.state ===
         "ready"
     ).length;
 
   const reviewFields =
     fields.filter(
-      (
-        field
-      ) =>
+      (field) =>
         field.state ===
         "review"
     ).length;
 
   const missingFields =
     fields.filter(
-      (
-        field
-      ) =>
+      (field) =>
         field.state ===
         "missing"
     ).length;
@@ -182,27 +161,68 @@ export default function QuickStartAssistant({
               możliwy duplikat.
             </p>
           </div>
+        </div>
 
-          {hasCurrentOffer && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={
+              onClear
+            }
+            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-stone-200 bg-white px-3.5 text-[10px] font-black text-stone-700 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 active:scale-[0.98] sm:text-xs"
+          >
+            <span className="mr-1.5 text-base leading-none">
+              +
+            </span>
+
+            Nowy produkt
+          </button>
+
+          {draftAvailable && (
             <button
               type="button"
               onClick={
-                onClear
+                onRestoreDraft
               }
-              className="hidden min-h-9 shrink-0 items-center rounded-xl border border-stone-200 bg-white px-3 text-[10px] font-black text-stone-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:flex"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-3.5 text-[10px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.98] sm:text-xs"
             >
-              + Nowy
+              ↶ Przywróć szkic
             </button>
           )}
         </div>
 
+        {draftAvailable && (
+          <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2.5">
+            <p className="text-[10px] font-black text-blue-800">
+              Masz zapisany wcześniejszy
+              szkic
+            </p>
+
+            <p className="mt-0.5 text-[9px] leading-4 text-blue-700">
+              Nie wczytujemy go
+              automatycznie. Formularz
+              zawsze rozpoczyna się
+              pusty. Użyj
+              „Przywróć szkic” tylko
+              wtedy, gdy chcesz do niego
+              wrócić.
+            </p>
+          </div>
+        )}
+
         <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-white/70 px-3 py-2">
           <p className="min-w-0 truncate text-[9px] font-semibold text-stone-400 sm:text-[10px]">
-            {draftSavedAt
-              ? `Autozapis • ${formatDraftTime(
-                  draftSavedAt
-                )}`
-              : "Szkic zapisuje się automatycznie"}
+            {draftAvailable
+              ? draftSavedAt
+                ? `Zapisany szkic • ${formatDraftTime(
+                    draftSavedAt
+                  )}`
+                : "Dostępny zapisany szkic"
+              : draftSavedAt
+                ? `Autozapis • ${formatDraftTime(
+                    draftSavedAt
+                  )}`
+                : "Nowy formularz startuje pusty"}
           </p>
 
           <span className="shrink-0 text-[9px] font-bold text-stone-400">
@@ -256,6 +276,9 @@ export default function QuickStartAssistant({
               event.target.value
             )
           }
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           rows={
             analysis
               ? 4
@@ -272,21 +295,16 @@ export default function QuickStartAssistant({
           </p>
 
           <p className="shrink-0 text-[9px] font-bold text-stone-400">
-            {
-              rawOffer.length
-            }{" "}
-            znaków
+            {rawOffer.length} znaków
           </p>
         </div>
 
         {!analysis &&
           parserMessage && (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold leading-5 text-amber-800">
-            {
-              parserMessage
-            }
-          </div>
-        )}
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold leading-5 text-amber-800">
+              {parserMessage}
+            </div>
+          )}
 
         {analysis && (
           <div className="mt-4 space-y-3">
@@ -319,9 +337,7 @@ export default function QuickStartAssistant({
 
             {parserMessage && (
               <p className="px-1 text-[10px] font-semibold leading-5 text-stone-500 sm:text-xs">
-                {
-                  parserMessage
-                }
+                {parserMessage}
               </p>
             )}
 
@@ -338,23 +354,15 @@ export default function QuickStartAssistant({
                 </span>
 
                 <span className="text-[10px] font-bold text-stone-400">
-                  {
-                    detectedFields
-                  }
-                  /
-                  {
-                    totalFields
-                  }{" "}
-                  kluczowych
+                  {detectedFields}/
+                  {totalFields} kluczowych
                 </span>
               </summary>
 
               <div className="border-t border-stone-100 p-3">
                 <div className="grid gap-2 sm:grid-cols-2">
                   {fields.map(
-                    (
-                      field
-                    ) => (
+                    (field) => (
                       <DetectedField
                         key={
                           field.id
@@ -386,9 +394,7 @@ export default function QuickStartAssistant({
 
                 <div className="space-y-2 border-t border-amber-200 px-3.5 py-3">
                   {parserWarnings.map(
-                    (
-                      warning
-                    ) => (
+                    (warning) => (
                       <p
                         key={
                           warning
@@ -400,9 +406,7 @@ export default function QuickStartAssistant({
                         </span>
 
                         <span>
-                          {
-                            warning
-                          }
+                          {warning}
                         </span>
                       </p>
                     )
@@ -423,19 +427,14 @@ export default function QuickStartAssistant({
                   <div className="flex flex-wrap gap-1.5">
                     {analysis.diagnostics
                       .signals.map(
-                        (
-                          signal
-                        ) => (
+                        (signal) => (
                           <span
                             key={
                               signal
                             }
                             className="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-stone-600 ring-1 ring-stone-200"
                           >
-                            ✓{" "}
-                            {
-                              signal
-                            }
+                            ✓ {signal}
                           </span>
                         )
                       )}
@@ -491,16 +490,6 @@ export default function QuickStartAssistant({
                   : "✓ Kluczowe dane gotowe"}
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={
-                onClear
-              }
-              className="flex min-h-10 w-full items-center justify-center text-[10px] font-black text-stone-400 transition hover:text-red-600 sm:hidden"
-            >
-              + Rozpocznij nowy produkt
-            </button>
           </div>
         )}
       </div>
@@ -518,30 +507,18 @@ function AnalysisSummary({
   reviewFields,
   missingFields,
 }: {
-  analysis:
-    ParsedOffer;
-
-  detectedFields:
-    number;
-
-  totalFields:
-    number;
-
-  analysisPercent:
-    number;
+  analysis: ParsedOffer;
+  detectedFields: number;
+  totalFields: number;
+  analysisPercent: number;
 
   confidence:
     | ParserConfidence
     | null;
 
-  readyFields:
-    number;
-
-  reviewFields:
-    number;
-
-  missingFields:
-    number;
+  readyFields: number;
+  reviewFields: number;
+  missingFields: number;
 }) {
   const productType =
     analysis.diagnostics
@@ -557,14 +534,9 @@ function AnalysisSummary({
             100
               ? "bg-green-100 text-green-700"
               : "bg-violet-100 text-violet-700",
-          ].join(
-            " "
-          )}
+          ].join(" ")}
         >
-          {
-            analysisPercent
-          }
-          %
+          {analysisPercent}%
         </div>
 
         <div className="min-w-0 flex-1">
@@ -632,11 +604,8 @@ function SummaryMetric({
   label,
   tone,
 }: {
-  value:
-    number;
-
-  label:
-    string;
+  value: number;
+  label: string;
 
   tone:
     | "green"
@@ -658,9 +627,7 @@ function SummaryMetric({
         className={[
           "text-sm font-black",
           toneClass,
-        ].join(
-          " "
-        )}
+        ].join(" ")}
       >
         {value}
       </p>
@@ -790,9 +757,7 @@ function DuplicateGuard({
 
           <div className="mt-2 space-y-2">
             {check.similarMatches.map(
-              (
-                product
-              ) => (
+              (product) => (
                 <DuplicateProductCard
                   key={
                     product.id
@@ -859,8 +824,7 @@ function DuplicateProductCard({
   product:
     DuplicateCandidate;
 
-  blocked?:
-    boolean;
+  blocked?: boolean;
 }) {
   return (
     <div className="mt-2 grid grid-cols-[48px_minmax(0,1fr)] gap-2.5 rounded-xl border border-white bg-white p-2 shadow-sm">
@@ -869,21 +833,19 @@ function DuplicateProductCard({
           product.imageUrl
         }
         alt=""
+        loading="lazy"
+        decoding="async"
         className="h-[60px] w-[48px] rounded-lg object-cover"
       />
 
       <div className="min-w-0">
         <p className="line-clamp-2 text-[10px] font-black leading-4 text-stone-900">
-          {
-            product.shortName
-          }
+          {product.shortName}
         </p>
 
         <div className="mt-1 flex flex-wrap gap-x-2 text-[9px] text-stone-400">
           <span>
-            {
-              product.category
-            }
+            {product.category}
           </span>
 
           <span>
@@ -939,16 +901,12 @@ function DetectedField({
                 "missing"
               ? "border-red-100 bg-red-50/20"
               : "border-stone-200 bg-stone-50/50",
-      ].join(
-        " "
-      )}
+      ].join(" ")}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-[8px] font-black uppercase tracking-[0.09em] text-stone-400">
-            {
-              field.label
-            }
+            {field.label}
           </p>
 
           <p
@@ -961,9 +919,7 @@ function DetectedField({
               "affiliateUrl"
                 ? "break-all"
                 : "line-clamp-2",
-            ].join(
-              " "
-            )}
+            ].join(" ")}
           >
             {field.value ||
               field.hint}
@@ -981,9 +937,7 @@ function DetectedField({
         field.state ===
           "review" && (
           <p className="mt-2 border-t border-amber-100 pt-2 text-[9px] leading-4 text-amber-700">
-            {
-              field.hint
-            }
+            {field.hint}
           </p>
         )}
     </div>
