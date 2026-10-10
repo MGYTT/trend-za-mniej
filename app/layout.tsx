@@ -3,6 +3,10 @@ import type {
   Viewport,
 } from "next";
 
+import {
+  Analytics,
+} from "@vercel/analytics/next";
+
 import "./globals.css";
 
 import {
@@ -110,13 +114,18 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
+
     locale:
       SITE_LANGUAGE,
+
     url: "/",
+
     siteName:
       SITE_NAME,
+
     title:
       SITE_DEFAULT_TITLE,
+
     description:
       SITE_DESCRIPTION,
 
@@ -124,8 +133,13 @@ export const metadata: Metadata = {
       {
         url:
           "/opengraph-image",
-        width: 1200,
-        height: 630,
+
+        width:
+          1200,
+
+        height:
+          630,
+
         alt:
           "Trend za Mniej - moda damska, ubrania i okazje",
       },
@@ -148,16 +162,27 @@ export const metadata: Metadata = {
   },
 
   robots: {
-    index: true,
-    follow: true,
+    index:
+      true,
+
+    follow:
+      true,
 
     googleBot: {
-      index: true,
-      follow: true,
+      index:
+        true,
+
+      follow:
+        true,
+
       "max-image-preview":
         "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
+
+      "max-snippet":
+        -1,
+
+      "max-video-preview":
+        -1,
     },
   },
 
@@ -205,9 +230,11 @@ export default function RootLayout({
           contentUrl:
             `${siteUrl}/icon`,
 
-          width: 512,
+          width:
+            512,
 
-          height: 512,
+          height:
+            512,
         },
 
         ...(contactEmail
@@ -280,6 +307,8 @@ export default function RootLayout({
         />
 
         {children}
+
+        <Analytics />
       </body>
     </html>
   );
