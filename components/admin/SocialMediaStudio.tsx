@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-
 import {
   type ReactNode,
   useEffect,
@@ -23,34 +22,27 @@ type SocialProduct = {
   active: boolean;
 };
 
-type SlideType =
-  | "cover"
-  | "product"
-  | "outro";
+type SlideType = "cover" | "product" | "outro";
+type TemplateType = "minimal" | "fashion" | "deal";
+type ImageFit = "contain" | "cover";
+type ImageStatus =
+  | "idle"
+  | "loading"
+  | "ready"
+  | "fallback"
+  | "error";
 
-type TemplateType =
-  | "fashion"
-  | "minimal"
-  | "deal";
-
-type ImageFit =
-  | "contain"
-  | "cover";
-
-type SlideTitles =
-  Record<
-    SlideType,
-    string
-  >;
+type SlideTitles = Record<SlideType, string>;
 
 type StudioDraft = {
-  version: 2;
+  version: 4;
   template: TemplateType;
   imageFit: ImageFit;
   showPrice: boolean;
   showOldPrice: boolean;
   showSheinSource: boolean;
   showCategory: boolean;
+  showCropGuide: boolean;
   titles: SlideTitles;
 };
 
@@ -61,41 +53,57 @@ type ExportState = {
 };
 
 type SlideTheme = {
-  background: string;
-  surface: string;
-  strongSurface: string;
-  imageSurface: string;
+  page: string;
+  core: string;
+  panel: string;
+  panelStrong: string;
   border: string;
-  primaryText: string;
-  secondaryText: string;
-  accentText: string;
+  text: string;
+  muted: string;
+  accent: string;
   pill: string;
   logo: string;
-  button: string;
+  cta: string;
+  imageSurface: string;
   exportBackground: string;
 };
 
 const DEFAULT_COVER_TITLE =
-  "Modowe znalezisko warte uwagi";
+  "Modowe znalezisko, które warto zobaczyć";
 
 const DEFAULT_OUTRO_TITLE =
-  "Więcej modowych okazji czeka na Trend za Mniej";
+  "Więcej modowych okazji znajdziesz na Trend za Mniej";
 
-const EXPORT_ORDER:
-  SlideType[] = [
-    "cover",
-    "product",
-    "outro",
-  ];
+const MAX_NORMALIZED_IMAGE_SIDE =
+  2048;
 
-const SLIDE_LABELS:
-  Record<
-    SlideType,
-    string
-  > = {
+const EXPORT_ORDER: SlideType[] = [
+  "cover",
+  "product",
+  "outro",
+];
+
+const SLIDE_LABELS: Record<
+  SlideType,
+  string
+> = {
   cover: "Okładka",
   product: "Produkt",
   outro: "Koniec",
+};
+
+const SLIDE_DESCRIPTIONS: Record<
+  SlideType,
+  string
+> = {
+  cover:
+    "Pierwszy slajd z marką, reklamą i produktem w bezpiecznym kadrze.",
+
+  product:
+    "Cena i najważniejsze dane pozostają widoczne również po cropie 1:1.",
+
+  outro:
+    "Adres strony i CTA są ustawione w centralnej strefie widoczności.",
 };
 
 function formatPrice(
@@ -133,6 +141,60 @@ function formatPrice(
   );
 }
 
+function getDiscountPercent(
+  price:
+    | number
+    | string,
+  oldPrice:
+    | number
+    | string
+    | null
+) {
+  const current =
+    Number(
+      price
+    );
+
+  const previous =
+    oldPrice ===
+      null
+      ? NaN
+      : Number(
+          oldPrice
+        );
+
+  if (
+    !Number.isFinite(
+      current
+    ) ||
+    !Number.isFinite(
+      previous
+    ) ||
+    previous <= 0 ||
+    previous <=
+      current
+  ) {
+    return null;
+  }
+
+  return Math.max(
+    1,
+    Math.min(
+      99,
+      Math.round(
+        (
+          (
+            previous -
+            current
+          ) /
+          previous
+        ) *
+          100
+      )
+    )
+  );
+}
+
 function getDefaultTitles(
   product:
     SocialProduct
@@ -153,7 +215,7 @@ function getStorageKey(
   productId:
     string
 ) {
-  return `trend-za-mniej:social-studio:v2:${productId}`;
+  return `trend-za-mniej:social-studio:v4:${productId}`;
 }
 
 function getSlideFileName(
@@ -195,51 +257,445 @@ function getSlideFileName(
   return `trend-za-mniej-${safeSlug}-${suffix}.png`;
 }
 
-function dataUrlFromBlob(
-  blob:
-    Blob
+function isIOSWebKit() {
+  if (
+    typeof navigator ===
+      "undefined"
+  ) {
+    return false;
+  }
+
+  return (
+    /iPad|iPhone|iPod/i.test(
+      navigator.userAgent
+    ) ||
+    (
+      navigator.platform ===
+        "MacIntel" &&
+      navigator.maxTouchPoints >
+        1
+    )
+  );
+}
+
+function waitForPaint() {
+  return new Promise<void>(
+    (
+      resolve
+    ) => {
+      requestAnimationFrame(
+        () => {
+          requestAnimationFrame(
+            () =>
+              resolve()
+          );
+        }
+      );
+    }
+  );
+}
+
+async function waitForExportPaint() {
+  await waitForPaint();
+
+  if (
+    isIOSWebKit()
+  ) {
+    await new Promise<void>(
+      (
+        resolve
+      ) => {
+        window.setTimeout(
+          resolve,
+          160
+        );
+      }
+    );
+  }
+
+  await waitForPaint();
+}
+
+function loadImage(
+  source:
+    string
 ) {
-  return new Promise<string>(
+  return new Promise<HTMLImageElement>(
     (
       resolve,
       reject
     ) => {
-      const reader =
-        new FileReader();
+      const image =
+        new Image();
 
-      reader.onload =
-        () => {
-          if (
-            typeof reader.result ===
-            "string"
-          ) {
-            resolve(
-              reader.result
+      let settled =
+        false;
+
+      const timeout =
+        window.setTimeout(
+          () => {
+            if (
+              settled
+            ) {
+              return;
+            }
+
+            settled =
+              true;
+
+            reject(
+              new Error(
+                "Przekroczono czas ładowania zdjęcia."
+              )
             );
+          },
+          12000
+        );
 
-            return;
-          }
+      const finish = (
+        success:
+          boolean
+      ) => {
+        if (
+          settled
+        ) {
+          return;
+        }
 
-          reject(
-            new Error(
-              "Nie udało się przygotować zdjęcia."
-            )
+        settled =
+          true;
+
+        window.clearTimeout(
+          timeout
+        );
+
+        if (
+          success &&
+          image.naturalWidth >
+            0 &&
+          image.naturalHeight >
+            0
+        ) {
+          resolve(
+            image
           );
-        };
 
-      reader.onerror =
-        () => {
-          reject(
-            new Error(
-              "Nie udało się odczytać zdjęcia."
-            )
+          return;
+        }
+
+        reject(
+          new Error(
+            "Nie udało się załadować zdjęcia produktu."
+          )
+        );
+      };
+
+      image.loading =
+        "eager";
+
+      image.decoding =
+        "async";
+
+      image.onload =
+        () =>
+          finish(
+            true
           );
-        };
 
-      reader.readAsDataURL(
-        blob
+      image.onerror =
+        () =>
+          finish(
+            false
+          );
+
+      image.src =
+        source;
+    }
+  );
+}
+
+async function normalizeRemoteImage(
+  source:
+    string
+) {
+  const response =
+    await fetch(
+      source,
+      {
+        cache:
+          "no-store",
+
+        mode:
+          "cors",
+
+        credentials:
+          "omit",
+      }
+    );
+
+  if (
+    !response.ok
+  ) {
+    throw new Error(
+      `Nie udało się pobrać zdjęcia (${response.status}).`
+    );
+  }
+
+  const blob =
+    await response.blob();
+
+  if (
+    !blob.type.startsWith(
+      "image/"
+    )
+  ) {
+    throw new Error(
+      "Pobrany plik nie jest obrazem."
+    );
+  }
+
+  const objectUrl =
+    URL.createObjectURL(
+      blob
+    );
+
+  try {
+    const image =
+      await loadImage(
+        objectUrl
+      );
+
+    if (
+      typeof image.decode ===
+        "function"
+    ) {
+      try {
+        await image.decode();
+      } catch {
+        /*
+         * WebKit potrafi
+         * odrzucić decode()
+         * mimo poprawnego onload.
+         */
+      }
+    }
+
+    const longestSide =
+      Math.max(
+        image.naturalWidth,
+        image.naturalHeight
+      );
+
+    const scale =
+      longestSide >
+      MAX_NORMALIZED_IMAGE_SIDE
+        ? MAX_NORMALIZED_IMAGE_SIDE /
+          longestSide
+        : 1;
+
+    const width =
+      Math.max(
+        1,
+        Math.round(
+          image.naturalWidth *
+            scale
+        )
+      );
+
+    const height =
+      Math.max(
+        1,
+        Math.round(
+          image.naturalHeight *
+            scale
+        )
+      );
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    canvas.width =
+      width;
+
+    canvas.height =
+      height;
+
+    const context =
+      canvas.getContext(
+        "2d",
+        {
+          alpha:
+            false,
+        }
+      );
+
+    if (
+      !context
+    ) {
+      throw new Error(
+        "Nie udało się przygotować obrazu do eksportu."
       );
     }
+
+    context.imageSmoothingEnabled =
+      true;
+
+    context.imageSmoothingQuality =
+      "high";
+
+    context.fillStyle =
+      "#ffffff";
+
+    context.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+    context.drawImage(
+      image,
+      0,
+      0,
+      width,
+      height
+    );
+
+    return canvas.toDataURL(
+      "image/jpeg",
+      0.94
+    );
+  } finally {
+    URL.revokeObjectURL(
+      objectUrl
+    );
+  }
+}
+
+async function waitForImages(
+  node:
+    HTMLElement
+) {
+  const images =
+    Array.from(
+      node.querySelectorAll(
+        "img"
+      )
+    );
+
+  await Promise.all(
+    images.map(
+      async (
+        image
+      ) => {
+        if (
+          !image.complete ||
+          image.naturalWidth <=
+            0
+        ) {
+          await new Promise<void>(
+            (
+              resolve,
+              reject
+            ) => {
+              const timeout =
+                window.setTimeout(
+                  () => {
+                    cleanup();
+
+                    reject(
+                      new Error(
+                        "Zdjęcie nie zdążyło się załadować."
+                      )
+                    );
+                  },
+                  10000
+                );
+
+              const cleanup =
+                () => {
+                  window.clearTimeout(
+                    timeout
+                  );
+
+                  image.removeEventListener(
+                    "load",
+                    handleLoad
+                  );
+
+                  image.removeEventListener(
+                    "error",
+                    handleError
+                  );
+                };
+
+              const handleLoad =
+                () => {
+                  cleanup();
+                  resolve();
+                };
+
+              const handleError =
+                () => {
+                  cleanup();
+
+                  reject(
+                    new Error(
+                      "Nie udało się załadować zdjęcia do slajdu."
+                    )
+                  );
+                };
+
+              image.addEventListener(
+                "load",
+                handleLoad,
+                {
+                  once:
+                    true,
+                }
+              );
+
+              image.addEventListener(
+                "error",
+                handleError,
+                {
+                  once:
+                    true,
+                }
+              );
+            }
+          );
+        }
+
+        if (
+          typeof image.decode ===
+            "function"
+        ) {
+          try {
+            await image.decode();
+          } catch {
+            /*
+             * onload pozostaje
+             * fallbackiem
+             * dla Safari.
+             */
+          }
+        }
+
+        if (
+          image.naturalWidth <=
+            0 ||
+          image.naturalHeight <=
+            0
+        ) {
+          throw new Error(
+            "Obraz nie został poprawnie zdekodowany."
+          );
+        }
+      }
+    )
   );
 }
 
@@ -272,107 +728,38 @@ async function dataUrlToFile(
   );
 }
 
-async function waitForImages(
-  node:
-    HTMLElement
-) {
-  const images =
-    Array.from(
-      node.querySelectorAll(
-        "img"
-      )
-    );
-
-  await Promise.all(
-    images.map(
-      (
-        image
-      ) => {
-        if (
-          image.complete &&
-          image.naturalWidth >
-            0
-        ) {
-          return Promise.resolve();
-        }
-
-        return new Promise<void>(
-          (
-            resolve
-          ) => {
-            const finish =
-              () => {
-                image.removeEventListener(
-                  "load",
-                  finish
-                );
-
-                image.removeEventListener(
-                  "error",
-                  finish
-                );
-
-                resolve();
-              };
-
-            image.addEventListener(
-              "load",
-              finish,
-              {
-                once:
-                  true,
-              }
-            );
-
-            image.addEventListener(
-              "error",
-              finish,
-              {
-                once:
-                  true,
-              }
-            );
-          }
-        );
-      }
-    )
-  );
-}
-
-function waitForPaint() {
-  return new Promise<void>(
-    (
-      resolve
-    ) => {
-      requestAnimationFrame(
-        () => {
-          requestAnimationFrame(
-            () => {
-              resolve();
-            }
-          );
-        }
-      );
-    }
-  );
-}
-
-function triggerDownload(
+async function downloadDataUrl(
   dataUrl:
     string,
   fileName:
     string
 ) {
+  const response =
+    await fetch(
+      dataUrl
+    );
+
+  const blob =
+    await response.blob();
+
+  const objectUrl =
+    URL.createObjectURL(
+      blob
+    );
+
   const link =
     document.createElement(
       "a"
     );
 
   link.href =
-    dataUrl;
+    objectUrl;
 
   link.download =
     fileName;
+
+  link.rel =
+    "noopener";
 
   document.body.appendChild(
     link
@@ -381,6 +768,14 @@ function triggerDownload(
   link.click();
 
   link.remove();
+
+  window.setTimeout(
+    () =>
+      URL.revokeObjectURL(
+        objectUrl
+      ),
+    1000
+  );
 }
 
 export default function SocialMediaStudio({
@@ -446,11 +841,11 @@ export default function SocialMediaStudio({
     );
 
   const [
-    showSafeArea,
-    setShowSafeArea,
+    showCropGuide,
+    setShowCropGuide,
   ] =
     useState(
-      false
+      true
     );
 
   const [
@@ -481,13 +876,21 @@ export default function SocialMediaStudio({
     );
 
   const [
-    exportImageUrl,
-    setExportImageUrl,
+    preparedImageUrl,
+    setPreparedImageUrl,
   ] =
     useState<
       string | null
     >(
       null
+    );
+
+  const [
+    imageStatus,
+    setImageStatus,
+  ] =
+    useState<ImageStatus>(
+      "idle"
     );
 
   const [
@@ -532,20 +935,89 @@ export default function SocialMediaStudio({
       slideType
     ];
 
-  const exportProduct =
+  const displayProduct =
     useMemo(
       () => ({
         ...product,
 
         imageUrl:
-          exportImageUrl ??
+          preparedImageUrl ??
           product.imageUrl,
       }),
       [
-        exportImageUrl,
+        preparedImageUrl,
         product,
       ]
     );
+
+  useEffect(
+    () => {
+      let disposed =
+        false;
+
+      setPreparedImageUrl(
+        null
+      );
+
+      setImageStatus(
+        "loading"
+      );
+
+      void (
+        async () => {
+          try {
+            const normalized =
+              await normalizeRemoteImage(
+                product.imageUrl
+              );
+
+            if (
+              disposed
+            ) {
+              return;
+            }
+
+            setPreparedImageUrl(
+              normalized
+            );
+
+            setImageStatus(
+              "ready"
+            );
+          } catch (
+            error
+          ) {
+            console.warn(
+              "Social Media Studio: nie udało się znormalizować zdjęcia. Używam oryginalnego adresu.",
+              error
+            );
+
+            if (
+              disposed
+            ) {
+              return;
+            }
+
+            setPreparedImageUrl(
+              null
+            );
+
+            setImageStatus(
+              "fallback"
+            );
+          }
+        }
+      )();
+
+      return () => {
+        disposed =
+          true;
+      };
+    },
+    [
+      product.imageUrl,
+    ]
+  );
 
   useEffect(
     () => {
@@ -571,12 +1043,11 @@ export default function SocialMediaStudio({
         const parsed =
           JSON.parse(
             saved
-          ) as
-            Partial<StudioDraft>;
+          ) as Partial<StudioDraft>;
 
         if (
           parsed.version !==
-          2
+          4
         ) {
           setDraftReady(
             true
@@ -587,9 +1058,9 @@ export default function SocialMediaStudio({
 
         if (
           parsed.template ===
-            "fashion" ||
-          parsed.template ===
             "minimal" ||
+          parsed.template ===
+            "fashion" ||
           parsed.template ===
             "deal"
         ) {
@@ -600,9 +1071,9 @@ export default function SocialMediaStudio({
 
         if (
           parsed.imageFit ===
-            "cover" ||
+            "contain" ||
           parsed.imageFit ===
-            "contain"
+            "cover"
         ) {
           setImageFit(
             parsed.imageFit
@@ -646,6 +1117,15 @@ export default function SocialMediaStudio({
         }
 
         if (
+          typeof parsed.showCropGuide ===
+          "boolean"
+        ) {
+          setShowCropGuide(
+            parsed.showCropGuide
+          );
+        }
+
+        if (
           parsed.titles
         ) {
           setTitles({
@@ -666,7 +1146,7 @@ export default function SocialMediaStudio({
         error
       ) {
         console.warn(
-          "Nie udało się przywrócić projektu Social Studio:",
+          "Nie udało się przywrócić Social Media Studio:",
           error
         );
       } finally {
@@ -695,7 +1175,7 @@ export default function SocialMediaStudio({
             const draft:
               StudioDraft = {
               version:
-                2,
+                4,
 
               template,
 
@@ -708,6 +1188,8 @@ export default function SocialMediaStudio({
               showSheinSource,
 
               showCategory,
+
+              showCropGuide,
 
               titles,
             };
@@ -728,18 +1210,17 @@ export default function SocialMediaStudio({
               );
 
               window.setTimeout(
-                () => {
+                () =>
                   setDraftSaved(
                     false
-                  );
-                },
+                  ),
                 1100
               );
             } catch (
               error
             ) {
               console.warn(
-                "Nie udało się zapisać projektu Social Studio:",
+                "Nie udało się zapisać Social Media Studio:",
                 error
               );
             }
@@ -747,17 +1228,17 @@ export default function SocialMediaStudio({
           300
         );
 
-      return () => {
+      return () =>
         window.clearTimeout(
           timeout
         );
-      };
     },
     [
       draftReady,
       imageFit,
       product.id,
       showCategory,
+      showCropGuide,
       showOldPrice,
       showPrice,
       showSheinSource,
@@ -785,7 +1266,7 @@ export default function SocialMediaStudio({
   function resetStudio() {
     const confirmed =
       window.confirm(
-        "Przywrócić domyślny wygląd tego projektu?"
+        "Przywrócić domyślne ustawienia tego projektu?"
       );
 
     if (
@@ -818,8 +1299,8 @@ export default function SocialMediaStudio({
       true
     );
 
-    setShowSafeArea(
-      false
+    setShowCropGuide(
+      true
     );
 
     setTitles(
@@ -847,61 +1328,66 @@ export default function SocialMediaStudio({
           )
         );
     } catch {
-      // localStorage może być niedostępny.
+      /*
+       * localStorage
+       * może być
+       * niedostępny.
+       */
     }
   }
 
   async function prepareImageForExport() {
     if (
-      exportImageUrl
+      preparedImageUrl
+        ?.startsWith(
+          "data:image/"
+        )
     ) {
-      return;
+      return preparedImageUrl;
     }
 
+    setImageStatus(
+      "loading"
+    );
+
     try {
-      const response =
-        await fetch(
-          product.imageUrl,
-          {
-            cache:
-              "no-store",
-          }
+      const normalized =
+        await normalizeRemoteImage(
+          product.imageUrl
         );
 
-      if (
-        !response.ok
-      ) {
-        throw new Error(
-          "Nie udało się pobrać zdjęcia produktu."
-        );
-      }
-
-      const blob =
-        await response.blob();
-
-      const dataUrl =
-        await dataUrlFromBlob(
-          blob
-        );
-
-      setExportImageUrl(
-        dataUrl
+      setPreparedImageUrl(
+        normalized
       );
 
-      await waitForPaint();
+      setImageStatus(
+        "ready"
+      );
+
+      await waitForExportPaint();
+
+      return normalized;
     } catch (
       error
     ) {
       console.warn(
-        "Nie udało się osadzić zdjęcia przed eksportem. Używamy oryginalnego adresu.",
+        "Social Media Studio: eksport użyje oryginalnego zdjęcia.",
         error
       );
+
+      setImageStatus(
+        "fallback"
+      );
+
+      return product.imageUrl;
     }
   }
 
   async function renderSlideToPng(
     type:
-      SlideType
+      SlideType,
+    imageSource:
+      string
   ) {
     const node =
       exportNodes.current[
@@ -916,6 +1402,34 @@ export default function SocialMediaStudio({
       );
     }
 
+    const productImages =
+      Array.from(
+        node.querySelectorAll(
+          '[data-social-product-image="true"]'
+        )
+      ) as HTMLImageElement[];
+
+    for (
+      const image
+      of productImages
+    ) {
+      if (
+        image.getAttribute(
+          "src"
+        ) !==
+        imageSource
+      ) {
+        image.src =
+          imageSource;
+      }
+
+      image.loading =
+        "eager";
+
+      image.decoding =
+        "sync";
+    }
+
     await waitForImages(
       node
     );
@@ -928,7 +1442,7 @@ export default function SocialMediaStudio({
         .ready;
     }
 
-    await waitForPaint();
+    await waitForExportPaint();
 
     const {
       toPng,
@@ -961,7 +1475,7 @@ export default function SocialMediaStudio({
           1,
 
         cacheBust:
-          true,
+          false,
 
         backgroundColor:
           theme.exportBackground,
@@ -991,16 +1505,16 @@ export default function SocialMediaStudio({
     });
 
     try {
-      await prepareImageForExport();
-
-      await waitForPaint();
+      const imageSource =
+        await prepareImageForExport();
 
       const dataUrl =
         await renderSlideToPng(
-          type
+          type,
+          imageSource
         );
 
-      triggerDownload(
+      await downloadDataUrl(
         dataUrl,
         getSlideFileName(
           product,
@@ -1022,8 +1536,18 @@ export default function SocialMediaStudio({
       error
     ) {
       console.error(
-        "Błąd eksportu Social Studio:",
+        "Błąd eksportu Social Media Studio:",
         error
+      );
+
+      setImageStatus(
+        (
+          current
+        ) =>
+          current ===
+          "ready"
+            ? current
+            : "error"
       );
 
       setExportState({
@@ -1034,7 +1558,7 @@ export default function SocialMediaStudio({
           "",
 
         error:
-          "Nie udało się utworzyć PNG. Sprawdź zdjęcie produktu i spróbuj ponownie.",
+          "Nie udało się utworzyć PNG. Odśwież Studio i spróbuj ponownie.",
       });
     }
   }
@@ -1061,9 +1585,8 @@ export default function SocialMediaStudio({
     });
 
     try {
-      await prepareImageForExport();
-
-      await waitForPaint();
+      const imageSource =
+        await prepareImageForExport();
 
       const fileName =
         getSlideFileName(
@@ -1073,7 +1596,8 @@ export default function SocialMediaStudio({
 
       const dataUrl =
         await renderSlideToPng(
-          type
+          type,
+          imageSource
         );
 
       const file =
@@ -1117,7 +1641,7 @@ export default function SocialMediaStudio({
         return;
       }
 
-      triggerDownload(
+      await downloadDataUrl(
         dataUrl,
         fileName
       );
@@ -1156,7 +1680,7 @@ export default function SocialMediaStudio({
       }
 
       console.error(
-        "Błąd udostępniania:",
+        "Błąd udostępniania Social Media Studio:",
         error
       );
 
@@ -1168,7 +1692,7 @@ export default function SocialMediaStudio({
           "",
 
         error:
-          "Nie udało się udostępnić pliku. Pobierz PNG.",
+          "Nie udało się udostępnić pliku. Spróbuj pobrać PNG.",
       });
     }
   }
@@ -1192,9 +1716,20 @@ export default function SocialMediaStudio({
     });
 
     try {
-      await prepareImageForExport();
+      const imageSource =
+        await prepareImageForExport();
 
-      await waitForPaint();
+      const files:
+        File[] = [];
+
+      const rendered:
+        Array<{
+          dataUrl:
+            string;
+
+          fileName:
+            string;
+        }> = [];
 
       for (
         let index =
@@ -1222,26 +1757,101 @@ export default function SocialMediaStudio({
 
         const dataUrl =
           await renderSlideToPng(
-            type
+            type,
+            imageSource
           );
 
-        triggerDownload(
-          dataUrl,
+        const fileName =
           getSlideFileName(
             product,
             type
+          );
+
+        rendered.push({
+          dataUrl,
+          fileName,
+        });
+
+        files.push(
+          await dataUrlToFile(
+            dataUrl,
+            fileName
           )
+        );
+      }
+
+      if (
+        typeof navigator.share ===
+          "function" &&
+        (
+          !navigator.canShare ||
+          navigator.canShare({
+            files,
+          })
+        )
+      ) {
+        try {
+          await navigator.share({
+            files,
+
+            title:
+              "Trend za Mniej — 3 slajdy",
+          });
+
+          setExportState({
+            active:
+              false,
+
+            message:
+              "✓ Zestaw 3 slajdów gotowy",
+
+            error:
+              null,
+          });
+
+          return;
+        } catch (
+          error
+        ) {
+          if (
+            error instanceof
+              DOMException &&
+            error.name ===
+              "AbortError"
+          ) {
+            setExportState({
+              active:
+                false,
+
+              message:
+                "",
+
+              error:
+                null,
+            });
+
+            return;
+          }
+        }
+      }
+
+      for (
+        const item
+        of rendered
+      ) {
+        await downloadDataUrl(
+          item.dataUrl,
+          item.fileName
         );
 
         await new Promise<void>(
           (
             resolve
-          ) => {
+          ) =>
             window.setTimeout(
               resolve,
-              220
-            );
-          }
+              180
+            )
         );
       }
 
@@ -1259,7 +1869,7 @@ export default function SocialMediaStudio({
       error
     ) {
       console.error(
-        "Błąd eksportu zestawu:",
+        "Błąd eksportu zestawu Social Media Studio:",
         error
       );
 
@@ -1271,7 +1881,7 @@ export default function SocialMediaStudio({
           "",
 
         error:
-          "Nie udało się pobrać całego zestawu.",
+          "Nie udało się przygotować całego zestawu.",
       });
     }
   }
@@ -1280,7 +1890,7 @@ export default function SocialMediaStudio({
     (
       <SocialSlide
         product={
-          product
+          displayProduct
         }
         slideType={
           slideType
@@ -1303,8 +1913,8 @@ export default function SocialMediaStudio({
         showCategory={
           showCategory
         }
-        showSafeArea={
-          showSafeArea
+        showCropGuide={
+          showCropGuide
         }
         title={
           titles[
@@ -1316,26 +1926,26 @@ export default function SocialMediaStudio({
 
   return (
     <>
-      <div className="mx-auto max-w-[1320px] px-3 pb-28 pt-4 sm:px-5 sm:pb-12 sm:pt-6">
-        <section className="rounded-[24px] border border-black/[0.055] bg-white p-4 shadow-[0_10px_40px_rgba(15,23,42,0.045)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-stone-950 text-sm font-black text-white">
+      <div className="mx-auto max-w-[1480px] px-3 pb-28 pt-4 sm:px-5 sm:pb-14 sm:pt-6">
+        <section className="overflow-hidden rounded-[28px] border border-black/[0.06] bg-white shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+          <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-stone-950 text-base font-black text-white shadow-[0_10px_25px_rgba(0,0,0,0.14)]">
                 T
               </div>
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-lg font-black tracking-[-0.035em] text-stone-950 sm:text-xl">
+                  <h1 className="text-lg font-black tracking-[-0.04em] text-stone-950 sm:text-[22px]">
                     Social Media Studio
                   </h1>
 
-                  <span className="rounded-full bg-[#f2f2f7] px-2.5 py-1 text-[9px] font-black text-stone-500">
-                    2.0
+                  <span className="rounded-full bg-[#ff375f] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+                    TikTok Safe 4.0
                   </span>
                 </div>
 
-                <p className="mt-0.5 truncate text-[11px] font-semibold text-stone-400">
+                <p className="mt-1 max-w-[620px] truncate text-[11px] font-semibold text-stone-400 sm:text-xs">
                   {
                     product.shortName
                   }
@@ -1345,11 +1955,38 @@ export default function SocialMediaStudio({
 
             <div className="flex flex-wrap items-center gap-2">
               <StatusChip>
-                TikTok 9:16
+                9:16
               </StatusChip>
 
               <StatusChip>
                 1080 × 1920
+              </StatusChip>
+
+              <StatusChip
+                success
+              >
+                1:1 crop-safe
+              </StatusChip>
+
+              <StatusChip
+                success={
+                  imageStatus ===
+                  "ready"
+                }
+              >
+                {imageStatus ===
+                "loading"
+                  ? "Zdjęcie…"
+                  : imageStatus ===
+                      "ready"
+                    ? "Zdjęcie gotowe"
+                    : imageStatus ===
+                        "fallback"
+                      ? "Tryb zgodności"
+                      : imageStatus ===
+                          "error"
+                        ? "Sprawdź zdjęcie"
+                        : "Zdjęcie"}
               </StatusChip>
 
               <StatusChip
@@ -1367,55 +2004,69 @@ export default function SocialMediaStudio({
                 onClick={
                   resetStudio
                 }
-                className="min-h-9 rounded-[12px] border border-black/[0.07] bg-white px-3 text-[10px] font-black text-stone-500"
+                className="inline-flex min-h-9 items-center justify-center rounded-[12px] border border-black/[0.07] bg-white px-3 text-[10px] font-black text-stone-500 transition hover:bg-stone-50"
               >
                 Reset
               </button>
 
               <Link
                 href="/admin"
-                className="inline-flex min-h-9 items-center justify-center rounded-[12px] border border-black/[0.07] bg-white px-3 text-[10px] font-black text-stone-600"
+                className="inline-flex min-h-9 items-center justify-center rounded-[12px] bg-stone-950 px-3.5 text-[10px] font-black text-white transition hover:bg-black"
               >
-                Oferty
+                Wróć do ofert
               </Link>
+            </div>
+          </div>
+
+          <div className="border-t border-black/[0.05] bg-[#fff7f8] px-4 py-3 sm:px-5">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+              <span className="inline-flex w-fit rounded-full bg-[#ff375f] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                Nowy układ
+              </span>
+
+              <p className="text-[10px] font-bold leading-4 text-[#8f4150]">
+                Wszystkie kluczowe
+                dane są teraz
+                w centralnym
+                kwadracie
+                1080 × 1080.
+                Góra i dół 9:16
+                są tylko
+                rozszerzeniem tła,
+                więc crop TikToka
+                nie usuwa marki,
+                reklamy, ceny ani
+                adresu strony.
+              </p>
             </div>
           </div>
         </section>
 
-        <div className="mt-4 grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)] xl:items-start">
+        <div className="mt-4 grid gap-4 xl:grid-cols-[390px_minmax(0,1fr)] xl:items-start">
           <aside className="order-2 space-y-3 xl:order-1">
             <ControlGroup
               title="Slajd"
+              subtitle="Wybierz część publikacji"
             >
               <SegmentedControl
                 value={
                   slideType
                 }
-                options={[
-                  {
-                    value:
-                      "cover",
+                options={
+                  EXPORT_ORDER.map(
+                    (
+                      type
+                    ) => ({
+                      value:
+                        type,
 
-                    label:
-                      "Okładka",
-                  },
-
-                  {
-                    value:
-                      "product",
-
-                    label:
-                      "Produkt",
-                  },
-
-                  {
-                    value:
-                      "outro",
-
-                    label:
-                      "Koniec",
-                  },
-                ]}
+                      label:
+                        SLIDE_LABELS[
+                          type
+                        ],
+                    })
+                  )
+                }
                 onChange={(
                   value
                 ) =>
@@ -1425,10 +2076,19 @@ export default function SocialMediaStudio({
                   )
                 }
               />
+
+              <p className="mt-2.5 px-1 text-[10px] leading-4 text-stone-400">
+                {
+                  SLIDE_DESCRIPTIONS[
+                    slideType
+                  ]
+                }
+              </p>
             </ControlGroup>
 
             <ControlGroup
               title="Styl"
+              subtitle="Jeden spójny motyw dla wszystkich slajdów"
             >
               <div className="grid grid-cols-3 gap-2">
                 <StyleButton
@@ -1436,8 +2096,8 @@ export default function SocialMediaStudio({
                     template ===
                     "minimal"
                   }
-                  title="Light"
-                  subtitle="premium"
+                  title="Clean"
+                  subtitle="jasny"
                   preview="light"
                   onClick={() =>
                     setTemplate(
@@ -1451,8 +2111,8 @@ export default function SocialMediaStudio({
                     template ===
                     "fashion"
                   }
-                  title="Warm"
-                  subtitle="fashion"
+                  title="Editorial"
+                  subtitle="ciepły"
                   preview="warm"
                   onClick={() =>
                     setTemplate(
@@ -1466,8 +2126,8 @@ export default function SocialMediaStudio({
                     template ===
                     "deal"
                   }
-                  title="Dark"
-                  subtitle="contrast"
+                  title="Night"
+                  subtitle="kontrast"
                   preview="dark"
                   onClick={() =>
                     setTemplate(
@@ -1479,7 +2139,8 @@ export default function SocialMediaStudio({
             </ControlGroup>
 
             <ControlGroup
-              title={`Tekst • ${currentSlideLabel}`}
+              title={`Tekst · ${currentSlideLabel}`}
+              subtitle="Najważniejszy tekst zostaje wewnątrz kadru 1:1"
             >
               <textarea
                 value={
@@ -1498,10 +2159,10 @@ export default function SocialMediaStudio({
                 maxLength={
                   90
                 }
-                className="w-full resize-none rounded-[15px] border border-black/[0.07] bg-[#f5f5f7] px-3.5 py-3 text-sm font-bold leading-5 text-stone-900 outline-none transition focus:border-stone-300 focus:bg-white focus:ring-4 focus:ring-stone-100"
+                className="w-full resize-none rounded-[16px] border border-black/[0.07] bg-[#f5f5f7] px-3.5 py-3 text-sm font-bold leading-5 text-stone-900 outline-none transition placeholder:text-stone-300 focus:border-stone-300 focus:bg-white focus:ring-4 focus:ring-stone-100"
               />
 
-              <div className="mt-2 flex items-center justify-between">
+              <div className="mt-2 flex items-center justify-between px-1">
                 <span className="text-[9px] font-semibold text-stone-400">
                   Edycja na żywo
                 </span>
@@ -1515,15 +2176,73 @@ export default function SocialMediaStudio({
               </div>
             </ControlGroup>
 
+            {(slideType ===
+              "product" ||
+              slideType ===
+                "cover") && (
+              <ControlGroup
+                title="Zdjęcie produktu"
+                subtitle="Kadrowanie pionowe z ochroną centralnego kwadratu"
+              >
+                <SegmentedControl
+                  value={
+                    imageFit
+                  }
+                  options={[
+                    {
+                      value:
+                        "contain",
+
+                      label:
+                        "Cały produkt",
+                    },
+
+                    {
+                      value:
+                        "cover",
+
+                      label:
+                        "Wypełnij",
+                    },
+                  ]}
+                  onChange={(
+                    value
+                  ) =>
+                    setImageFit(
+                      value as
+                        ImageFit
+                    )
+                  }
+                />
+
+                <div className="mt-3 rounded-[15px] border border-black/[0.05] bg-[#f7f7f9] px-3.5 py-3">
+                  <p className="text-[10px] font-black text-stone-700">
+                    {imageFit ===
+                    "contain"
+                      ? "Pełny produkt bez obcięcia"
+                      : "Mocniejszy kadr zdjęcia"}
+                  </p>
+
+                  <p className="mt-1 text-[9px] leading-4 text-stone-400">
+                    {imageFit ===
+                    "contain"
+                      ? "Najbezpieczniejsza opcja. Produkt pozostaje w całości widoczny także w centralnym cropie."
+                      : "Zdjęcie wypełnia całą strefę produktu. Używaj, gdy obiekt jest dobrze wycentrowany."}
+                  </p>
+                </div>
+              </ControlGroup>
+            )}
+
             {slideType ===
               "product" && (
               <ControlGroup
                 title="Informacje produktu"
+                subtitle="Dane widoczne także w kaflu i przy cropie"
               >
                 <div className="overflow-hidden rounded-[17px] border border-black/[0.06] bg-white">
                   <SwitchRow
                     label="Cena"
-                    description="Pokaż cenę produktu"
+                    description="Pokaż aktualną cenę"
                     active={
                       showPrice
                     }
@@ -1540,12 +2259,12 @@ export default function SocialMediaStudio({
                   <Divider />
 
                   <SwitchRow
-                    label="Stara cena"
+                    label="Stara cena i rabat"
                     description={
                       product.oldPrice ===
                       null
-                        ? "Brak starej ceny"
-                        : "Pokaż starą cenę"
+                        ? "Produkt nie ma zapisanej starej ceny"
+                        : "Pokaż starą cenę i procent obniżki"
                     }
                     active={
                       showOldPrice
@@ -1586,7 +2305,7 @@ export default function SocialMediaStudio({
 
                   <SwitchRow
                     label="Źródło SHEIN"
-                    description="Znalezisko z SHEIN"
+                    description="Pokaż źródło przy produkcie"
                     active={
                       showSheinSource
                     }
@@ -1600,41 +2319,6 @@ export default function SocialMediaStudio({
                     }
                   />
                 </div>
-
-                <p className="mb-2 mt-4 text-[9px] font-black uppercase tracking-[0.1em] text-stone-400">
-                  Zdjęcie
-                </p>
-
-                <SegmentedControl
-                  value={
-                    imageFit
-                  }
-                  options={[
-                    {
-                      value:
-                        "contain",
-
-                      label:
-                        "Cały produkt",
-                    },
-
-                    {
-                      value:
-                        "cover",
-
-                      label:
-                        "Wypełnij",
-                    },
-                  ]}
-                  onChange={(
-                    value
-                  ) =>
-                    setImageFit(
-                      value as
-                        ImageFit
-                    )
-                  }
-                />
               </ControlGroup>
             )}
 
@@ -1642,6 +2326,7 @@ export default function SocialMediaStudio({
               "cover" && (
               <ControlGroup
                 title="Okładka"
+                subtitle="Informacja o źródle pozostaje w kadrze 1:1"
               >
                 <div className="overflow-hidden rounded-[17px] border border-black/[0.06] bg-white">
                   <SwitchRow
@@ -1660,56 +2345,22 @@ export default function SocialMediaStudio({
                     }
                   />
                 </div>
-
-                <p className="mb-2 mt-4 text-[9px] font-black uppercase tracking-[0.1em] text-stone-400">
-                  Zdjęcie
-                </p>
-
-                <SegmentedControl
-                  value={
-                    imageFit
-                  }
-                  options={[
-                    {
-                      value:
-                        "contain",
-
-                      label:
-                        "Cały produkt",
-                    },
-
-                    {
-                      value:
-                        "cover",
-
-                      label:
-                        "Wypełnij",
-                    },
-                  ]}
-                  onChange={(
-                    value
-                  ) =>
-                    setImageFit(
-                      value as
-                        ImageFit
-                    )
-                  }
-                />
               </ControlGroup>
             )}
 
             <ControlGroup
-              title="TikTok"
+              title="Kadr TikTok"
+              subtitle="Sprawdź dokładnie, co zostanie widoczne po cropie"
             >
               <div className="overflow-hidden rounded-[17px] border border-black/[0.06] bg-white">
                 <SwitchRow
-                  label="Bezpieczna strefa"
-                  description="Pokaż obszar interfejsu TikTok"
+                  label="Pokaż centralny crop 1:1"
+                  description="Przyciemnia obszar poza bezpiecznym kwadratem"
                   active={
-                    showSafeArea
+                    showCropGuide
                   }
                   onClick={() =>
-                    setShowSafeArea(
+                    setShowCropGuide(
                       (
                         current
                       ) =>
@@ -1719,21 +2370,29 @@ export default function SocialMediaStudio({
                 />
               </div>
 
-              <div className="mt-3 rounded-[15px] bg-[#f5f5f7] px-3.5 py-3">
-                <p className="text-[10px] font-black text-stone-700">
-                  Oznaczenie reklamowe
+              <div className="mt-3 rounded-[15px] bg-[#fff0f3] px-3.5 py-3">
+                <p className="text-[10px] font-black text-[#a52943]">
+                  Najważniejsza zasada
                 </p>
 
-                <p className="mt-1 text-[9px] leading-4 text-stone-400">
-                  Każdy slajd zawiera
-                  oznaczenie materiału
-                  reklamowego i SHEIN.
+                <p className="mt-1 text-[9px] leading-4 text-[#a52943]/70">
+                  Logo, oznaczenie
+                  reklamowe, produkt,
+                  cena i
+                  trendzamniej.pl
+                  są zawsze
+                  wewnątrz centralnego
+                  kwadratu. Nic
+                  ważnego nie opiera
+                  się już o samą
+                  górę lub dół 9:16.
                 </p>
               </div>
             </ControlGroup>
 
             <ControlGroup
               title="Eksport"
+              subtitle="PNG 1080 × 1920 · crop-safe 1:1"
             >
               <button
                 type="button"
@@ -1745,13 +2404,13 @@ export default function SocialMediaStudio({
                     slideType
                   )
                 }
-                className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[15px] bg-stone-950 px-4 text-sm font-black text-white transition hover:bg-black disabled:opacity-50"
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[16px] bg-stone-950 px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-wait disabled:opacity-50"
               >
                 <DownloadIcon />
 
                 {exportState.active
                   ? "Przygotowuję…"
-                  : "Pobierz PNG"}
+                  : "Pobierz aktualny slajd"}
               </button>
 
               <div className="mt-2 grid grid-cols-2 gap-2">
@@ -1765,7 +2424,7 @@ export default function SocialMediaStudio({
                       slideType
                     )
                   }
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-black/[0.07] bg-white px-3 text-[11px] font-black text-stone-700 disabled:opacity-50"
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-black/[0.07] bg-white px-3 text-[11px] font-black text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
                 >
                   <ShareIcon />
 
@@ -1780,22 +2439,16 @@ export default function SocialMediaStudio({
                   onClick={() =>
                     void exportFullPack()
                   }
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-black/[0.07] bg-white px-3 text-[11px] font-black text-stone-700 disabled:opacity-50"
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-black/[0.07] bg-white px-3 text-[11px] font-black text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
                 >
                   <StackIcon />
 
-                  3 slajdy
+                  Całe 3 slajdy
                 </button>
               </div>
 
-              <div className="mt-3 rounded-[13px] bg-[#f5f5f7] px-3 py-2 text-center">
-                <p className="text-[9px] font-black text-stone-500">
-                  PNG • 1080 × 1920
-                </p>
-              </div>
-
               {exportState.message && (
-                <p className="mt-3 text-center text-[10px] font-black text-emerald-600">
+                <p className="mt-3 rounded-[13px] bg-emerald-50 px-3 py-2.5 text-center text-[10px] font-black text-emerald-700">
                   {
                     exportState.message
                   }
@@ -1803,7 +2456,7 @@ export default function SocialMediaStudio({
               )}
 
               {exportState.error && (
-                <p className="mt-3 rounded-[13px] bg-red-50 px-3 py-2 text-center text-[10px] font-bold leading-4 text-red-700">
+                <p className="mt-3 rounded-[13px] bg-red-50 px-3 py-2.5 text-center text-[10px] font-bold leading-4 text-red-700">
                   {
                     exportState.error
                   }
@@ -1813,89 +2466,102 @@ export default function SocialMediaStudio({
           </aside>
 
           <section className="order-1 xl:order-2 xl:sticky xl:top-24">
-            <div className="rounded-[26px] border border-black/[0.055] bg-[#ededf1] p-3 shadow-[0_14px_50px_rgba(15,23,42,0.07)] sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="overflow-hidden rounded-[30px] border border-black/[0.06] bg-[#e9e9ed] shadow-[0_20px_70px_rgba(15,23,42,0.10)]">
+              <div className="flex flex-col gap-3 border-b border-black/[0.05] bg-white/85 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-stone-400">
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-stone-400">
                     Podgląd publikacji
                   </p>
 
-                  <p className="mt-0.5 text-xs font-black text-stone-800">
-                    {
-                      currentSlideLabel
-                    }
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-black text-stone-900">
+                      {
+                        currentSlideLabel
+                      }
+                    </p>
+
+                    <span className="h-1 w-1 rounded-full bg-stone-300" />
+
+                    <p className="text-[10px] font-semibold text-stone-400">
+                      środek odporny
+                      na crop 1:1
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex gap-1.5">
-                  <span className="rounded-full bg-white px-2.5 py-1.5 text-[9px] font-black text-stone-500 shadow-sm">
+                  <span className="rounded-full border border-black/[0.05] bg-white px-2.5 py-1.5 text-[9px] font-black text-stone-500 shadow-sm">
                     1080 × 1920
                   </span>
 
-                  <span className="rounded-full bg-stone-950 px-2.5 py-1.5 text-[9px] font-black text-white">
-                    9:16
+                  <span className="rounded-full bg-[#ff375f] px-2.5 py-1.5 text-[9px] font-black text-white">
+                    1:1 SAFE
                   </span>
                 </div>
               </div>
 
-              <div className="flex justify-center">
-                <div className="w-full max-w-[355px]">
-                  <div className="rounded-[36px] bg-[#1c1c1e] p-[4px] shadow-[0_26px_70px_rgba(0,0,0,0.20)]">
-                    <div className="overflow-hidden rounded-[32px] bg-white">
-                      {
-                        previewSlide
-                      }
+              <div className="p-3 sm:p-5 lg:p-7">
+                <div className="flex justify-center">
+                  <div className="w-full max-w-[390px]">
+                    <div className="rounded-[42px] bg-[#151517] p-[5px] shadow-[0_30px_90px_rgba(0,0,0,0.22)]">
+                      <div className="overflow-hidden rounded-[37px] bg-white">
+                        {
+                          previewSlide
+                        }
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    {EXPORT_ORDER.map(
-                      (
-                        type,
-                        index
-                      ) => {
-                        const active =
-                          slideType ===
-                          type;
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      {EXPORT_ORDER.map(
+                        (
+                          type,
+                          index
+                        ) => {
+                          const active =
+                            slideType ===
+                            type;
 
-                        return (
-                          <button
-                            key={
-                              type
-                            }
-                            type="button"
-                            onClick={() =>
-                              setSlideType(
+                          return (
+                            <button
+                              key={
                                 type
-                              )
-                            }
-                            className={[
-                              "rounded-[14px] border px-2 py-2.5 text-center transition",
-                              active
-                                ? "border-stone-950 bg-stone-950 text-white"
-                                : "border-white bg-white/80 text-stone-500",
-                            ].join(
-                              " "
-                            )}
-                          >
-                            <span className="block text-[8px] font-black opacity-50">
-                              0{
-                                index +
-                                1
                               }
-                            </span>
-
-                            <span className="mt-0.5 block text-[9px] font-black">
-                              {
-                                SLIDE_LABELS[
+                              type="button"
+                              onClick={() =>
+                                setSlideType(
                                   type
-                                ]
+                                )
                               }
-                            </span>
-                          </button>
-                        );
-                      }
-                    )}
+                              className={[
+                                "rounded-[15px] border px-2 py-2.5 text-center transition",
+
+                                active
+                                  ? "border-stone-950 bg-stone-950 text-white shadow-[0_8px_18px_rgba(0,0,0,0.12)]"
+                                  : "border-white bg-white/85 text-stone-500 hover:bg-white",
+                              ].join(
+                                " "
+                              )}
+                            >
+                              <span className="block text-[8px] font-black opacity-45">
+                                0
+                                {
+                                  index +
+                                  1
+                                }
+                              </span>
+
+                              <span className="mt-0.5 block text-[10px] font-black">
+                                {
+                                  SLIDE_LABELS[
+                                    type
+                                  ]
+                                }
+                              </span>
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1934,7 +2600,7 @@ export default function SocialMediaStudio({
             >
               <SocialSlide
                 product={
-                  exportProduct
+                  displayProduct
                 }
                 slideType={
                   type
@@ -1957,7 +2623,7 @@ export default function SocialMediaStudio({
                 showCategory={
                   showCategory
                 }
-                showSafeArea={
+                showCropGuide={
                   false
                 }
                 title={
@@ -1983,7 +2649,7 @@ function SocialSlide({
   showOldPrice,
   showSheinSource,
   showCategory,
-  showSafeArea,
+  showCropGuide,
   title,
 }: {
   product:
@@ -2010,7 +2676,7 @@ function SocialSlide({
   showCategory:
     boolean;
 
-  showSafeArea:
+  showCropGuide:
     boolean;
 
   title:
@@ -2025,93 +2691,511 @@ function SocialSlide({
     <div
       className={[
         "relative aspect-[9/16] h-full w-full overflow-hidden [container-type:size]",
-        theme.background,
+        theme.page,
       ].join(
         " "
       )}
     >
       <SlideBackground
-        product={
-          product
-        }
         template={
           template
         }
       />
 
-      <div className="relative z-10 h-full px-[5.5cqw] pb-[7cqw] pt-[5cqw]">
-        {slideType ===
-          "product" && (
-          <ProductSlide
-            product={
-              product
-            }
-            template={
-              template
-            }
-            imageFit={
-              imageFit
-            }
-            showPrice={
-              showPrice
-            }
-            showOldPrice={
-              showOldPrice
-            }
-            showSheinSource={
-              showSheinSource
-            }
-            showCategory={
-              showCategory
-            }
-            title={
-              title
-            }
-          />
-        )}
+      <DecorativeTop
+        template={
+          template
+        }
+        slideType={
+          slideType
+        }
+      />
 
-        {slideType ===
-          "cover" && (
-          <CoverSlide
-            product={
-              product
-            }
-            template={
-              template
-            }
-            imageFit={
-              imageFit
-            }
-            showSheinSource={
-              showSheinSource
-            }
-            title={
-              title
-            }
-          />
-        )}
+      <DecorativeBottom
+        template={
+          template
+        }
+      />
 
-        {slideType ===
-          "outro" && (
-          <OutroSlide
-            template={
-              template
-            }
-            title={
-              title
-            }
-          />
-        )}
+      <div className="absolute inset-x-0 top-[38.888cqw] z-10 h-[100cqw]">
+        <div className="h-full px-[5.2cqw] py-[4cqw]">
+          <div
+            className={[
+              "h-full overflow-hidden rounded-[6cqw] border shadow-[0_4cqw_16cqw_rgba(0,0,0,0.10)]",
+
+              theme.core,
+              theme.border,
+            ].join(
+              " "
+            )}
+          >
+            {slideType ===
+              "cover" && (
+              <CoverCore
+                product={
+                  product
+                }
+                template={
+                  template
+                }
+                imageFit={
+                  imageFit
+                }
+                showSheinSource={
+                  showSheinSource
+                }
+                title={
+                  title
+                }
+              />
+            )}
+
+            {slideType ===
+              "product" && (
+              <ProductCore
+                product={
+                  product
+                }
+                template={
+                  template
+                }
+                imageFit={
+                  imageFit
+                }
+                showPrice={
+                  showPrice
+                }
+                showOldPrice={
+                  showOldPrice
+                }
+                showSheinSource={
+                  showSheinSource
+                }
+                showCategory={
+                  showCategory
+                }
+                title={
+                  title
+                }
+              />
+            )}
+
+            {slideType ===
+              "outro" && (
+              <OutroCore
+                template={
+                  template
+                }
+                title={
+                  title
+                }
+              />
+            )}
+          </div>
+        </div>
       </div>
 
-      {showSafeArea && (
-        <SafeAreaOverlay />
+      {showCropGuide && (
+        <SquareCropOverlay />
       )}
     </div>
   );
 }
 
-function ProductSlide({
+function CoreBrandHeader({
+  template,
+  compact = false,
+}: {
+  template:
+    TemplateType;
+
+  compact?:
+    boolean;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <div className="flex items-center justify-between gap-[2cqw]">
+      <div className="flex min-w-0 items-center gap-[1.7cqw]">
+        <div
+          className={[
+            "flex shrink-0 items-center justify-center rounded-[1.8cqw] font-black",
+
+            compact
+              ? "h-[5.4cqw] w-[5.4cqw] text-[2.1cqw]"
+              : "h-[6cqw] w-[6cqw] text-[2.3cqw]",
+
+            theme.logo,
+          ].join(
+            " "
+          )}
+        >
+          T
+        </div>
+
+        <div className="min-w-0">
+          <p
+            className={[
+              "truncate font-black tracking-[-0.035em]",
+
+              compact
+                ? "text-[2cqw]"
+                : "text-[2.2cqw]",
+
+              theme.text,
+            ].join(
+              " "
+            )}
+          >
+            Trend za Mniej
+          </p>
+
+          <p
+            className={[
+              "mt-[0.1cqw] font-semibold",
+
+              compact
+                ? "text-[1.15cqw]"
+                : "text-[1.3cqw]",
+
+              theme.muted,
+            ].join(
+              " "
+            )}
+          >
+            modowe okazje
+            i znaleziska
+          </p>
+        </div>
+      </div>
+
+      <span
+        className={[
+          "rounded-full px-[1.8cqw] py-[0.8cqw] text-[1.15cqw] font-black uppercase tracking-[0.08em]",
+          theme.pill,
+        ].join(
+          " "
+        )}
+      >
+        TikTok
+      </span>
+    </div>
+  );
+}
+
+function CoreDisclosure({
+  template,
+}: {
+  template:
+    TemplateType;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <div className="mt-[1.7cqw] flex items-center justify-between gap-[2cqw]">
+      <span
+        className={[
+          "inline-flex items-center gap-[0.8cqw] rounded-full border px-[1.8cqw] py-[0.7cqw] text-[1.12cqw] font-black uppercase tracking-[0.07em]",
+
+          theme.panel,
+          theme.border,
+          theme.text,
+        ].join(
+          " "
+        )}
+      >
+        <span className="h-[0.8cqw] w-[0.8cqw] rounded-full bg-[#ff375f]" />
+
+        Materiał reklamowy ·
+        SHEIN
+      </span>
+
+      <span
+        className={[
+          "shrink-0 text-[1.15cqw] font-black",
+          theme.accent,
+        ].join(
+          " "
+        )}
+      >
+        trendzamniej.pl
+      </span>
+    </div>
+  );
+}
+
+function ProductImageStage({
+  product,
+  imageFit,
+  template,
+  featured,
+  showSheinSource,
+  discountPercent,
+}: {
+  product:
+    SocialProduct;
+
+  imageFit:
+    ImageFit;
+
+  template:
+    TemplateType;
+
+  featured:
+    boolean;
+
+  showSheinSource:
+    boolean;
+
+  discountPercent:
+    number | null;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <div
+      className={[
+        "relative h-full w-full overflow-hidden rounded-[3.5cqw] border",
+        theme.imageSurface,
+        theme.border,
+      ].join(
+        " "
+      )}
+    >
+      {imageFit ===
+        "contain" && (
+        <div className="absolute inset-0">
+          <div
+            className={[
+              "absolute inset-0",
+
+              template ===
+              "deal"
+                ? "bg-gradient-to-br from-[#2d2d33] via-[#1b1b1f] to-[#101012]"
+                : template ===
+                    "fashion"
+                  ? "bg-gradient-to-br from-[#fffaf7] via-[#f3e6df] to-[#e7d7ce]"
+                  : "bg-gradient-to-br from-white via-[#f5f5f8] to-[#e8e8ed]",
+            ].join(
+              " "
+            )}
+          />
+
+          <div className="absolute inset-[7%] rounded-[3cqw] border border-white/35 bg-white/10" />
+        </div>
+      )}
+
+      <img
+        data-social-product-image="true"
+        src={
+          product.imageUrl
+        }
+        alt={
+          product.name
+        }
+        loading="eager"
+        decoding="async"
+        draggable={
+          false
+        }
+        fetchPriority="high"
+        className={[
+          "relative z-[1] block h-full w-full select-none",
+
+          imageFit ===
+          "cover"
+            ? "object-cover object-center"
+            : "object-contain p-[3cqw]",
+        ].join(
+          " "
+        )}
+      />
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[27%] bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+
+      <div className="absolute left-[2cqw] top-[2cqw] z-[3] flex max-w-[80%] flex-wrap gap-[0.9cqw]">
+        {featured && (
+          <span className="rounded-full border border-white/55 bg-white px-[2cqw] py-[0.8cqw] text-[1.3cqw] font-black text-stone-900 shadow-sm">
+            🔥 Wybrane
+          </span>
+        )}
+
+        {discountPercent !==
+          null && (
+          <span className="rounded-full bg-[#ff375f] px-[2cqw] py-[0.8cqw] text-[1.3cqw] font-black text-white shadow-sm">
+            -
+            {
+              discountPercent
+            }
+            %
+          </span>
+        )}
+      </div>
+
+      {showSheinSource && (
+        <div className="absolute bottom-[2cqw] left-[2cqw] z-[3]">
+          <span className="inline-flex items-center gap-[0.8cqw] rounded-full bg-black/72 px-[2cqw] py-[0.85cqw] text-[1.25cqw] font-black text-white">
+            <span className="h-[0.8cqw] w-[0.8cqw] rounded-full bg-[#ff6b81]" />
+
+            Znalezisko z SHEIN
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoverCore({
+  product,
+  template,
+  imageFit,
+  showSheinSource,
+  title,
+}: {
+  product:
+    SocialProduct;
+
+  template:
+    TemplateType;
+
+  imageFit:
+    ImageFit;
+
+  showSheinSource:
+    boolean;
+
+  title:
+    string;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  const discountPercent =
+    getDiscountPercent(
+      product.price,
+      product.oldPrice
+    );
+
+  return (
+    <div className="flex h-full flex-col px-[4cqw] py-[3.7cqw]">
+      <CoreBrandHeader
+        template={
+          template
+        }
+      />
+
+      <CoreDisclosure
+        template={
+          template
+        }
+      />
+
+      <div className="mt-[2.4cqw] grid min-h-0 flex-1 grid-cols-[0.93fr_1.07fr] gap-[2.4cqw]">
+        <div className="flex min-w-0 flex-col justify-center">
+          <p
+            className={[
+              "text-[1.35cqw] font-black uppercase tracking-[0.15em]",
+              theme.accent,
+            ].join(
+              " "
+            )}
+          >
+            Dzisiejsze
+            znalezisko
+          </p>
+
+          <h2
+            className={[
+              "mt-[1.3cqw] line-clamp-4 text-[4.5cqw] font-black leading-[0.94] tracking-[-0.058em]",
+              theme.text,
+            ].join(
+              " "
+            )}
+          >
+            {
+              title
+            }
+          </h2>
+
+          <p
+            className={[
+              "mt-[1.7cqw] text-[1.45cqw] font-semibold leading-[1.45]",
+              theme.muted,
+            ].join(
+              " "
+            )}
+          >
+            Przesuń dalej,
+            aby zobaczyć
+            cenę i najważniejsze
+            informacje.
+          </p>
+
+          <div className="mt-[2cqw] flex flex-wrap gap-[0.8cqw]">
+            <InfoPill
+              template={
+                template
+              }
+            >
+              SHEIN
+            </InfoPill>
+
+            <InfoPill
+              template={
+                template
+              }
+            >
+              Wybrane ręcznie
+            </InfoPill>
+          </div>
+        </div>
+
+        <div className="min-h-0">
+          <ProductImageStage
+            product={
+              product
+            }
+            imageFit={
+              imageFit
+            }
+            template={
+              template
+            }
+            featured={
+              product.featured
+            }
+            showSheinSource={
+              showSheinSource
+            }
+            discountPercent={
+              discountPercent
+            }
+          />
+        </div>
+      </div>
+
+      <CoreWebsiteBar
+        template={
+          template
+        }
+        label="Cena i szczegóły na kolejnym slajdzie"
+      />
+    </div>
+  );
+}
+
+function ProductCore({
   product,
   template,
   imageFit,
@@ -2150,150 +3234,91 @@ function ProductSlide({
       template
     );
 
+  const discountPercent =
+    showOldPrice
+      ? getDiscountPercent(
+          product.price,
+          product.oldPrice
+        )
+      : null;
+
   return (
-    <div className="flex h-full flex-col">
-      <SlideHeader
+    <div className="flex h-full flex-col px-[4cqw] py-[3.7cqw]">
+      <CoreBrandHeader
         template={
           template
         }
       />
 
-      <div className="mt-[2cqw] flex items-center justify-between gap-[2cqw]">
-        <DisclosureBadge
-          template={
-            template
-          }
-        />
+      <CoreDisclosure
+        template={
+          template
+        }
+      />
 
-        {showSheinSource && (
-          <span
-            className={[
-              "rounded-full px-[2.3cqw] py-[1.05cqw] text-[1.7cqw] font-black",
-              theme.pill,
-            ].join(
-              " "
-            )}
-          >
-            SHEIN
-          </span>
-        )}
-      </div>
-
-      <div className="mt-[3.5cqw]">
-        <div
-          className={[
-            "relative h-[81cqw] overflow-hidden rounded-[6cqw] border p-[1.8cqw] shadow-[0_5cqw_15cqw_rgba(0,0,0,0.11)]",
-            theme.strongSurface,
-            theme.border,
-          ].join(
-            " "
-          )}
-        >
-          <div
-            className={[
-              "relative h-full overflow-hidden rounded-[4.6cqw]",
-              theme.imageSurface,
-            ].join(
-              " "
-            )}
-          >
-            <img
-              src={
-                product.imageUrl
-              }
-              alt={
-                product.name
-              }
-              className={[
-                "h-full w-full",
-                imageFit ===
-                "cover"
-                  ? "object-cover"
-                  : "object-contain p-[3.5cqw]",
-              ].join(
-                " "
-              )}
-            />
-
-            <div className="absolute inset-x-0 bottom-0 h-[26%] bg-gradient-to-t from-black/32 via-black/[0.08] to-transparent" />
-
-            {product.featured && (
-              <span className="absolute left-[2.7cqw] top-[2.7cqw] rounded-full border border-white/60 bg-white/92 px-[2.5cqw] py-[1.1cqw] text-[1.9cqw] font-black text-stone-900 shadow-sm">
-                🔥 Wybrane
-              </span>
-            )}
-
-            {showSheinSource && (
-              <span className="absolute bottom-[2.7cqw] left-[2.7cqw] rounded-full bg-black/60 px-[2.6cqw] py-[1.15cqw] text-[1.8cqw] font-black text-white backdrop-blur-xl">
-                Znalezisko z SHEIN
-              </span>
-            )}
-          </div>
+      <div className="mt-[2.2cqw] grid min-h-0 flex-1 grid-cols-[1.08fr_0.92fr] gap-[2.4cqw]">
+        <div className="min-h-0">
+          <ProductImageStage
+            product={
+              product
+            }
+            imageFit={
+              imageFit
+            }
+            template={
+              template
+            }
+            featured={
+              product.featured
+            }
+            showSheinSource={
+              showSheinSource
+            }
+            discountPercent={
+              discountPercent
+            }
+          />
         </div>
-      </div>
 
-      <div
-        className={[
-          "mt-[3.5cqw] rounded-[5cqw] border px-[4.2cqw] py-[3.7cqw] shadow-[0_2cqw_8cqw_rgba(0,0,0,0.06)] backdrop-blur-2xl",
-          theme.surface,
-          theme.border,
-        ].join(
-          " "
-        )}
-      >
-        {showCategory && (
-          <div className="flex items-center gap-[1.5cqw]">
-            <span className="h-[1.15cqw] w-[1.15cqw] rounded-full bg-rose-500" />
+        <div className="flex min-w-0 flex-col justify-center">
+          {showCategory && (
+            <div className="flex items-center gap-[1cqw]">
+              <span className="h-[0.85cqw] w-[0.85cqw] rounded-full bg-[#ff375f]" />
 
-            <p
-              className={[
-                "text-[1.95cqw] font-black uppercase tracking-[0.13em]",
-                theme.accentText,
-              ].join(
-                " "
-              )}
-            >
-              {
-                product.category
-              }
-            </p>
-          </div>
-        )}
-
-        <div className="mt-[1.8cqw] flex items-start justify-between gap-[4cqw]">
-          <div className="min-w-0 flex-1">
-            <h2
-              className={[
-                "line-clamp-2 text-[5.7cqw] font-black leading-[0.98] tracking-[-0.05em]",
-                theme.primaryText,
-              ].join(
-                " "
-              )}
-            >
-              {
-                title
-              }
-            </h2>
-
-            <p
-              className={[
-                "mt-[1.7cqw] line-clamp-1 text-[1.8cqw] font-semibold",
-                theme.secondaryText,
-              ].join(
-                " "
-              )}
-            >
-              Wybrany produkt •
-              Trend za Mniej
-            </p>
-          </div>
-
-          {showPrice && (
-            <div className="shrink-0 text-right">
               <p
                 className={[
-                  "whitespace-nowrap text-[5.1cqw] font-black tracking-[-0.05em]",
-                  theme.primaryText,
+                  "max-w-[33cqw] truncate text-[1.25cqw] font-black uppercase tracking-[0.11em]",
+                  theme.accent,
+                ].join(
+                  " "
+                )}
+              >
+                {
+                  product.category
+                }
+              </p>
+            </div>
+          )}
+
+          <h2
+            className={[
+              "mt-[1.1cqw] line-clamp-3 text-[4.2cqw] font-black leading-[0.95] tracking-[-0.055em]",
+              theme.text,
+            ].join(
+              " "
+            )}
+          >
+            {
+              title
+            }
+          </h2>
+
+          {showPrice && (
+            <div className="mt-[2cqw]">
+              <p
+                className={[
+                  "whitespace-nowrap text-[5.2cqw] font-black tracking-[-0.06em]",
+                  theme.text,
                 ].join(
                   " "
                 )}
@@ -2306,236 +3331,73 @@ function ProductSlide({
               {showOldPrice &&
                 product.oldPrice !==
                   null && (
-                  <p className="mt-[0.4cqw] text-[2.2cqw] font-bold text-stone-400 line-through">
-                    {formatPrice(
-                      product.oldPrice
+                  <div className="mt-[0.6cqw] flex flex-wrap items-center gap-[0.8cqw]">
+                    <span className="text-[1.6cqw] font-bold text-stone-400 line-through">
+                      {formatPrice(
+                        product.oldPrice
+                      )}
+                    </span>
+
+                    {discountPercent !==
+                      null && (
+                      <span className="rounded-full bg-[#ff375f] px-[1.5cqw] py-[0.55cqw] text-[1.2cqw] font-black text-white">
+                        -
+                        {
+                          discountPercent
+                        }
+                        %
+                      </span>
                     )}
-                  </p>
+                  </div>
                 )}
-
-              <p
-                className={[
-                  "mt-[0.6cqw] text-[1.55cqw] font-semibold",
-                  theme.secondaryText,
-                ].join(
-                  " "
-                )}
-              >
-                cena zapisana
-              </p>
             </div>
           )}
-        </div>
 
-        <div className="mt-[3cqw] flex items-center gap-[1.5cqw]">
-          <span
+          <p
             className={[
-              "rounded-full px-[2.4cqw] py-[1.05cqw] text-[1.65cqw] font-black",
-              theme.pill,
+              "mt-[1.5cqw] text-[1.3cqw] font-semibold leading-[1.4]",
+              theme.muted,
             ].join(
               " "
             )}
           >
-            Moda
-          </span>
+            Cena i dostępność
+            mogą zmienić się
+            po przejściu
+            do sklepu.
+          </p>
 
-          <span
-            className={[
-              "rounded-full px-[2.4cqw] py-[1.05cqw] text-[1.65cqw] font-black",
-              theme.pill,
-            ].join(
-              " "
-            )}
-          >
-            Okazje
-          </span>
+          <div className="mt-[1.7cqw] flex flex-wrap gap-[0.8cqw]">
+            <InfoPill
+              template={
+                template
+              }
+            >
+              SHEIN
+            </InfoPill>
 
-          <span
-            className={[
-              "rounded-full px-[2.4cqw] py-[1.05cqw] text-[1.65cqw] font-black",
-              theme.pill,
-            ].join(
-              " "
-            )}
-          >
-            Inspiracje
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-auto pt-[3cqw]">
-        <SlideFooter
-          template={
-            template
-          }
-        />
-      </div>
-    </div>
-  );
-}
-
-function CoverSlide({
-  product,
-  template,
-  imageFit,
-  showSheinSource,
-  title,
-}: {
-  product:
-    SocialProduct;
-
-  template:
-    TemplateType;
-
-  imageFit:
-    ImageFit;
-
-  showSheinSource:
-    boolean;
-
-  title:
-    string;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <div className="flex h-full flex-col">
-      <SlideHeader
-        template={
-          template
-        }
-      />
-
-      <div className="mt-[2cqw]">
-        <DisclosureBadge
-          template={
-            template
-          }
-        />
-      </div>
-
-      <div
-        className={[
-          "mt-[3.8cqw] rounded-[5.5cqw] border px-[4.3cqw] py-[3.7cqw] shadow-[0_2cqw_8cqw_rgba(0,0,0,0.055)] backdrop-blur-xl",
-          theme.surface,
-          theme.border,
-        ].join(
-          " "
-        )}
-      >
-        <p
-          className={[
-            "text-[1.9cqw] font-black uppercase tracking-[0.15em]",
-            theme.accentText,
-          ].join(
-            " "
-          )}
-        >
-          Nowe znalezisko
-        </p>
-
-        <h2
-          className={[
-            "mt-[1.7cqw] max-w-[80cqw] text-[6.6cqw] font-black leading-[0.96] tracking-[-0.058em]",
-            theme.primaryText,
-          ].join(
-            " "
-          )}
-        >
-          {
-            title
-          }
-        </h2>
-
-        <p
-          className={[
-            "mt-[2cqw] max-w-[70cqw] text-[2cqw] font-semibold leading-[1.45]",
-            theme.secondaryText,
-          ].join(
-            " "
-          )}
-        >
-          Sprawdzamy modowe
-          produkty i wybieramy
-          te, które warto zobaczyć.
-        </p>
-      </div>
-
-      <div
-        className={[
-          "relative mt-[3.8cqw] h-[78cqw] overflow-hidden rounded-[6.5cqw] border p-[1.8cqw] shadow-[0_5cqw_15cqw_rgba(0,0,0,0.11)]",
-          theme.strongSurface,
-          theme.border,
-        ].join(
-          " "
-        )}
-      >
-        <div
-          className={[
-            "relative h-full overflow-hidden rounded-[5cqw]",
-            theme.imageSurface,
-          ].join(
-            " "
-          )}
-        >
-          <img
-            src={
-              product.imageUrl
-            }
-            alt={
-              product.name
-            }
-            className={[
-              "h-full w-full",
-              imageFit ===
-                "cover"
-                ? "object-cover"
-                : "object-contain p-[4cqw]",
-            ].join(
-              " "
-            )}
-          />
-
-          <div className="absolute inset-x-0 bottom-0 h-[32%] bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-
-          <div className="absolute inset-x-[3cqw] bottom-[3cqw]">
-            <div className="flex items-end justify-between gap-[3cqw]">
-              <div>
-                {showSheinSource && (
-                  <p className="text-[1.8cqw] font-black uppercase tracking-[0.11em] text-white/70">
-                    Znalezisko z SHEIN
-                  </p>
-                )}
-
-                <p className="mt-[0.8cqw] text-[3.5cqw] font-black tracking-[-0.04em] text-white">
-                  Zobacz szczegóły
-                  produktu
-                </p>
-              </div>
-
-              <span className="flex h-[8cqw] w-[8cqw] shrink-0 items-center justify-center rounded-full bg-white text-[3.7cqw] font-black text-stone-950">
-                →
-              </span>
-            </div>
+            <InfoPill
+              template={
+                template
+              }
+            >
+              Trend za Mniej
+            </InfoPill>
           </div>
         </div>
       </div>
 
-      <div className="mt-auto pt-[3cqw]">
-        <SlideFooter
-          template={
-            template
-          }
-        />
-      </div>
+      <CoreWebsiteBar
+        template={
+          template
+        }
+        label="Sprawdź aktualną ofertę"
+      />
     </div>
   );
 }
 
-function OutroSlide({
+function OutroCore({
   template,
   title,
 }: {
@@ -2551,34 +3413,24 @@ function OutroSlide({
     );
 
   return (
-    <div className="flex h-full flex-col">
-      <SlideHeader
+    <div className="flex h-full flex-col px-[4cqw] py-[3.7cqw]">
+      <CoreBrandHeader
         template={
           template
         }
       />
 
-      <div className="mt-[2cqw]">
-        <DisclosureBadge
-          template={
-            template
-          }
-        />
-      </div>
+      <CoreDisclosure
+        template={
+          template
+        }
+      />
 
-      <div className="flex flex-1 items-center justify-center py-[4cqw]">
-        <div
-          className={[
-            "w-full rounded-[7cqw] border px-[6cqw] py-[7cqw] text-center shadow-[0_5cqw_16cqw_rgba(0,0,0,0.08)] backdrop-blur-2xl",
-            theme.surface,
-            theme.border,
-          ].join(
-            " "
-          )}
-        >
+      <div className="flex min-h-0 flex-1 items-center justify-center py-[2cqw] text-center">
+        <div className="w-full max-w-[72cqw]">
           <div
             className={[
-              "mx-auto flex h-[14cqw] w-[14cqw] items-center justify-center rounded-[4.2cqw] text-[5cqw] font-black shadow-[0_2cqw_6cqw_rgba(0,0,0,0.10)]",
+              "mx-auto flex h-[11cqw] w-[11cqw] items-center justify-center rounded-[3.5cqw] text-[4cqw] font-black shadow-[0_2cqw_6cqw_rgba(0,0,0,0.09)]",
               theme.logo,
             ].join(
               " "
@@ -2589,8 +3441,8 @@ function OutroSlide({
 
           <p
             className={[
-              "mt-[4cqw] text-[1.9cqw] font-black uppercase tracking-[0.16em]",
-              theme.accentText,
+              "mt-[2.2cqw] text-[1.35cqw] font-black uppercase tracking-[0.16em]",
+              theme.accent,
             ].join(
               " "
             )}
@@ -2600,8 +3452,8 @@ function OutroSlide({
 
           <h2
             className={[
-              "mx-auto mt-[2.8cqw] max-w-[75cqw] text-[6.8cqw] font-black leading-[0.97] tracking-[-0.058em]",
-              theme.primaryText,
+              "mx-auto mt-[1.6cqw] line-clamp-3 max-w-[70cqw] text-[5cqw] font-black leading-[0.94] tracking-[-0.06em]",
+              theme.text,
             ].join(
               " "
             )}
@@ -2613,89 +3465,70 @@ function OutroSlide({
 
           <p
             className={[
-              "mx-auto mt-[3cqw] max-w-[66cqw] text-[2.1cqw] font-semibold leading-[1.5]",
-              theme.secondaryText,
+              "mx-auto mt-[2cqw] max-w-[58cqw] text-[1.45cqw] font-semibold leading-[1.5]",
+              theme.muted,
             ].join(
               " "
             )}
           >
-            Wybrane produkty,
-            modne inspiracje
-            i szybkie przejście
-            do aktualnych ofert.
+            Modowe produkty,
+            okazje i inspiracje
+            wybrane w jednym
+            miejscu.
           </p>
 
-          <div className="mx-auto mt-[5cqw] grid max-w-[68cqw] grid-cols-3 gap-[1.3cqw]">
-            <MiniFeature
+          <div className="mx-auto mt-[2.3cqw] flex max-w-[58cqw] justify-center gap-[0.9cqw]">
+            <InfoPill
               template={
                 template
               }
-              label="Moda"
-            />
+            >
+              Moda
+            </InfoPill>
 
-            <MiniFeature
+            <InfoPill
               template={
                 template
               }
-              label="Okazje"
-            />
+            >
+              Okazje
+            </InfoPill>
 
-            <MiniFeature
+            <InfoPill
               template={
                 template
               }
-              label="Inspiracje"
-            />
+            >
+              Inspiracje
+            </InfoPill>
           </div>
-
-          <div
-            className={[
-              "mx-auto mt-[5cqw] flex min-h-[10.5cqw] max-w-[61cqw] items-center justify-between rounded-full pl-[4cqw] pr-[1.4cqw]",
-              theme.button,
-            ].join(
-              " "
-            )}
-          >
-            <span className="text-[2.4cqw] font-black">
-              Zobacz więcej
-            </span>
-
-            <span className="flex h-[7.7cqw] w-[7.7cqw] items-center justify-center rounded-full bg-white/15 text-[3.5cqw]">
-              →
-            </span>
-          </div>
-
-          <p
-            className={[
-              "mt-[4cqw] text-[3cqw] font-black",
-              theme.primaryText,
-            ].join(
-              " "
-            )}
-          >
-            trendzamniej.pl
-          </p>
         </div>
       </div>
 
-      <SlideFooter
+      <CoreWebsiteBar
         template={
           template
         }
+        label="Zobacz więcej wybranych okazji"
+        strong
       />
     </div>
   );
 }
 
-function MiniFeature({
+function CoreWebsiteBar({
   template,
   label,
+  strong = false,
 }: {
   template:
     TemplateType;
 
   label:
     string;
+
+  strong?:
+    boolean;
 }) {
   const theme =
     getSlideTheme(
@@ -2705,141 +3538,15 @@ function MiniFeature({
   return (
     <div
       className={[
-        "rounded-[3cqw] px-[1cqw] py-[2cqw] text-center text-[1.75cqw] font-black",
-        theme.pill,
-      ].join(
-        " "
-      )}
-    >
-      {
-        label
-      }
-    </div>
-  );
-}
+        "mt-[2cqw] flex min-h-[7.5cqw] items-center justify-between gap-[2cqw] rounded-[2.8cqw] px-[2.5cqw]",
 
-function SlideHeader({
-  template,
-}: {
-  template:
-    TemplateType;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
+        strong
+          ? theme.cta
+          : theme.panel,
 
-  return (
-    <div
-      className={[
-        "flex min-h-[10cqw] items-center justify-between rounded-[4cqw] border px-[3cqw] shadow-[0_1.5cqw_6cqw_rgba(0,0,0,0.045)] backdrop-blur-xl",
-        theme.surface,
-        theme.border,
-      ].join(
-        " "
-      )}
-    >
-      <div className="flex min-w-0 items-center gap-[2.1cqw]">
-        <div
-          className={[
-            "flex h-[6.7cqw] w-[6.7cqw] shrink-0 items-center justify-center rounded-[2.1cqw] text-[2.5cqw] font-black",
-            theme.logo,
-          ].join(
-            " "
-          )}
-        >
-          T
-        </div>
-
-        <div className="min-w-0">
-          <p
-            className={[
-              "truncate text-[2.45cqw] font-black tracking-[-0.03em]",
-              theme.primaryText,
-            ].join(
-              " "
-            )}
-          >
-            Trend za Mniej
-          </p>
-
-          <p
-            className={[
-              "mt-[0.25cqw] text-[1.5cqw] font-semibold",
-              theme.secondaryText,
-            ].join(
-              " "
-            )}
-          >
-            Moda i okazje
-          </p>
-        </div>
-      </div>
-
-      <span
-        className={[
-          "rounded-full px-[2.3cqw] py-[1cqw] text-[1.55cqw] font-black",
-          theme.pill,
-        ].join(
-          " "
-        )}
-      >
-        ✦ daily finds
-      </span>
-    </div>
-  );
-}
-
-function DisclosureBadge({
-  template,
-}: {
-  template:
-    TemplateType;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <span
-      className={[
-        "inline-flex items-center gap-[1cqw] rounded-full border px-[2.2cqw] py-[0.95cqw] text-[1.5cqw] font-black uppercase tracking-[0.075em]",
-        theme.surface,
-        theme.border,
-        theme.primaryText,
-      ].join(
-        " "
-      )}
-    >
-      <span className="h-[0.9cqw] w-[0.9cqw] rounded-full bg-rose-500" />
-
-      Materiał reklamowy
-      <span className="opacity-30">
-        •
-      </span>
-      SHEIN
-    </span>
-  );
-}
-
-function SlideFooter({
-  template,
-}: {
-  template:
-    TemplateType;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <div
-      className={[
-        "flex min-h-[10.5cqw] items-center justify-between rounded-[4cqw] border px-[3.5cqw] shadow-[0_1.5cqw_6cqw_rgba(0,0,0,0.04)] backdrop-blur-xl",
-        theme.surface,
-        theme.border,
+        strong
+          ? ""
+          : `border ${theme.border}`,
       ].join(
         " "
       )}
@@ -2847,20 +3554,27 @@ function SlideFooter({
       <div className="min-w-0">
         <p
           className={[
-            "text-[1.5cqw] font-semibold",
-            theme.secondaryText,
+            "truncate text-[1.15cqw] font-semibold",
+
+            strong
+              ? "opacity-65"
+              : theme.muted,
           ].join(
             " "
           )}
         >
-          Więcej modowych
-          okazji
+          {
+            label
+          }
         </p>
 
         <p
           className={[
-            "mt-[0.2cqw] text-[2.45cqw] font-black",
-            theme.primaryText,
+            "mt-[0.15cqw] text-[2.25cqw] font-black tracking-[-0.04em]",
+
+            strong
+              ? ""
+              : theme.text,
           ].join(
             " "
           )}
@@ -2869,27 +3583,134 @@ function SlideFooter({
         </p>
       </div>
 
-      <div className="flex items-center gap-[1.5cqw]">
-        <span
-          className={[
-            "rounded-full px-[2.2cqw] py-[0.9cqw] text-[1.5cqw] font-black",
-            theme.pill,
-          ].join(
-            " "
-          )}
-        >
-          Sprawdź
-        </span>
+      <span
+        className={[
+          "flex h-[5.2cqw] w-[5.2cqw] shrink-0 items-center justify-center rounded-full text-[2.4cqw] font-black",
 
-        <span
+          strong
+            ? "bg-white/15"
+            : theme.cta,
+        ].join(
+          " "
+        )}
+      >
+        →
+      </span>
+    </div>
+  );
+}
+
+function DecorativeTop({
+  template,
+  slideType,
+}: {
+  template:
+    TemplateType;
+
+  slideType:
+    SlideType;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <div className="absolute inset-x-[6cqw] top-[8cqw] z-[2] flex items-center justify-between">
+      <div>
+        <p
           className={[
-            "flex h-[7cqw] w-[7cqw] items-center justify-center rounded-full text-[3cqw] font-black",
-            theme.button,
+            "text-[1.35cqw] font-black uppercase tracking-[0.16em] opacity-55",
+            theme.text,
           ].join(
             " "
           )}
         >
-          →
+          Trend za Mniej ·
+          Social
+        </p>
+
+        <p
+          className={[
+            "mt-[0.7cqw] text-[2.5cqw] font-black tracking-[-0.04em] opacity-35",
+            theme.text,
+          ].join(
+            " "
+          )}
+        >
+          {
+            SLIDE_LABELS[
+              slideType
+            ]
+          }
+        </p>
+      </div>
+
+      <span
+        className={[
+          "rounded-full px-[2cqw] py-[0.8cqw] text-[1.2cqw] font-black opacity-55",
+          theme.pill,
+        ].join(
+          " "
+        )}
+      >
+        9:16
+      </span>
+    </div>
+  );
+}
+
+function DecorativeBottom({
+  template,
+}: {
+  template:
+    TemplateType;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <div className="absolute inset-x-[6cqw] bottom-[7cqw] z-[2] flex items-center justify-between opacity-40">
+      <span
+        className={[
+          "text-[1.3cqw] font-bold",
+          theme.text,
+        ].join(
+          " "
+        )}
+      >
+        Pełny format TikTok
+        1080 × 1920
+      </span>
+
+      <span
+        className={[
+          "text-[1.3cqw] font-black",
+          theme.text,
+        ].join(
+          " "
+        )}
+      >
+        trendzamniej.pl
+      </span>
+    </div>
+  );
+}
+
+function SquareCropOverlay() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-50 [container-type:size]">
+      <div className="absolute inset-x-0 top-0 h-[38.888cqw] bg-black/30" />
+
+      <div className="absolute inset-x-0 bottom-0 h-[38.888cqw] bg-black/30" />
+
+      <div className="absolute inset-x-0 top-[38.888cqw] h-[100cqw] border-y-2 border-dashed border-[#ff375f]/90">
+        <span className="absolute left-[3cqw] top-[2cqw] rounded-full bg-[#ff375f] px-[2cqw] py-[0.75cqw] text-[1.4cqw] font-black text-white shadow-sm">
+          Kadr 1:1 —
+          wszystko ważne
+          musi zostać tutaj
         </span>
       </div>
     </div>
@@ -2897,12 +3718,8 @@ function SlideFooter({
 }
 
 function SlideBackground({
-  product,
   template,
 }: {
-  product:
-    SocialProduct;
-
   template:
     TemplateType;
 }) {
@@ -2912,18 +3729,11 @@ function SlideBackground({
   ) {
     return (
       <>
-        <img
-          src={
-            product.imageUrl
-          }
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full scale-125 object-cover opacity-[0.10] blur-[55px]"
-        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#222228] via-[#131316] to-[#09090a]" />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1d1d20] via-[#121214] to-[#09090a]" />
+        <div className="absolute -left-[20cqw] top-[18cqh] h-[70cqw] w-[70cqw] rounded-full bg-[#ff375f]/[0.09] blur-[36px]" />
 
-        <div className="absolute -left-[20cqw] top-[25cqh] h-[65cqw] w-[65cqw] rounded-full bg-rose-500/[0.07] blur-[38px]" />
+        <div className="absolute -right-[24cqw] bottom-[7cqh] h-[72cqw] w-[72cqw] rounded-full bg-white/[0.04] blur-[40px]" />
       </>
     );
   }
@@ -2934,57 +3744,23 @@ function SlideBackground({
   ) {
     return (
       <>
-        <img
-          src={
-            product.imageUrl
-          }
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full scale-125 object-cover opacity-[0.05] blur-[55px]"
-        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fffaf7] via-[#f4e8e1] to-[#e8d7cd]" />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fbf6f3] via-[#f7efeb] to-[#eee3dd]" />
+        <div className="absolute -left-[18cqw] top-[20cqh] h-[68cqw] w-[68cqw] rounded-full bg-[#d8bfb4]/45 blur-[40px]" />
 
-        <div className="absolute -left-[16cqw] top-[23cqh] h-[70cqw] w-[70cqw] rounded-full bg-[#e8d3ca]/45 blur-[42px]" />
-
-        <div className="absolute -right-[20cqw] bottom-[8cqh] h-[60cqw] w-[60cqw] rounded-full bg-white/55 blur-[45px]" />
+        <div className="absolute -right-[18cqw] bottom-[6cqh] h-[62cqw] w-[62cqw] rounded-full bg-white/60 blur-[40px]" />
       </>
     );
   }
 
   return (
     <>
-      <img
-        src={
-          product.imageUrl
-        }
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full scale-125 object-cover opacity-[0.035] blur-[60px]"
-      />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#fcfcfd] via-[#f2f2f6] to-[#e7e7ec]" />
 
-      <div className="absolute inset-0 bg-gradient-to-b from-[#fafafb] via-[#f5f5f7] to-[#ebebef]" />
+      <div className="absolute -right-[18cqw] top-[15cqh] h-[68cqw] w-[68cqw] rounded-full bg-white/80 blur-[38px]" />
 
-      <div className="absolute -right-[18cqw] top-[17cqh] h-[70cqw] w-[70cqw] rounded-full bg-white/80 blur-[40px]" />
-
-      <div className="absolute -left-[20cqw] bottom-[8cqh] h-[55cqw] w-[55cqw] rounded-full bg-[#e4e4ea]/50 blur-[40px]" />
+      <div className="absolute -left-[18cqw] bottom-[7cqh] h-[55cqw] w-[55cqw] rounded-full bg-[#dcdce4]/50 blur-[38px]" />
     </>
-  );
-}
-
-function SafeAreaOverlay() {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-50 [container-type:size]">
-      <div className="absolute bottom-[17cqh] left-[4cqw] right-[14cqw] top-[6cqh] rounded-[4cqw] border border-dashed border-rose-500/65">
-        <span className="absolute left-[2cqw] top-[2cqw] rounded-full bg-rose-500 px-[2cqw] py-[0.7cqw] text-[1.45cqw] font-black text-white">
-          TikTok safe
-        </span>
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-[16cqh] bg-rose-500/[0.045]" />
-
-      <div className="absolute bottom-[16cqh] right-0 top-[15cqh] w-[13cqw] bg-rose-500/[0.045]" />
-    </div>
   );
 }
 
@@ -2997,38 +3773,41 @@ function getSlideTheme(
     "deal"
   ) {
     return {
-      background:
+      page:
         "bg-[#111113]",
 
-      surface:
-        "bg-white/[0.09]",
+      core:
+        "bg-[#171719]",
 
-      strongSurface:
-        "bg-white/[0.12]",
+      panel:
+        "bg-[#202024]",
 
-      imageSurface:
-        "bg-[#1c1c1e]",
+      panelStrong:
+        "bg-[#25252a]",
 
       border:
-        "border-white/[0.12]",
+        "border-white/[0.10]",
 
-      primaryText:
+      text:
         "text-white",
 
-      secondaryText:
+      muted:
         "text-white/50",
 
-      accentText:
-        "text-rose-200",
+      accent:
+        "text-[#ff9bad]",
 
       pill:
-        "bg-white/[0.09] text-white/70",
+        "bg-white/[0.08] text-white/72",
 
       logo:
         "bg-white text-stone-950",
 
-      button:
+      cta:
         "bg-white text-stone-950",
+
+      imageSurface:
+        "bg-[#171719]",
 
       exportBackground:
         "#111113",
@@ -3040,67 +3819,70 @@ function getSlideTheme(
     "fashion"
   ) {
     return {
-      background:
-        "bg-[#f6efeb]",
+      page:
+        "bg-[#f5ebe5]",
 
-      surface:
-        "bg-white/68",
+      core:
+        "bg-[#fffaf7]",
 
-      strongSurface:
-        "bg-white/78",
+      panel:
+        "bg-[#fff7f2]",
 
-      imageSurface:
-        "bg-[#fffdfc]",
+      panelStrong:
+        "bg-[#fff4ee]",
 
       border:
-        "border-white/80",
+        "border-[#d9c7be]/55",
 
-      primaryText:
-        "text-[#29201d]",
+      text:
+        "text-[#2d2421]",
 
-      secondaryText:
-        "text-[#94847d]",
+      muted:
+        "text-[#8e7b73]",
 
-      accentText:
-        "text-[#a15e51]",
+      accent:
+        "text-[#a45d50]",
 
       pill:
-        "bg-[#eee0da] text-[#87554a]",
+        "bg-[#eadad2] text-[#835147]",
 
       logo:
         "bg-[#2d2421] text-white",
 
-      button:
+      cta:
         "bg-[#2d2421] text-white",
 
+      imageSurface:
+        "bg-[#fffdfb]",
+
       exportBackground:
-        "#f6efeb",
+        "#f5ebe5",
     };
   }
 
   return {
-    background:
-      "bg-[#f4f4f6]",
+    page:
+      "bg-[#f2f2f5]",
 
-    surface:
-      "bg-white/72",
-
-    strongSurface:
-      "bg-white/82",
-
-    imageSurface:
+    core:
       "bg-white",
 
-    border:
-      "border-white/85",
+    panel:
+      "bg-[#f7f7f9]",
 
-    primaryText:
+    panelStrong:
+      "bg-[#fafafa]",
+
+    border:
+      "border-black/[0.07]",
+
+    text:
       "text-[#1c1c1e]",
 
-    secondaryText:
+    muted:
       "text-[#8e8e93]",
 
-    accentText:
+    accent:
       "text-[#5f5f64]",
 
     pill:
@@ -3109,31 +3891,79 @@ function getSlideTheme(
     logo:
       "bg-[#1c1c1e] text-white",
 
-    button:
+    cta:
       "bg-[#1c1c1e] text-white",
 
+    imageSurface:
+      "bg-white",
+
     exportBackground:
-      "#f4f4f6",
+      "#f2f2f5",
   };
+}
+
+function InfoPill({
+  template,
+  children,
+}: {
+  template:
+    TemplateType;
+
+  children:
+    ReactNode;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <span
+      className={[
+        "rounded-full px-[1.7cqw] py-[0.7cqw] text-[1.15cqw] font-black",
+        theme.pill,
+      ].join(
+        " "
+      )}
+    >
+      {
+        children
+      }
+    </span>
+  );
 }
 
 function ControlGroup({
   title,
+  subtitle,
   children,
 }: {
   title:
+    string;
+
+  subtitle?:
     string;
 
   children:
     ReactNode;
 }) {
   return (
-    <section className="rounded-[21px] border border-black/[0.055] bg-white p-3.5 shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-      <h2 className="px-1 text-[9px] font-black uppercase tracking-[0.12em] text-stone-400">
-        {
-          title
-        }
-      </h2>
+    <section className="rounded-[22px] border border-black/[0.055] bg-white p-3.5 shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
+      <div className="px-1">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.12em] text-stone-500">
+          {
+            title
+          }
+        </h2>
+
+        {subtitle && (
+          <p className="mt-1 text-[9px] leading-4 text-stone-400">
+            {
+              subtitle
+            }
+          </p>
+        )}
+      </div>
 
       <div className="mt-2.5">
         {
@@ -3169,7 +3999,7 @@ function SegmentedControl({
 }) {
   return (
     <div
-      className="grid gap-1 rounded-[13px] bg-[#e9e9ee] p-1"
+      className="grid gap-1 rounded-[14px] bg-[#e9e9ee] p-1"
       style={{
         gridTemplateColumns:
           `repeat(${options.length}, minmax(0, 1fr))`,
@@ -3195,10 +4025,11 @@ function SegmentedControl({
                 )
               }
               className={[
-                "min-h-9 rounded-[10px] px-2 text-[10px] font-black transition",
+                "min-h-9 rounded-[11px] px-2 text-[10px] font-black transition",
+
                 active
-                  ? "bg-white text-stone-950 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
-                  : "text-stone-500",
+                  ? "bg-white text-stone-950 shadow-[0_1px_5px_rgba(0,0,0,0.13)]"
+                  : "text-stone-500 hover:text-stone-700",
               ].join(
                 " "
               )}
@@ -3241,11 +4072,11 @@ function StyleButton({
   const previewClass =
     preview ===
     "light"
-      ? "bg-gradient-to-br from-white to-[#e4e4e9]"
+      ? "bg-gradient-to-br from-white via-[#f4f4f6] to-[#dedee4]"
       : preview ===
           "warm"
-        ? "bg-gradient-to-br from-[#faf2ed] to-[#dfcdc5]"
-        : "bg-gradient-to-br from-[#29292d] to-[#09090a]";
+        ? "bg-gradient-to-br from-[#fffaf7] via-[#f0e1d9] to-[#d9c0b5]"
+        : "bg-gradient-to-br from-[#35353a] via-[#1b1b1e] to-[#09090a]";
 
   return (
     <button
@@ -3254,22 +4085,29 @@ function StyleButton({
         onClick
       }
       className={[
-        "rounded-[15px] border p-2 text-left transition",
+        "rounded-[16px] border p-2 text-left transition",
+
         active
-          ? "border-stone-950 bg-stone-950 text-white"
-          : "border-black/[0.06] bg-[#f7f7f9] text-stone-700",
+          ? "border-stone-950 bg-stone-950 text-white shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+          : "border-black/[0.06] bg-[#f7f7f9] text-stone-700 hover:bg-[#f2f2f5]",
       ].join(
         " "
       )}
     >
       <span
         className={[
-          "block h-9 rounded-[10px] border border-white/30",
+          "relative block h-10 overflow-hidden rounded-[10px]",
           previewClass,
         ].join(
           " "
         )}
-      />
+      >
+        <span className="absolute left-2 top-2 h-2 w-5 rounded-full bg-white/70" />
+
+        <span className="absolute bottom-2 left-2 h-3 w-3 rounded-[4px] bg-white/80" />
+
+        <span className="absolute bottom-2 left-6 right-2 h-1.5 rounded-full bg-white/55" />
+      </span>
 
       <span className="mt-1.5 block text-[10px] font-black">
         {
@@ -3280,6 +4118,7 @@ function StyleButton({
       <span
         className={[
           "mt-0.5 block text-[8px] font-semibold",
+
           active
             ? "text-white/50"
             : "text-stone-400",
@@ -3327,7 +4166,8 @@ function SwitchRow({
         disabled
       }
       className={[
-        "flex min-h-[58px] w-full items-center gap-3 px-3 text-left transition",
+        "flex min-h-[60px] w-full items-center gap-3 px-3 text-left transition",
+
         disabled
           ? "cursor-not-allowed opacity-40"
           : "hover:bg-[#f7f7f9]",
@@ -3351,7 +4191,8 @@ function SwitchRow({
 
       <span
         className={[
-          "flex h-[27px] w-[46px] shrink-0 items-center rounded-full p-[2px] transition",
+          "flex h-[28px] w-[47px] shrink-0 items-center rounded-full p-[2px] transition",
+
           active &&
           !disabled
             ? "justify-end bg-[#34c759]"
@@ -3360,7 +4201,7 @@ function SwitchRow({
           " "
         )}
       >
-        <span className="h-[23px] w-[23px] rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.22)]" />
+        <span className="h-[24px] w-[24px] rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.22)]" />
       </span>
     </button>
   );
@@ -3386,6 +4227,7 @@ function StatusChip({
     <span
       className={[
         "inline-flex min-h-8 items-center rounded-full border px-2.5 text-[9px] font-black",
+
         success
           ? "border-emerald-100 bg-emerald-50 text-emerald-700"
           : "border-black/[0.06] bg-[#f5f5f7] text-stone-500",
@@ -3413,7 +4255,9 @@ function DownloadIcon() {
       strokeLinejoin="round"
     >
       <path d="M12 3v12" />
+
       <path d="m7 10 5 5 5-5" />
+
       <path d="M5 21h14" />
     </svg>
   );
@@ -3432,7 +4276,9 @@ function ShareIcon() {
       strokeLinejoin="round"
     >
       <path d="M12 16V3" />
+
       <path d="m7 8 5-5 5 5" />
+
       <path d="M5 12v8h14v-8" />
     </svg>
   );
@@ -3459,7 +4305,9 @@ function StackIcon() {
       />
 
       <path d="M9 7h6" />
+
       <path d="M9 11h6" />
+
       <path d="M9 15h4" />
     </svg>
   );
