@@ -18,15 +18,25 @@ export type OfferAssistantFieldId =
   | "soldText";
 
 export type OfferAssistantField = {
-  id: OfferAssistantFieldId;
-  label: string;
-  value: string;
-  state: OfferAssistantFieldState;
-  hint: string;
+  id:
+    OfferAssistantFieldId;
+
+  label:
+    string;
+
+  value:
+    string;
+
+  state:
+    OfferAssistantFieldState;
+
+  hint:
+    string;
 };
 
 const REQUIRED_FIELDS:
-  OfferAssistantFieldId[] = [
+  OfferAssistantFieldId[] =
+  [
     "name",
     "shortName",
     "price",
@@ -37,9 +47,37 @@ const REQUIRED_FIELDS:
 function isSheinOneLink(
   value: string
 ) {
-  return /onelink\.shein\.com/i.test(
-    value
-  );
+  try {
+    return (
+      new URL(
+        value
+      ).hostname.toLowerCase() ===
+      "onelink.shein.com"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isSheinUrl(
+  value: string
+) {
+  try {
+    const host =
+      new URL(
+        value
+      ).hostname.toLowerCase();
+
+    return (
+      host ===
+        "shein.com" ||
+      host.endsWith(
+        ".shein.com"
+      )
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function getOfferAssistantFields(
@@ -49,7 +87,8 @@ export function getOfferAssistantFields(
     OfferAssistantFieldState =
     !parsed.name
       ? "missing"
-      : parsed.confidence ===
+      : parsed.diagnostics
+            .nameConfidence ===
           "low"
         ? "review"
         : "ready";
@@ -58,10 +97,30 @@ export function getOfferAssistantFields(
     OfferAssistantFieldState =
     !parsed.shortName
       ? "missing"
-      : parsed.confidence ===
+      : nameState ===
+          "review"
+        ? "review"
+        : "ready";
+
+  const priceState:
+    OfferAssistantFieldState =
+    !parsed.price
+      ? "missing"
+      : parsed.diagnostics
+            .priceConfidence ===
           "low"
         ? "review"
         : "ready";
+
+  const categoryState:
+    OfferAssistantFieldState =
+    !parsed.category
+      ? "missing"
+      : parsed.diagnostics
+            .categoryConfidence ===
+          "high"
+        ? "ready"
+        : "review";
 
   const affiliateState:
     OfferAssistantFieldState =
@@ -75,120 +134,180 @@ export function getOfferAssistantFields(
 
   return [
     {
-      id: "name",
-      label: "Pełna nazwa",
-      value: parsed.name,
-      state: nameState,
+      id:
+        "name",
+
+      label:
+        "Pełna nazwa",
+
+      value:
+        parsed.name,
+
+      state:
+        nameState,
+
       hint:
-        parsed.name
-          ? nameState ===
+        !parsed.name
+          ? "Nie udało się rozpoznać nazwy."
+          : nameState ===
               "review"
-            ? "Sprawdź, czy parser wybrał właściwą nazwę produktu."
-            : "Nazwa została rozpoznana."
-          : "Nie udało się rozpoznać nazwy.",
+            ? "Sprawdź, czy system wybrał właściwą nazwę produktu."
+            : parsed.diagnostics
+                .productType
+              ? `Rozpoznano typ: ${parsed.diagnostics.productType}.`
+              : "Nazwa została rozpoznana.",
     },
 
     {
-      id: "shortName",
-      label: "Krótka nazwa",
-      value: parsed.shortName,
+      id:
+        "shortName",
+
+      label:
+        "Krótka nazwa",
+
+      value:
+        parsed.shortName,
+
       state:
         shortNameState,
+
       hint:
-        parsed.shortName
-          ? "Krótka nazwa została przygotowana automatycznie."
-          : "Krótka nazwa wymaga uzupełnienia.",
+        !parsed.shortName
+          ? "Krótka nazwa wymaga uzupełnienia."
+          : shortNameState ===
+              "review"
+            ? "Krótka nazwa powstała na podstawie niepewnej nazwy produktu."
+            : "Krótka nazwa została przygotowana automatycznie.",
     },
 
     {
-      id: "price",
-      label: "Cena",
+      id:
+        "price",
+
+      label:
+        "Cena",
+
       value:
         parsed.price
           ? `${parsed.price} zł`
           : "",
+
       state:
-        parsed.price
-          ? "ready"
-          : "missing",
+        priceState,
+
       hint:
-        parsed.price
-          ? "Cena została znaleziona we wklejonej treści."
-          : "Nie znaleziono jednoznacznej ceny.",
+        !parsed.price
+          ? "Nie znaleziono jednoznacznej ceny."
+          : priceState ===
+              "review"
+            ? "Sprawdź rozpoznaną kwotę."
+            : "Aktualna cena została rozpoznana.",
     },
 
     {
-      id: "oldPrice",
-      label: "Stara cena",
+      id:
+        "oldPrice",
+
+      label:
+        "Stara cena",
+
       value:
         parsed.oldPrice
           ? `${parsed.oldPrice} zł`
           : "",
+
       state:
         parsed.oldPrice
           ? "review"
           : "optional",
+
       hint:
         parsed.oldPrice
-          ? "Sprawdź, czy jest to rzeczywiście przekreślona lub poprzednia cena."
-          : "To pole jest opcjonalne.",
+          ? "Sprawdź ją przed publikacją."
+          : "Pole opcjonalne.",
     },
 
     {
-      id: "category",
-      label: "Kategoria",
+      id:
+        "category",
+
+      label:
+        "Kategoria",
+
       value:
         parsed.category,
+
       state:
-        parsed.category
-          ? "ready"
-          : "missing",
+        categoryState,
+
       hint:
-        parsed.category
-          ? "Kategoria została dobrana na podstawie nazwy produktu."
-          : "Wybierz kategorię ręcznie.",
+        !parsed.category
+          ? "Wybierz kategorię ręcznie."
+          : parsed.diagnostics
+              .productType
+            ? `Rozpoznano ${parsed.diagnostics.productType}.`
+            : "Kategoria została rozpoznana.",
     },
 
     {
-      id: "affiliateUrl",
+      id:
+        "affiliateUrl",
+
       label:
         "Link afiliacyjny",
+
       value:
         parsed.affiliateUrl,
+
       state:
         affiliateState,
+
       hint:
         !parsed.affiliateUrl
           ? "Nie znaleziono linku."
-          : affiliateState ===
-              "ready"
-            ? "Rozpoznano link SHEIN OneLink."
-            : "Link został znaleziony, ale warto sprawdzić czy jest właściwym linkiem afiliacyjnym.",
+          : isSheinOneLink(
+                parsed.affiliateUrl
+              )
+            ? "Rozpoznano SHEIN OneLink."
+            : isSheinUrl(
+                  parsed.affiliateUrl
+                )
+              ? "Rozpoznano link SHEIN — sprawdź, czy jest właściwym linkiem afiliacyjnym."
+              : "Link pochodzi spoza SHEIN — sprawdź go ręcznie.",
     },
 
     {
-      id: "soldText",
-      label: "Sprzedaż",
+      id:
+        "soldText",
+
+      label:
+        "Sprzedaż",
+
       value:
         parsed.soldText,
+
       state:
         parsed.soldText
           ? "review"
           : "optional",
+
       hint:
         parsed.soldText
-          ? "Publikuj tę informację tylko jeśli dane są aktualne i zweryfikowane."
-          : "To pole jest opcjonalne.",
+          ? "Publikuj tylko wtedy, gdy informacja jest nadal aktualna."
+          : "Pole opcjonalne.",
     },
   ];
 }
 
 export function getRequiredAssistantCompletion(
-  fields: OfferAssistantField[]
+  fields:
+    OfferAssistantField[]
 ) {
   const required =
     fields.filter(
-      (field) =>
+      (
+        field
+      ) =>
         REQUIRED_FIELDS.includes(
           field.id
         )
@@ -196,19 +315,44 @@ export function getRequiredAssistantCompletion(
 
   const detected =
     required.filter(
-      (field) =>
+      (
+        field
+      ) =>
         field.state !==
         "missing"
+    ).length;
+
+  const ready =
+    required.filter(
+      (
+        field
+      ) =>
+        field.state ===
+        "ready"
+    ).length;
+
+  const review =
+    required.filter(
+      (
+        field
+      ) =>
+        field.state ===
+        "review"
     ).length;
 
   return {
     detected,
 
+    ready,
+
+    review,
+
     total:
       required.length,
 
     percent:
-      required.length === 0
+      required.length ===
+        0
         ? 0
         : Math.round(
             (
@@ -221,39 +365,29 @@ export function getRequiredAssistantCompletion(
 }
 
 export function buildSuggestedDescription(
-  parsed: ParsedOffer
+  parsed:
+    ParsedOffer
 ) {
-  const fullName =
-    parsed.name
+  const name =
+    (
+      parsed.name ||
+      parsed.shortName
+    )
       .replace(
         /\s+/g,
         " "
       )
-      .trim();
-
-  const shortName =
-    parsed.shortName
-      .replace(
-        /\s+/g,
-        " "
-      )
-      .trim();
-
-  const base =
-    fullName ||
-    shortName;
-
-  if (!base) {
-    return "";
-  }
-
-  const firstSentence =
-    base
       .replace(
         /[.!?]+$/,
         ""
       )
       .trim();
 
-  return `${firstSentence}. Przed zakupem sprawdź dostępne warianty, rozmiar oraz aktualną cenę bezpośrednio w sklepie.`;
+  if (
+    !name
+  ) {
+    return "";
+  }
+
+  return `${name}. Przed zakupem sprawdź dostępne warianty, rozmiar, aktualną cenę oraz dostępność bezpośrednio w sklepie.`;
 }

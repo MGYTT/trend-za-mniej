@@ -20,39 +20,26 @@ import {
 import AdminFormShell from "@/components/admin/AdminFormShell";
 import AdminHeader from "@/components/admin/AdminHeader";
 import OfferQualityChecks from "@/components/admin/OfferQualityChecks";
+import ProductCategorySelect from "@/components/admin/ProductCategorySelect";
 import ProductPreview from "@/components/admin/ProductPreview";
+
+import {
+  isProductCategory,
+} from "@/lib/product-categories";
 
 import {
   createClient,
 } from "@/lib/supabase/client";
 
 const MAX_FILE_SIZE =
-  5 * 1024 * 1024;
+  5 *
+  1024 *
+  1024;
 
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
-];
-
-const CATEGORIES = [
-  "Bluzy",
-  "Swetry",
-  "Topy",
-  "Koszule",
-  "Kardigany",
-  "Sukienki",
-  "Spodnie",
-  "Spódnice",
-  "Kurtki i płaszcze",
-  "Buty",
-  "Torebki",
-  "Biżuteria",
-  "Akcesoria",
-  "Akcesoria kosmetyczne",
-  "Uroda",
-  "Dom i lifestyle",
-  "Inne",
 ];
 
 type ProductRow = {
@@ -61,20 +48,25 @@ type ProductRow = {
   name: string;
   short_name: string;
   description: string;
+
   price:
     | number
     | string;
+
   old_price:
     | number
     | string
     | null;
+
   category: string;
   image_url: string;
   affiliate_url: string;
   featured: boolean;
+
   sold_text:
     | string
     | null;
+
   active: boolean;
 };
 
@@ -91,17 +83,37 @@ type FormState = {
   active: boolean;
 };
 
-const INITIAL_FORM: FormState = {
-  name: "",
-  shortName: "",
-  description: "",
-  price: "",
-  oldPrice: "",
-  category: "",
-  affiliateUrl: "",
-  soldText: "",
-  featured: false,
-  active: true,
+const INITIAL_FORM:
+  FormState = {
+  name:
+    "",
+
+  shortName:
+    "",
+
+  description:
+    "",
+
+  price:
+    "",
+
+  oldPrice:
+    "",
+
+  category:
+    "",
+
+  affiliateUrl:
+    "",
+
+  soldText:
+    "",
+
+  featured:
+    false,
+
+  active:
+    true,
 };
 
 export default function EditProductPage() {
@@ -113,9 +125,12 @@ export default function EditProductPage() {
   const router =
     useRouter();
 
-  const [supabase] =
+  const [
+    supabase,
+  ] =
     useState(
-      () => createClient()
+      () =>
+        createClient()
     );
 
   const id =
@@ -127,36 +142,56 @@ export default function EditProductPage() {
   const [
     loadingProduct,
     setLoadingProduct,
-  ] = useState(true);
+  ] =
+    useState(
+      true
+    );
 
   const [
     saving,
     setSaving,
-  ] = useState(false);
+  ] =
+    useState(
+      false
+    );
 
   const [
     error,
     setError,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<
+      string |
+      null
+    >(
+      null
+    );
 
   const [
     success,
     setSuccess,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<
+      string |
+      null
+    >(
+      null
+    );
 
   const [
     slug,
     setSlug,
-  ] = useState("");
+  ] =
+    useState(
+      ""
+    );
 
   const [
     currentImageUrl,
     setCurrentImageUrl,
-  ] = useState("");
+  ] =
+    useState(
+      ""
+    );
 
   const [
     form,
@@ -170,342 +205,425 @@ export default function EditProductPage() {
     originalForm,
     setOriginalForm,
   ] =
-    useState<FormState | null>(
+    useState<
+      FormState |
+      null
+    >(
       null
     );
 
   const [
     imageFile,
     setImageFile,
-  ] = useState<File | null>(
-    null
-  );
+  ] =
+    useState<
+      File |
+      null
+    >(
+      null
+    );
 
   const [
     previewUrl,
     setPreviewUrl,
-  ] = useState<
-    string | null
-  >(null);
+  ] =
+    useState<
+      string |
+      null
+    >(
+      null
+    );
 
   const [
     mobilePreviewOpen,
     setMobilePreviewOpen,
-  ] = useState(false);
+  ] =
+    useState(
+      false
+    );
 
   const hasChanges =
-    useMemo(() => {
-      if (!originalForm) {
-        return false;
-      }
+    useMemo(
+      () => {
+        if (
+          !originalForm
+        ) {
+          return false;
+        }
 
-      if (imageFile) {
-        return true;
-      }
+        if (
+          imageFile
+        ) {
+          return true;
+        }
 
-      return (
-        JSON.stringify(form) !==
-        JSON.stringify(
-          originalForm
-        )
-      );
-    }, [
-      form,
-      originalForm,
-      imageFile,
-    ]);
+        return (
+          JSON.stringify(
+            form
+          ) !==
+          JSON.stringify(
+            originalForm
+          )
+        );
+      },
+      [
+        form,
+        originalForm,
+        imageFile,
+      ]
+    );
 
   const changedSections =
-    useMemo(() => {
-      if (!originalForm) {
+    useMemo(
+      () => {
+        if (
+          !originalForm
+        ) {
+          return {
+            basic:
+              false,
+
+            price:
+              false,
+
+            image:
+              false,
+
+            publication:
+              false,
+          };
+        }
+
         return {
-          basic: false,
-          price: false,
-          image: false,
-          publication: false,
+          basic:
+            form.name !==
+              originalForm.name ||
+            form.shortName !==
+              originalForm.shortName ||
+            form.description !==
+              originalForm.description,
+
+          price:
+            form.price !==
+              originalForm.price ||
+            form.oldPrice !==
+              originalForm.oldPrice ||
+            form.category !==
+              originalForm.category,
+
+          image:
+            imageFile !==
+            null,
+
+          publication:
+            form.affiliateUrl !==
+              originalForm.affiliateUrl ||
+            form.soldText !==
+              originalForm.soldText ||
+            form.featured !==
+              originalForm.featured ||
+            form.active !==
+              originalForm.active,
         };
-      }
-
-      return {
-        basic:
-          form.name !==
-            originalForm.name ||
-          form.shortName !==
-            originalForm.shortName ||
-          form.description !==
-            originalForm.description,
-
-        price:
-          form.price !==
-            originalForm.price ||
-          form.oldPrice !==
-            originalForm.oldPrice ||
-          form.category !==
-            originalForm.category,
-
-        image:
-          imageFile !== null,
-
-        publication:
-          form.affiliateUrl !==
-            originalForm.affiliateUrl ||
-          form.soldText !==
-            originalForm.soldText ||
-          form.featured !==
-            originalForm.featured ||
-          form.active !==
-            originalForm.active,
-      };
-    }, [
-      form,
-      originalForm,
-      imageFile,
-    ]);
+      },
+      [
+        form,
+        originalForm,
+        imageFile,
+      ]
+    );
 
   const changedSectionsCount =
     Object.values(
       changedSections
-    ).filter(Boolean).length;
+    ).filter(
+      Boolean
+    ).length;
 
-  useEffect(() => {
-    if (!id) {
-      return;
-    }
-
-    let cancelled =
-      false;
-
-    async function loadProduct() {
-      setLoadingProduct(
-        true
-      );
-
-      setError(null);
-
-      const {
-        data,
-        error:
-          productError,
-      } =
-        await supabase
-          .from("products")
-          .select("*")
-          .eq(
-            "id",
-            id
-          )
-          .maybeSingle();
-
-      if (cancelled) {
+  useEffect(
+    () => {
+      if (
+        !id
+      ) {
         return;
       }
 
-      if (
-        productError ||
-        !data
-      ) {
-        console.error(
-          "Błąd pobierania produktu:",
-          productError
+      let cancelled =
+        false;
+
+      async function loadProduct() {
+        setLoadingProduct(
+          true
         );
 
         setError(
-          "Nie udało się znaleźć produktu."
+          null
+        );
+
+        const {
+          data,
+          error:
+            productError,
+        } =
+          await supabase
+            .from(
+              "products"
+            )
+            .select(
+              "*"
+            )
+            .eq(
+              "id",
+              id
+            )
+            .maybeSingle();
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        if (
+          productError ||
+          !data
+        ) {
+          console.error(
+            "Błąd pobierania produktu:",
+            productError
+          );
+
+          setError(
+            "Nie udało się znaleźć produktu."
+          );
+
+          setLoadingProduct(
+            false
+          );
+
+          return;
+        }
+
+        const product =
+          data as
+            unknown as
+            ProductRow;
+
+        const nextForm:
+          FormState = {
+          name:
+            product.name,
+
+          shortName:
+            product.short_name,
+
+          description:
+            product.description,
+
+          price:
+            String(
+              product.price
+            ).replace(
+              ".",
+              ","
+            ),
+
+          oldPrice:
+            product.old_price ===
+            null
+              ? ""
+              : String(
+                  product.old_price
+                ).replace(
+                  ".",
+                  ","
+                ),
+
+          category:
+            product.category,
+
+          affiliateUrl:
+            product.affiliate_url,
+
+          soldText:
+            product.sold_text ??
+            "",
+
+          featured:
+            product.featured,
+
+          active:
+            product.active,
+        };
+
+        setSlug(
+          product.slug
+        );
+
+        setCurrentImageUrl(
+          product.image_url
+        );
+
+        setForm(
+          nextForm
+        );
+
+        setOriginalForm(
+          nextForm
         );
 
         setLoadingProduct(
           false
         );
+      }
 
+      void loadProduct();
+
+      return () => {
+        cancelled =
+          true;
+      };
+    },
+    [
+      id,
+      supabase,
+    ]
+  );
+
+  useEffect(
+    () => {
+      return () => {
+        if (
+          previewUrl
+        ) {
+          URL.revokeObjectURL(
+            previewUrl
+          );
+        }
+      };
+    },
+    [
+      previewUrl,
+    ]
+  );
+
+  useEffect(
+    () => {
+      if (
+        !hasChanges
+      ) {
         return;
       }
 
-      const product =
-        data as unknown as ProductRow;
-
-      const nextForm: FormState = {
-        name:
-          product.name,
-
-        shortName:
-          product.short_name,
-
-        description:
-          product.description,
-
-        price:
-          String(
-            product.price
-          ).replace(
-            ".",
-            ","
-          ),
-
-        oldPrice:
-          product.old_price ===
-          null
-            ? ""
-            : String(
-                product.old_price
-              ).replace(
-                ".",
-                ","
-              ),
-
-        category:
-          product.category,
-
-        affiliateUrl:
-          product.affiliate_url,
-
-        soldText:
-          product.sold_text ??
-          "",
-
-        featured:
-          product.featured,
-
-        active:
-          product.active,
-      };
-
-      setSlug(
-        product.slug
-      );
-
-      setCurrentImageUrl(
-        product.image_url
-      );
-
-      setForm(
-        nextForm
-      );
-
-      setOriginalForm(
-        nextForm
-      );
-
-      setLoadingProduct(
-        false
-      );
-    }
-
-    loadProduct();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    id,
-    supabase,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(
-          previewUrl
-        );
+      function handleBeforeUnload(
+        event:
+          BeforeUnloadEvent
+      ) {
+        event.preventDefault();
       }
-    };
-  }, [previewUrl]);
 
-  useEffect(() => {
-    if (!hasChanges) {
-      return;
-    }
-
-    function handleBeforeUnload(
-      event: BeforeUnloadEvent
-    ) {
-      event.preventDefault();
-    }
-
-    window.addEventListener(
-      "beforeunload",
-      handleBeforeUnload
-    );
-
-    return () => {
-      window.removeEventListener(
+      window.addEventListener(
         "beforeunload",
         handleBeforeUnload
       );
-    };
-  }, [hasChanges]);
 
-  useEffect(() => {
-    if (!mobilePreviewOpen) {
-      return;
-    }
-
-    const previousOverflow =
-      document.body.style
-        .overflow;
-
-    document.body.style.overflow =
-      "hidden";
-
-    function handleKeyDown(
-      event: KeyboardEvent
-    ) {
-      if (
-        event.key ===
-        "Escape"
-      ) {
-        setMobilePreviewOpen(
-          false
+      return () =>
+        window.removeEventListener(
+          "beforeunload",
+          handleBeforeUnload
         );
+    },
+    [
+      hasChanges,
+    ]
+  );
+
+  useEffect(
+    () => {
+      if (
+        !mobilePreviewOpen
+      ) {
+        return;
       }
-    }
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+      const previousOverflow =
+        document.body.style
+          .overflow;
 
-    return () => {
       document.body.style.overflow =
-        previousOverflow;
+        "hidden";
 
-      window.removeEventListener(
+      function handleKeyDown(
+        event:
+          KeyboardEvent
+      ) {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          setMobilePreviewOpen(
+            false
+          );
+        }
+      }
+
+      window.addEventListener(
         "keydown",
         handleKeyDown
       );
-    };
-  }, [mobilePreviewOpen]);
 
-  useEffect(() => {
-    if (!error || !slug) {
-      return;
-    }
+      return () => {
+        document.body.style.overflow =
+          previousOverflow;
 
-    const timeout =
-      window.setTimeout(
-        () => {
-          document
-            .getElementById(
-              "edit-product-error"
-            )
-            ?.scrollIntoView({
-              behavior:
-                "smooth",
-              block:
-                "center",
-            });
-        },
-        100
-      );
+        window.removeEventListener(
+          "keydown",
+          handleKeyDown
+        );
+      };
+    },
+    [
+      mobilePreviewOpen,
+    ]
+  );
 
-    return () => {
-      window.clearTimeout(
-        timeout
-      );
-    };
-  }, [
-    error,
-    slug,
-  ]);
+  useEffect(
+    () => {
+      if (
+        !error ||
+        !slug
+      ) {
+        return;
+      }
+
+      const timeout =
+        window.setTimeout(
+          () => {
+            document
+              .getElementById(
+                "edit-product-error"
+              )
+              ?.scrollIntoView({
+                behavior:
+                  "smooth",
+
+                block:
+                  "center",
+              });
+          },
+          100
+        );
+
+      return () =>
+        window.clearTimeout(
+          timeout
+        );
+    },
+    [
+      error,
+      slug,
+    ]
+  );
 
   function parsePrice(
     value: string
@@ -513,10 +631,18 @@ export default function EditProductPage() {
     const normalized =
       value
         .trim()
-        .replace(/\s/g, "")
-        .replace(",", ".");
+        .replace(
+          /\s/g,
+          ""
+        )
+        .replace(
+          ",",
+          "."
+        );
 
-    if (!normalized) {
+    if (
+      !normalized
+    ) {
       return null;
     }
 
@@ -535,21 +661,21 @@ export default function EditProductPage() {
   function getExtension(
     file: File
   ) {
-    switch (
-      file.type
+    if (
+      file.type ===
+      "image/png"
     ) {
-      case "image/jpeg":
-        return "jpg";
-
-      case "image/png":
-        return "png";
-
-      case "image/webp":
-        return "webp";
-
-      default:
-        return "jpg";
+      return "png";
     }
+
+    if (
+      file.type ===
+      "image/webp"
+    ) {
+      return "webp";
+    }
+
+    return "jpg";
   }
 
   function getStoragePath(
@@ -564,7 +690,8 @@ export default function EditProductPage() {
       );
 
     if (
-      index === -1
+      index ===
+      -1
     ) {
       return null;
     }
@@ -575,7 +702,9 @@ export default function EditProductPage() {
           index +
             marker.length
         )
-        .split("?")[0]
+        .split(
+          "?"
+        )[0]
     );
   }
 
@@ -583,11 +712,10 @@ export default function EditProductPage() {
     value: string
   ) {
     try {
-      const url =
-        new URL(value);
-
       return (
-        url.protocol ===
+        new URL(
+          value
+        ).protocol ===
         "https:"
       );
     } catch {
@@ -596,21 +724,30 @@ export default function EditProductPage() {
   }
 
   function updateField<
-    Key extends keyof FormState,
+    Key extends
+      keyof FormState,
   >(
     key: Key,
-    value: FormState[Key]
+    value:
+      FormState[Key]
   ) {
     setForm(
-      (current) => ({
+      (
+        current
+      ) => ({
         ...current,
         [key]:
           value,
       })
     );
 
-    setError(null);
-    setSuccess(null);
+    setError(
+      null
+    );
+
+    setSuccess(
+      null
+    );
   }
 
   async function checkDuplicateAffiliateUrl(
@@ -622,7 +759,9 @@ export default function EditProductPage() {
         duplicateError,
     } =
       await supabase
-        .from("products")
+        .from(
+          "products"
+        )
         .select(
           "id, short_name"
         )
@@ -634,7 +773,9 @@ export default function EditProductPage() {
           "id",
           id
         )
-        .limit(1);
+        .limit(
+          1
+        );
 
     if (
       duplicateError
@@ -645,7 +786,7 @@ export default function EditProductPage() {
     if (
       data &&
       data.length >
-        0
+      0
     ) {
       return {
         duplicate:
@@ -667,17 +808,25 @@ export default function EditProductPage() {
   }
 
   function handleImageChange(
-    event: ChangeEvent<HTMLInputElement>
+    event:
+      ChangeEvent<HTMLInputElement>
   ) {
-    setError(null);
-    setSuccess(null);
+    setError(
+      null
+    );
+
+    setSuccess(
+      null
+    );
 
     const file =
       event.target
         .files?.[0] ??
       null;
 
-    if (!file) {
+    if (
+      !file
+    ) {
       return;
     }
 
@@ -710,41 +859,55 @@ export default function EditProductPage() {
       return;
     }
 
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
     }
-
-    const localPreview =
-      URL.createObjectURL(
-        file
-      );
 
     setImageFile(
       file
     );
 
     setPreviewUrl(
-      localPreview
+      URL.createObjectURL(
+        file
+      )
     );
   }
 
   function removeNewImage() {
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
     }
 
-    setImageFile(null);
-    setPreviewUrl(null);
-    setError(null);
-    setSuccess(null);
+    setImageFile(
+      null
+    );
+
+    setPreviewUrl(
+      null
+    );
+
+    setError(
+      null
+    );
+
+    setSuccess(
+      null
+    );
   }
 
   function resetChanges() {
-    if (!originalForm) {
+    if (
+      !originalForm
+    ) {
       return;
     }
 
@@ -757,30 +920,52 @@ export default function EditProductPage() {
       return;
     }
 
-    if (previewUrl) {
+    if (
+      previewUrl
+    ) {
       URL.revokeObjectURL(
         previewUrl
       );
     }
 
-    setImageFile(null);
-    setPreviewUrl(null);
+    setImageFile(
+      null
+    );
+
+    setPreviewUrl(
+      null
+    );
+
     setForm(
       originalForm
     );
-    setError(null);
-    setSuccess(null);
+
+    setError(
+      null
+    );
+
+    setSuccess(
+      null
+    );
   }
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    setError(null);
-    setSuccess(null);
+    setError(
+      null
+    );
 
-    if (!hasChanges) {
+    setSuccess(
+      null
+    );
+
+    if (
+      !hasChanges
+    ) {
       setError(
         "Nie wprowadzono żadnych zmian."
       );
@@ -829,7 +1014,9 @@ export default function EditProductPage() {
       return;
     }
 
-    if (!description) {
+    if (
+      !description
+    ) {
       setError(
         "Dodaj opis produktu."
       );
@@ -837,17 +1024,24 @@ export default function EditProductPage() {
       return;
     }
 
-    if (!category) {
+    if (
+      !category ||
+      !isProductCategory(
+        category
+      )
+    ) {
       setError(
-        "Wybierz kategorię."
+        "Wybierz poprawną kategorię produktu."
       );
 
       return;
     }
 
     if (
-      price === null ||
-      price <= 0
+      price ===
+        null ||
+      price <=
+        0
     ) {
       setError(
         "Podaj poprawną cenę większą od 0."
@@ -859,8 +1053,10 @@ export default function EditProductPage() {
     if (
       form.oldPrice.trim() &&
       (
-        oldPrice === null ||
-        oldPrice <= 0
+        oldPrice ===
+          null ||
+        oldPrice <=
+          0
       )
     ) {
       setError(
@@ -871,8 +1067,10 @@ export default function EditProductPage() {
     }
 
     if (
-      oldPrice !== null &&
-      oldPrice <= price
+      oldPrice !==
+        null &&
+      oldPrice <=
+        price
     ) {
       setError(
         "Stara cena powinna być wyższa od aktualnej ceny."
@@ -894,7 +1092,9 @@ export default function EditProductPage() {
       return;
     }
 
-    setSaving(true);
+    setSaving(
+      true
+    );
 
     try {
       const duplicate =
@@ -909,7 +1109,9 @@ export default function EditProductPage() {
           `Ten link afiliacyjny jest już używany przez produkt „${duplicate.productName ?? "bez nazwy"}”.`
         );
 
-        setSaving(false);
+        setSaving(
+          false
+        );
 
         return;
       }
@@ -925,7 +1127,9 @@ export default function EditProductPage() {
         "Nie udało się sprawdzić linku afiliacyjnego."
       );
 
-      setSaving(false);
+      setSaving(
+        false
+      );
 
       return;
     }
@@ -938,14 +1142,13 @@ export default function EditProductPage() {
       | null =
       null;
 
-    if (imageFile) {
-      const extension =
-        getExtension(
-          imageFile
-        );
-
+    if (
+      imageFile
+    ) {
       uploadedPath =
-        `products/${crypto.randomUUID()}.${extension}`;
+        `products/${crypto.randomUUID()}.${getExtension(
+          imageFile
+        )}`;
 
       const {
         error:
@@ -982,7 +1185,9 @@ export default function EditProductPage() {
           "Nie udało się przesłać nowego zdjęcia."
         );
 
-        setSaving(false);
+        setSaving(
+          false
+        );
 
         return;
       }
@@ -1008,7 +1213,9 @@ export default function EditProductPage() {
         updateError,
     } =
       await supabase
-        .from("products")
+        .from(
+          "products"
+        )
         .update({
           name,
 
@@ -1041,7 +1248,8 @@ export default function EditProductPage() {
             form.active,
 
           updated_at:
-            new Date().toISOString(),
+            new Date()
+              .toISOString(),
         })
         .eq(
           "id",
@@ -1072,7 +1280,9 @@ export default function EditProductPage() {
         "Nie udało się zapisać zmian."
       );
 
-      setSaving(false);
+      setSaving(
+        false
+      );
 
       return;
     }
@@ -1112,7 +1322,9 @@ export default function EditProductPage() {
         }
       }
 
-      if (previewUrl) {
+      if (
+        previewUrl
+      ) {
         URL.revokeObjectURL(
           previewUrl
         );
@@ -1122,11 +1334,17 @@ export default function EditProductPage() {
         nextImageUrl
       );
 
-      setImageFile(null);
-      setPreviewUrl(null);
+      setImageFile(
+        null
+      );
+
+      setPreviewUrl(
+        null
+      );
     }
 
-    const savedForm: FormState = {
+    const savedForm:
+      FormState = {
       name,
       shortName,
       description,
@@ -1138,7 +1356,9 @@ export default function EditProductPage() {
         form.oldPrice,
 
       category,
+
       affiliateUrl,
+
       soldText,
 
       featured:
@@ -1160,13 +1380,20 @@ export default function EditProductPage() {
       "Zmiany zostały zapisane."
     );
 
-    setSaving(false);
-    setMobilePreviewOpen(false);
+    setSaving(
+      false
+    );
+
+    setMobilePreviewOpen(
+      false
+    );
 
     router.refresh();
 
     window.scrollTo({
-      top: 0,
+      top:
+        0,
+
       behavior:
         "smooth",
     });
@@ -1265,6 +1492,7 @@ export default function EditProductPage() {
         eyebrow="Edycja oferty"
         title="Edytuj produkt"
         description="Zmień potrzebne informacje i zapisz. Adres produktu pozostanie bez zmian."
+        mobileBadge="Edycja"
       >
         <EditStatus
           hasChanges={
@@ -1292,7 +1520,8 @@ export default function EditProductPage() {
 
             <div className="min-w-0">
               <p className="text-xs font-black text-stone-800">
-                Stały adres produktu
+                Stały adres
+                produktu
               </p>
 
               <p className="mt-1 break-all text-xs leading-5 text-stone-500">
@@ -1301,12 +1530,26 @@ export default function EditProductPage() {
               </p>
 
               <p className="mt-1 text-[10px] leading-5 text-stone-400">
-                Zmiana nazwy nie
+                Zmiana nazwy lub
+                kategorii nie
                 zmienia tego adresu.
               </p>
             </div>
           </div>
         </div>
+
+        {error && (
+          <div
+            id="edit-product-error"
+            className="mt-4 rounded-[18px] border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800"
+          >
+            <span className="font-black">
+              Nie można zapisać:
+            </span>
+            {" "}
+            {error}
+          </div>
+        )}
 
         {success && (
           <div className="mt-4 rounded-[18px] border border-green-200 bg-green-50 p-4">
@@ -1354,7 +1597,8 @@ export default function EditProductPage() {
                 title="Nazwa i opis"
                 description="Edytuj informacje prezentowane użytkownikowi."
                 changed={
-                  changedSections.basic
+                  changedSections
+                    .basic
                 }
               >
                 <Input
@@ -1398,7 +1642,9 @@ export default function EditProductPage() {
 
                   <textarea
                     required
-                    rows={5}
+                    rows={
+                      5
+                    }
                     value={
                       form.description
                     }
@@ -1427,9 +1673,10 @@ export default function EditProductPage() {
               <FormSection
                 number="2"
                 title="Cena i kategoria"
-                description="Zaktualizuj cenę lub kategorię produktu."
+                description="Zaktualizuj cenę lub wybierz dokładniejszą kategorię."
                 changed={
-                  changedSections.price
+                  changedSections
+                    .price
                 }
               >
                 <div className="grid grid-cols-2 gap-3">
@@ -1473,62 +1720,19 @@ export default function EditProductPage() {
                   />
                 </div>
 
-                <div>
-                  <FieldLabel>
-                    Kategoria
-                  </FieldLabel>
-
-                  <select
-                    required
-                    value={
-                      form.category
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      updateField(
-                        "category",
-                        event.target
-                          .value
-                      )
-                    }
-                    className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
-                  >
-                    {!CATEGORIES.includes(
-                      form.category
-                    ) &&
-                      form.category && (
-                        <option
-                          value={
-                            form.category
-                          }
-                        >
-                          {
-                            form.category
-                          }
-                        </option>
-                      )}
-
-                    {CATEGORIES.map(
-                      (
-                        category
-                      ) => (
-                        <option
-                          key={
-                            category
-                          }
-                          value={
-                            category
-                          }
-                        >
-                          {
-                            category
-                          }
-                        </option>
-                      )
-                    )}
-                  </select>
-                </div>
+                <ProductCategorySelect
+                  value={
+                    form.category
+                  }
+                  onChange={(
+                    category
+                  ) =>
+                    updateField(
+                      "category",
+                      category
+                    )
+                  }
+                />
               </FormSection>
 
               <FormSection
@@ -1536,7 +1740,8 @@ export default function EditProductPage() {
                 title="Zdjęcie"
                 description="Zostaw obecne albo wybierz nowe."
                 changed={
-                  changedSections.image
+                  changedSections
+                    .image
                 }
               >
                 <div className="grid grid-cols-[105px_minmax(0,1fr)] gap-3 rounded-[18px] border border-stone-200 bg-stone-50 p-3 sm:grid-cols-[135px_minmax(0,1fr)]">
@@ -1588,8 +1793,9 @@ export default function EditProductPage() {
                         </>
                       ) : (
                         <p className="mt-2 text-[10px] leading-5 text-stone-400 sm:text-xs">
-                          Zdjęcie pozostanie
-                          bez zmian.
+                          Zdjęcie
+                          pozostanie bez
+                          zmian.
                         </p>
                       )}
                     </div>
@@ -1641,7 +1847,8 @@ export default function EditProductPage() {
                 title="Link i widoczność"
                 description="Kontroluj link, wyróżnienie i publikację."
                 changed={
-                  changedSections.publication
+                  changedSections
+                    .publication
                 }
               >
                 <Input
@@ -1693,7 +1900,6 @@ export default function EditProductPage() {
                       checked
                     )
                   }
-                  tone="orange"
                   title="🔥 Gorąca okazja"
                   description="Pokaż produkt w wyróżnionej sekcji strony głównej."
                 />
@@ -1710,74 +1916,23 @@ export default function EditProductPage() {
                       checked
                     )
                   }
-                  tone="green"
-                  title={
-                    form.active
-                      ? "✓ Oferta opublikowana"
-                      : "Oferta ukryta"
-                  }
-                  description={
-                    form.active
-                      ? "Produkt jest widoczny dla użytkowników."
-                      : "Produkt pozostanie w panelu, ale zniknie ze strony publicznej."
-                  }
+                  title="Widoczna publicznie"
+                  description="Wyłącz, jeśli oferta ma być chwilowo ukryta."
                 />
-              </FormSection>
 
-              {error && (
-                <div
-                  id="edit-product-error"
-                  className="rounded-[16px] border border-red-200 bg-red-50 p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-red-600">
-                      !
-                    </span>
-
-                    <div>
-                      <p className="text-sm font-black text-red-800">
-                        Nie udało się
-                        zapisać
-                      </p>
-
-                      <p className="mt-1 text-sm leading-6 text-red-700">
-                        {error}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="hidden gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto]">
                 <button
                   type="submit"
                   disabled={
                     saving ||
                     !hasChanges
                   }
-                  className="flex min-h-14 items-center justify-center rounded-xl bg-rose-600 px-6 text-base font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="hidden min-h-12 w-full rounded-[14px] bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 lg:block"
                 >
                   {saving
                     ? "Zapisywanie..."
-                    : hasChanges
-                      ? "Zapisz zmiany"
-                      : "Brak zmian"}
+                    : "Zapisz zmiany"}
                 </button>
-
-                <button
-                  type="button"
-                  onClick={
-                    resetChanges
-                  }
-                  disabled={
-                    !hasChanges ||
-                    saving
-                  }
-                  className="min-h-14 rounded-xl border border-stone-200 bg-white px-5 text-sm font-black text-stone-600 transition hover:border-rose-200 hover:text-rose-700 disabled:opacity-40"
-                >
-                  Cofnij zmiany
-                </button>
-              </div>
+              </FormSection>
             </form>
 
             <div className="mt-4 xl:hidden">
@@ -1812,60 +1967,8 @@ export default function EditProductPage() {
             </div>
           </div>
 
-          <aside className="hidden space-y-4 xl:sticky xl:top-24 xl:block xl:self-start">
-            <OfferQualityChecks
-              name={
-                form.name
-              }
-              shortName={
-                form.shortName
-              }
-              description={
-                form.description
-              }
-              price={
-                form.price
-              }
-              oldPrice={
-                form.oldPrice
-              }
-              affiliateUrl={
-                form.affiliateUrl
-              }
-              soldText={
-                form.soldText
-              }
-              imageSelected={
-                Boolean(
-                  visibleImage
-                )
-              }
-            />
-
-            <div className="rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-rose-600">
-                    Podgląd
-                  </p>
-
-                  <h2 className="mt-1 text-lg font-black">
-                    Widok produktu
-                  </h2>
-                </div>
-
-                {form.active && (
-                  <Link
-                    href={`/produkt/${slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-black text-rose-600 hover:text-rose-700"
-                  >
-                    Otwórz ↗
-                  </Link>
-                )}
-              </div>
-
+          <aside className="hidden min-w-0 space-y-4 xl:block">
+            <div className="sticky top-5 space-y-4">
               <ProductPreview
                 name={
                   form.name
@@ -1892,19 +1995,48 @@ export default function EditProductPage() {
                   visibleImage
                 }
               />
+
+              <OfferQualityChecks
+                name={
+                  form.name
+                }
+                shortName={
+                  form.shortName
+                }
+                description={
+                  form.description
+                }
+                price={
+                  form.price
+                }
+                oldPrice={
+                  form.oldPrice
+                }
+                affiliateUrl={
+                  form.affiliateUrl
+                }
+                soldText={
+                  form.soldText
+                }
+                imageSelected={
+                  Boolean(
+                    visibleImage
+                  )
+                }
+              />
             </div>
           </aside>
         </div>
       </AdminFormShell>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/96 px-3 pt-2.5 shadow-[0_-6px_24px_rgba(28,25,23,0.10)] backdrop-blur-xl lg:hidden">
-        <div
-          className="mx-auto grid max-w-xl grid-cols-[105px_minmax(0,1fr)] gap-2"
-          style={{
-            paddingBottom:
-              "max(0.65rem, env(safe-area-inset-bottom))",
-          }}
-        >
+      <div
+        className="fixed inset-x-0 bottom-0 z-[70] border-t border-stone-200 bg-white/95 px-3 pt-2 shadow-[0_-10px_35px_rgba(28,25,23,0.10)] backdrop-blur-xl lg:hidden"
+        style={{
+          paddingBottom:
+            "max(0.6rem, env(safe-area-inset-bottom))",
+        }}
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-[110px_minmax(0,1fr)] gap-2">
           <button
             type="button"
             onClick={() =>
@@ -1912,7 +2044,7 @@ export default function EditProductPage() {
                 true
               )
             }
-            className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-3 text-xs font-black text-stone-700"
+            className="min-h-12 rounded-[14px] border border-stone-200 bg-white px-3 text-xs font-black text-stone-700"
           >
             Podgląd
           </button>
@@ -1924,13 +2056,11 @@ export default function EditProductPage() {
               saving ||
               !hasChanges
             }
-            className="flex min-h-12 min-w-0 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-12 rounded-[14px] bg-rose-600 px-4 text-sm font-black text-white shadow-sm disabled:opacity-40"
           >
             {saving
               ? "Zapisywanie..."
-              : hasChanges
-                ? `Zapisz zmiany (${changedSectionsCount})`
-                : "Brak zmian"}
+              : "Zapisz zmiany"}
           </button>
         </div>
       </div>
@@ -1952,51 +2082,41 @@ function EditStatus({
   onReset: () => void;
 }) {
   return (
-    <section className="rounded-[18px] border border-stone-200 bg-white p-3.5 shadow-sm sm:p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap gap-1.5">
+    <div className="rounded-[18px] border border-stone-200 bg-white p-3.5 shadow-sm sm:p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
             <span
               className={[
-                "rounded-full px-2.5 py-1 text-[10px] font-black",
-                hasChanges
-                  ? "bg-amber-50 text-amber-700"
-                  : "bg-green-50 text-green-700",
-              ].join(
-                " "
-              )}
-            >
-              {hasChanges
-                ? `● ${changedSectionsCount} sekcje zmienione`
-                : "✓ Wszystko zapisane"}
-            </span>
-
-            <span
-              className={[
-                "rounded-full px-2.5 py-1 text-[10px] font-black",
+                "rounded-full px-2.5 py-1 text-[9px] font-black",
                 active
                   ? "bg-green-50 text-green-700"
-                  : "bg-stone-100 text-stone-600",
+                  : "bg-stone-100 text-stone-500",
               ].join(
                 " "
               )}
             >
               {active
-                ? "Aktywna"
-                : "Ukryta"}
+                ? "● Aktywna"
+                : "● Ukryta"}
             </span>
 
             {featured && (
-              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-black text-orange-700">
+              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[9px] font-black text-orange-700">
                 🔥 Gorąca
               </span>
             )}
           </div>
 
-          <p className="mt-2 text-xs leading-5 text-stone-400">
+          <p className="mt-2 text-xs font-black text-stone-800">
             {hasChanges
-              ? "Zmiany nie są jeszcze widoczne publicznie."
-              : "Oferta jest zsynchronizowana z zapisanymi danymi."}
+              ? `${changedSectionsCount} ${
+                  changedSectionsCount ===
+                  1
+                    ? "sekcja zmieniona"
+                    : "sekcje zmienione"
+                }`
+              : "Brak niezapisanych zmian"}
           </p>
         </div>
 
@@ -2006,13 +2126,13 @@ function EditStatus({
             onClick={
               onReset
             }
-            className="shrink-0 rounded-xl bg-stone-100 px-3 py-2 text-[10px] font-black text-stone-600"
+            className="min-h-10 shrink-0 rounded-xl border border-stone-200 bg-white px-3 text-xs font-black text-stone-600"
           >
             Cofnij
           </button>
         )}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -2030,53 +2150,85 @@ function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section
-      className={[
-        "rounded-[20px] border bg-white p-4 shadow-sm transition sm:p-5",
-        changed
-          ? "border-amber-200"
-          : "border-stone-200",
-      ].join(
-        " "
-      )}
-    >
-      <div className="mb-4 flex items-start gap-3">
+    <section className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm">
+      <div className="flex items-start gap-3 border-b border-stone-100 p-4 sm:p-5">
         <span
           className={[
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-xs font-black",
             changed
-              ? "bg-amber-50 text-amber-700"
-              : "bg-rose-50 text-rose-700",
+              ? "bg-amber-100 text-amber-700"
+              : "bg-stone-100 text-stone-500",
           ].join(
             " "
           )}
         >
-          {number}
+          {changed
+            ? "●"
+            : number}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-black text-stone-900 sm:text-lg">
-              {title}
-            </h2>
+        <div>
+          <h2 className="text-base font-black tracking-[-0.02em] text-stone-900">
+            {title}
+          </h2>
 
-            {changed && (
-              <span className="shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[9px] font-black text-amber-700">
-                zmieniono
-              </span>
-            )}
-          </div>
-
-          <p className="mt-0.5 text-xs leading-5 text-stone-400">
+          <p className="mt-1 text-xs leading-5 text-stone-400">
             {description}
           </p>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 p-4 sm:p-5">
         {children}
       </div>
     </section>
+  );
+}
+
+function FieldLabel({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <label className="mb-1.5 block text-xs font-black text-stone-700 sm:text-sm">
+      {children}
+    </label>
+  );
+}
+
+function Input({
+  label,
+  optional = false,
+  className = "",
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  optional?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-center gap-2 text-xs font-black text-stone-700 sm:text-sm">
+        {label}
+
+        {optional && (
+          <span className="text-[9px] font-bold text-stone-400">
+            opcjonalne
+          </span>
+        )}
+      </span>
+
+      <input
+        {...props}
+        className={[
+          "min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm",
+          className,
+        ].join(
+          " "
+        )}
+      />
+    </label>
   );
 }
 
@@ -2085,34 +2237,21 @@ function ToggleCard({
   onChange,
   title,
   description,
-  tone,
 }: {
   checked: boolean;
-  onChange: (
-    value: boolean
-  ) => void;
-  title: string;
-  description: string;
-  tone:
-    | "orange"
-    | "green";
-}) {
-  const activeClasses =
-    tone === "green"
-      ? "border-green-200 bg-green-50"
-      : "border-orange-200 bg-orange-50";
 
+  onChange:
+    (
+      checked:
+        boolean
+    ) => void;
+
+  title: string;
+
+  description: string;
+}) {
   return (
-    <label
-      className={[
-        "flex cursor-pointer items-start gap-3 rounded-[16px] border p-3.5 transition",
-        checked
-          ? activeClasses
-          : "border-stone-200 bg-stone-50",
-      ].join(
-        " "
-      )}
-    >
+    <label className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-stone-200 bg-stone-50 p-3.5">
       <input
         type="checkbox"
         checked={
@@ -2126,66 +2265,18 @@ function ToggleCard({
               .checked
           )
         }
-        className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600"
+        className="h-5 w-5 shrink-0 accent-rose-600"
       />
 
-      <div>
-        <p className="text-sm font-black text-stone-900">
+      <span className="min-w-0">
+        <span className="block text-sm font-black text-stone-900">
           {title}
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-stone-500">
-          {description}
-        </p>
-      </div>
-    </label>
-  );
-}
-
-function Input({
-  label,
-  optional = false,
-  ...props
-}: {
-  label: string;
-  optional?: boolean;
-} & InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <div>
-      <FieldLabel
-        optional={
-          optional
-        }
-      >
-        {label}
-      </FieldLabel>
-
-      <input
-        {...props}
-        className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-base outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100 sm:text-sm"
-      />
-    </div>
-  );
-}
-
-function FieldLabel({
-  optional = false,
-  children,
-}: {
-  optional?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <label className="mb-1.5 flex items-center justify-between gap-2 text-xs font-black text-stone-700 sm:text-sm">
-      <span>
-        {children}
-      </span>
-
-      {optional && (
-        <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-stone-400">
-          opcjonalne
         </span>
-      )}
+
+        <span className="mt-1 block text-[10px] leading-5 text-stone-400">
+          {description}
+        </span>
+      </span>
     </label>
   );
 }
@@ -2196,11 +2287,11 @@ function MobilePreview({
   onClose,
 }: {
   form: FormState;
-  imageUrl: string | null;
+  imageUrl: string;
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[90] flex items-end bg-stone-950/45 backdrop-blur-sm xl:hidden">
+    <div className="fixed inset-0 z-[100] flex items-end bg-stone-950/45 backdrop-blur-sm xl:hidden">
       <button
         type="button"
         aria-label="Zamknij podgląd"

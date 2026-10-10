@@ -7,6 +7,10 @@ import {
   useState,
 } from "react";
 
+import {
+  getCategoryPublicGroup,
+} from "@/lib/product-categories";
+
 export type CategoryExplorerItem = {
   name: string;
   slug: string;
@@ -98,74 +102,16 @@ const GROUPS:
   },
 ];
 
-const CLOTHES =
-  new Set([
-    "Bluzy",
-    "Swetry",
-    "Topy",
-    "Koszule",
-    "Kardigany",
-    "Sukienki",
-    "Spodnie",
-    "Spódnice",
-    "Kurtki i płaszcze",
-  ]);
-
-const ACCESSORIES =
-  new Set([
-    "Buty",
-    "Torebki",
-    "Biżuteria",
-    "Akcesoria",
-  ]);
-
-const BEAUTY =
-  new Set([
-    "Uroda",
-    "Akcesoria kosmetyczne",
-  ]);
-
-const HOME =
-  new Set([
-    "Dom i lifestyle",
-  ]);
-
 function getCategoryGroup(
   name: string
-): CategoryGroup {
-  if (
-    CLOTHES.has(
-      name
-    )
-  ) {
-    return "clothes";
-  }
-
-  if (
-    ACCESSORIES.has(
-      name
-    )
-  ) {
-    return "accessories";
-  }
-
-  if (
-    BEAUTY.has(
-      name
-    )
-  ) {
-    return "beauty";
-  }
-
-  if (
-    HOME.has(
-      name
-    )
-  ) {
-    return "home";
-  }
-
-  return "other";
+):
+  Exclude<
+    CategoryGroup,
+    "all"
+  > {
+  return getCategoryPublicGroup(
+    name
+  );
 }
 
 function normalizeText(
@@ -198,7 +144,9 @@ export default function CategoryExplorer({
     query,
     setQuery,
   ] =
-    useState("");
+    useState(
+      ""
+    );
 
   const [
     group,
@@ -296,12 +244,9 @@ export default function CategoryExplorer({
               return true;
             }
 
-            const searchable =
-              normalizeText(
-                `${category.name} ${category.description}`
-              );
-
-            return searchable.includes(
+            return normalizeText(
+              `${category.name} ${category.description}`
+            ).includes(
               normalizedQuery
             );
           }
@@ -359,7 +304,7 @@ export default function CategoryExplorer({
                   event.target.value
                 )
               }
-              placeholder="Szukaj kategorii, np. sukienki, buty, uroda..."
+              placeholder="Szukaj kategorii, np. koszulki, jeansy, marynarki..."
               aria-label="Szukaj kategorii produktów"
               className="min-h-[52px] w-full rounded-2xl border border-stone-200 bg-stone-50 py-3 pl-12 pr-12 text-base outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100 sm:text-sm"
             />
@@ -491,10 +436,10 @@ export default function CategoryExplorer({
           </h2>
 
           <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-stone-500">
-            Spróbuj wpisać
-            inną nazwę albo
-            pokaż wszystkie
-            dostępne kategorie.
+            Spróbuj wpisać inną
+            nazwę albo pokaż
+            wszystkie dostępne
+            kategorie.
           </p>
 
           <button

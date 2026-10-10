@@ -9,6 +9,9 @@ type Props = {
   title: string;
   description: string;
   children: ReactNode;
+  mobileBadge?:
+    | string
+    | null;
 };
 
 export default function AdminFormShell({
@@ -16,6 +19,7 @@ export default function AdminFormShell({
   title,
   description,
   children,
+  mobileBadge = null,
 }: Props) {
   return (
     <section className="admin-form-shell mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
@@ -44,9 +48,11 @@ export default function AdminFormShell({
                 {eyebrow}
               </span>
 
-              <span className="inline-flex rounded-full bg-stone-100 px-2.5 py-1.5 text-[9px] font-black text-stone-500 sm:hidden">
-                Autozapis
-              </span>
+              {mobileBadge && (
+                <span className="inline-flex rounded-full bg-stone-100 px-2.5 py-1.5 text-[9px] font-black text-stone-500 sm:hidden">
+                  {mobileBadge}
+                </span>
+              )}
             </div>
 
             <h1 className="mt-2 text-[28px] font-black leading-none tracking-[-0.05em] text-stone-950 sm:mt-1 sm:text-4xl">

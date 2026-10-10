@@ -3,6 +3,45 @@ export type ParserConfidence =
   | "medium"
   | "low";
 
+export type DetectionConfidence =
+  | "high"
+  | "medium"
+  | "low"
+  | "none";
+
+export type AffiliateKind =
+  | "onelink"
+  | "shein"
+  | "other"
+  | "none";
+
+export type ParsedOfferDiagnostics = {
+  sourceKind:
+    | "shein"
+    | "mixed"
+    | "unknown";
+
+  sourceLines: number;
+
+  ignoredNoiseLines: number;
+
+  productType: string;
+
+  nameConfidence:
+    DetectionConfidence;
+
+  priceConfidence:
+    DetectionConfidence;
+
+  categoryConfidence:
+    DetectionConfidence;
+
+  affiliateKind:
+    AffiliateKind;
+
+  signals: string[];
+};
+
 export type ParsedOffer = {
   name: string;
   shortName: string;
@@ -11,14 +50,51 @@ export type ParsedOffer = {
   affiliateUrl: string;
   category: string;
   soldText: string;
-  confidence: ParserConfidence;
-  warnings: string[];
+
+  confidence:
+    ParserConfidence;
+
+  warnings:
+    string[];
+
+  diagnostics:
+    ParsedOfferDiagnostics;
 };
 
 type TitleCandidate = {
-  original: string;
-  cleaned: string;
+  value: string;
   score: number;
+};
+
+type PriceCandidate = {
+  raw: string;
+  numeric: number;
+  lineIndex: number;
+  score: number;
+};
+
+type PriceResult = {
+  price: string;
+  oldPrice: string;
+
+  confidence:
+    DetectionConfidence;
+
+  oldPriceInferred:
+    boolean;
+};
+
+type ProductRecognition = {
+  type: string;
+  category: string;
+
+  confidence:
+    DetectionConfidence;
+};
+
+type AffiliateResult = {
+  url: string;
+  kind: AffiliateKind;
 };
 
 const SHEIN_COLLECTIONS = [
@@ -39,101 +115,686 @@ const SHEIN_COLLECTIONS = [
   "Young",
 ];
 
-const PRODUCT_KEYWORDS = [
-  "bluza",
-  "bluzka",
-  "sweter",
-  "kardigan",
-  "top",
-  "koszulka",
-  "t-shirt",
-  "tshirt",
-  "koszula",
-  "sukienka",
-  "spodnie",
-  "jeans",
-  "jeansy",
-  "spódnica",
-  "kurtka",
-  "płaszcz",
-  "kamizelka",
-  "kombinezon",
-  "szorty",
-  "buty",
-  "sandały",
-  "trampki",
-  "sneakers",
-  "torebka",
-  "torba",
-  "kolczyki",
-  "naszyjnik",
-  "bransoletka",
-  "pierścionek",
-  "gąbka",
-  "gąbeczka",
-  "pędzel",
-  "akcesoria",
-  "zestaw",
-  "hoodie",
-  "sweatshirt",
-  "sweater",
-  "dress",
-  "shirt",
-  "skirt",
-  "pants",
-  "jacket",
-  "coat",
+const PRODUCT_RULES: Array<{
+  type: string;
+  category: string;
+  patterns: RegExp[];
+}> = [
+  {
+    type:
+      "Kardigan",
+
+    category:
+      "Kardigany",
+
+    patterns: [
+      /\bkardigan/i,
+      /\bcardigan/i,
+    ],
+  },
+
+  {
+    type:
+      "Koszulka / T-shirt",
+
+    category:
+      "Topy",
+
+    patterns: [
+      /\bkoszulk/i,
+      /\bt shirt\b/i,
+      /\btshirt\b/i,
+      /\btee\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Bluzka",
+
+    category:
+      "Topy",
+
+    patterns: [
+      /\bbluzk/i,
+      /\bblouse\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Body",
+
+    category:
+      "Topy",
+
+    patterns: [
+      /\bbody\b/i,
+      /\bbodysuit/i,
+    ],
+  },
+
+  {
+    type:
+      "Crop top",
+
+    category:
+      "Topy",
+
+    patterns: [
+      /\bcrop top\b/i,
+      /\bcropped top\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Top na ramiączkach",
+
+    category:
+      "Topy",
+
+    patterns: [
+      /\btank top\b/i,
+      /\bcami top\b/i,
+      /\bcamisole\b/i,
+      /\btop na ramiaczk/i,
+    ],
+  },
+
+  {
+    type:
+      "Koszula",
+
+    category:
+      "Koszule",
+
+    patterns: [
+      /\bkoszula\b/i,
+      /\bkoszule\b/i,
+      /\bkoszuli\b/i,
+      /\bshirt\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Bluza z kapturem",
+
+    category:
+      "Bluzy",
+
+    patterns: [
+      /\bbluza z kapturem\b/i,
+      /\bhoodie\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Bluza",
+
+    category:
+      "Bluzy",
+
+    patterns: [
+      /\bbluza\b/i,
+      /\bbluzy\b/i,
+      /\bbluze\b/i,
+      /\bsweatshirt\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Golf",
+
+    category:
+      "Swetry",
+
+    patterns: [
+      /\bgolf\b/i,
+      /\bturtleneck\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Sweter",
+
+    category:
+      "Swetry",
+
+    patterns: [
+      /\bsweter/i,
+      /\bsweater\b/i,
+      /\bpullover\b/i,
+      /\bjumper\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Top",
+
+    category:
+      "Topy",
+
+    patterns: [
+      /\btop\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Sukienka",
+
+    category:
+      "Sukienki",
+
+    patterns: [
+      /\bsukienk/i,
+      /\bdress\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Spódnica",
+
+    category:
+      "Spódnice",
+
+    patterns: [
+      /\bspodnic/i,
+      /\bskirt\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Jeansy",
+
+    category:
+      "Spodnie",
+
+    patterns: [
+      /\bjeans/i,
+      /\bdenim pants\b/i,
+      /\bdenim trousers\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Legginsy",
+
+    category:
+      "Spodnie",
+
+    patterns: [
+      /\bleggins/i,
+      /\bleggings/i,
+    ],
+  },
+
+  {
+    type:
+      "Szorty",
+
+    category:
+      "Spodnie",
+
+    patterns: [
+      /\bszort/i,
+      /\bshorts?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Spodnie cargo",
+
+    category:
+      "Spodnie",
+
+    patterns: [
+      /\bspodn[a-z]* cargo\b/i,
+      /\bcargo pants?\b/i,
+      /\bcargo trousers?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Spodnie",
+
+    category:
+      "Spodnie",
+
+    patterns: [
+      /\bspodn/i,
+      /\btrousers?\b/i,
+      /\bpants?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Marynarka / żakiet",
+
+    category:
+      "Kurtki i płaszcze",
+
+    patterns: [
+      /\bmarynark/i,
+      /\bzakiet/i,
+      /\bblazer\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Kamizelka",
+
+    category:
+      "Kurtki i płaszcze",
+
+    patterns: [
+      /\bkamizelk/i,
+      /\bwaistcoat\b/i,
+      /\bvest\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Płaszcz",
+
+    category:
+      "Kurtki i płaszcze",
+
+    patterns: [
+      /\bplaszcz/i,
+      /\bcoat\b/i,
+      /\bovercoat\b/i,
+      /\btrench\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Kurtka",
+
+    category:
+      "Kurtki i płaszcze",
+
+    patterns: [
+      /\bkurtk/i,
+      /\bjacket\b/i,
+      /\bparka\b/i,
+      /\bbomber\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Torebka crossbody",
+
+    category:
+      "Torebki",
+
+    patterns: [
+      /\bcrossbody\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Torebka na ramię",
+
+    category:
+      "Torebki",
+
+    patterns: [
+      /\bshoulder bag\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Shopperka",
+
+    category:
+      "Torebki",
+
+    patterns: [
+      /\bshopper\b/i,
+      /\btote bag\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Torebka / torba",
+
+    category:
+      "Torebki",
+
+    patterns: [
+      /\btorebk/i,
+      /\btorba\b/i,
+      /\bhandbag\b/i,
+      /\bbag\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Sneakersy",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\bsneaker/i,
+    ],
+  },
+
+  {
+    type:
+      "Sandały",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\bsandal/i,
+    ],
+  },
+
+  {
+    type:
+      "Botki",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\bbotk/i,
+      /\bankle boots?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Kozaki",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\bkozak/i,
+      /\bknee high boots?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Szpilki / obcasy",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\bszpilk/i,
+      /\bhigh heels?\b/i,
+      /\bheels?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Trampki",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\btrampk/i,
+      /\bcanvas shoes?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Buty",
+
+    category:
+      "Buty",
+
+    patterns: [
+      /\bbuty\b/i,
+      /\bshoes?\b/i,
+      /\bfootwear\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Kolczyki",
+
+    category:
+      "Biżuteria",
+
+    patterns: [
+      /\bkolczyk/i,
+      /\bearrings?\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Naszyjnik",
+
+    category:
+      "Biżuteria",
+
+    patterns: [
+      /\bnaszyjnik/i,
+      /\bnecklace\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Bransoletka",
+
+    category:
+      "Biżuteria",
+
+    patterns: [
+      /\bbransolet/i,
+      /\bbracelet\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Pierścionek",
+
+    category:
+      "Biżuteria",
+
+    patterns: [
+      /\bpierscion/i,
+      /\bring\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Biżuteria",
+
+    category:
+      "Biżuteria",
+
+    patterns: [
+      /\bbizuter/i,
+      /\bjewelry\b/i,
+      /\bjewellery\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Pędzel kosmetyczny",
+
+    category:
+      "Akcesoria kosmetyczne",
+
+    patterns: [
+      /\bpedzel/i,
+      /\bmakeup brush\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Gąbka kosmetyczna",
+
+    category:
+      "Akcesoria kosmetyczne",
+
+    patterns: [
+      /\bgabk/i,
+      /\bbeauty blender\b/i,
+      /\bmakeup sponge\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Akcesoria kosmetyczne",
+
+    category:
+      "Akcesoria kosmetyczne",
+
+    patterns: [
+      /\bzalotk/i,
+      /\baplikator/i,
+      /\bmakeup tool/i,
+    ],
+  },
+
+  {
+    type:
+      "Kosmetyk",
+
+    category:
+      "Uroda",
+
+    patterns: [
+      /\bszmink/i,
+      /\bpomadk/i,
+      /\bblyszczyk/i,
+      /\bmascara\b/i,
+      /\beyeliner\b/i,
+      /\bconcealer\b/i,
+      /\bfoundation\b/i,
+      /\blipstick\b/i,
+      /\blip gloss\b/i,
+      /\bserum\b/i,
+    ],
+  },
+
+  {
+    type:
+      "Akcesoria",
+
+    category:
+      "Akcesoria",
+
+    patterns: [
+      /\bpasek\b/i,
+      /\bbelt\b/i,
+      /\bokular/i,
+      /\bsunglasses\b/i,
+      /\bczapk/i,
+      /\bkapelusz/i,
+      /\bszal\b/i,
+      /\bscarf\b/i,
+      /\bopask/i,
+      /\bspink/i,
+    ],
+  },
+
+  {
+    type:
+      "Produkt do domu",
+
+    category:
+      "Dom i lifestyle",
+
+    patterns: [
+      /\borganizer/i,
+      /\bposzewk/i,
+      /\bposciel/i,
+      /\bkoc\b/i,
+      /\bdekorac/i,
+      /\bhome decor\b/i,
+      /\bkitchen\b/i,
+      /\bpojemnik/i,
+      /\brecznik/i,
+    ],
+  },
 ];
 
-const UI_LINE_PATTERNS = [
-  /^strona główna$/i,
+const UI_PATTERNS = [
+  /^strona glowna$/i,
   /^home$/i,
   /^shein$/i,
+
   /^kobiety$/i,
-  /^mężczyźni$/i,
+  /^mezczyzni$/i,
   /^dzieci$/i,
-  /^uroda$/i,
-  /^dom$/i,
-  /^odzież damska$/i,
-  /^odzież męska$/i,
-  /^wyprzedaż$/i,
-  /^sale$/i,
 
   /^wyszukaj/i,
   /^szukaj/i,
 
-  /^wybierz kolor/i,
   /^kolor$/i,
   /^color$/i,
 
-  /^wybierz rozmiar/i,
   /^rozmiar$/i,
   /^size$/i,
 
-  /^tabela rozmiarów/i,
+  /^wybierz kolor/i,
+  /^wybierz rozmiar/i,
+
+  /^tabela rozmiarow/i,
   /^przewodnik po rozmiarach/i,
 
   /^dodaj do koszyka/i,
   /^dodaj do torby/i,
   /^kup teraz/i,
+
   /^add to bag/i,
   /^add to cart/i,
   /^buy now/i,
 
   /^dostawa/i,
-  /^wysyłka/i,
+  /^wysylka/i,
   /^shipping/i,
 
   /^zwrot/i,
-  /^returns?/i,
-
-  /^bezpłatna dostawa/i,
-  /^darmowa dostawa/i,
+  /^returns?$/i,
 
   /^opis$/i,
   /^opis produktu/i,
-  /^szczegóły/i,
-  /^szczegóły produktu/i,
+
+  /^szczegoly$/i,
+  /^szczegoly produktu/i,
+
   /^specyfikacja/i,
 
   /^recenzje/i,
@@ -145,11 +806,9 @@ const UI_LINE_PATTERNS = [
   /^sku\b/i,
   /^id produktu/i,
 
-  /^promocja/i,
-  /^kupon/i,
-  /^kod rabatowy/i,
-  /^rabat/i,
-  /^zniżka/i,
+  /^promocja$/i,
+  /^kupon$/i,
+  /^rabat$/i,
 
   /^zaloguj/i,
   /^rejestracja/i,
@@ -159,201 +818,71 @@ const UI_LINE_PATTERNS = [
   /^wishlist/i,
 
   /^podobne produkty/i,
-  /^może ci się spodobać/i,
   /^polecane/i,
 
-  /^sprzedano/i,
-  /^sprzedanych/i,
-
-  /^\d+(?:[.,]\d+)?\s*\/\s*5$/i,
-  /^\d+(?:[.,]\d+)?\s*gwiazdek?$/i,
+  /^sprzedano$/i,
+  /^sprzedanych$/i,
 
   /^[xsml]{1,4}$/i,
-  /^\d{2,3}\s*(?:cm|kg)$/i,
+
+  /^\d+(?:[.,]\d+)?\s*\/\s*5$/i,
+
+  /^\d+(?:[.,]\d+)?\s*gwiazdek?$/i,
 
   /^[-–—]+$/,
 ];
 
-const CATEGORY_RULES: Array<{
-  category: string;
-  patterns: RegExp[];
-}> = [
-  {
-    category:
-      "Kardigany",
+const CURRENT_PRICE_MARKERS = [
+  "aktualna cena",
+  "cena promocyjna",
+  "cena teraz",
+  "sale price",
+  "current price",
+  "teraz",
+  "now",
+  "price",
+  "cena",
+];
 
-    patterns: [
-      /\bkardigan/i,
-      /\bcardigan/i,
-    ],
-  },
+const OLD_PRICE_MARKERS = [
+  "stara cena",
+  "cena regularna",
+  "regularna cena",
+  "pierwotna cena",
+  "cena detaliczna",
+  "old price",
+  "regular price",
+  "retail price",
+  "original price",
+  "bylo",
+  "przedtem",
+  "was",
+];
 
-  {
-    category:
-      "Bluzy",
-
-    patterns: [
-      /\bbluz[ayę]/i,
-      /\bhoodie\b/i,
-      /\bsweatshirt\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Swetry",
-
-    patterns: [
-      /\bsweter/i,
-      /\bpullover/i,
-      /\bsweater/i,
-    ],
-  },
-
-  {
-    category:
-      "Koszule",
-
-    patterns: [
-      /\bkoszul[aeęy]/i,
-      /\bshirt\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Sukienki",
-
-    patterns: [
-      /\bsukienk/i,
-      /\bdress\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Spódnice",
-
-    patterns: [
-      /\bspódnic/i,
-      /\bskirt\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Spodnie",
-
-    patterns: [
-      /\bspodn/i,
-      /\bjeans/i,
-      /\bjeansy\b/i,
-      /\btrousers?\b/i,
-      /\bpants?\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Kurtki i płaszcze",
-
-    patterns: [
-      /\bkurtk/i,
-      /\bpłaszcz/i,
-      /\bcoat\b/i,
-      /\bjacket\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Torebki",
-
-    patterns: [
-      /\btorebk/i,
-      /\btorba\b/i,
-      /\bhandbag\b/i,
-      /\bshoulder bag\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Buty",
-
-    patterns: [
-      /\bbuty\b/i,
-      /\bsandał/i,
-      /\btrampk/i,
-      /\bsneaker/i,
-      /\bbotk/i,
-      /\bszpilk/i,
-      /\bloafers?\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Biżuteria",
-
-    patterns: [
-      /\bkolczyk/i,
-      /\bnaszyjnik/i,
-      /\bbransolet/i,
-      /\bpierścion/i,
-      /\bjewelry\b/i,
-      /\bearrings?\b/i,
-      /\bnecklace\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Akcesoria kosmetyczne",
-
-    patterns: [
-      /\bgąbk/i,
-      /\bgąbeczk/i,
-      /\bpędzel/i,
-      /\baplikator/i,
-      /\bmakeup sponge\b/i,
-      /\bmakeup brush\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Topy",
-
-    patterns: [
-      /\btop\b/i,
-      /\bcrop top\b/i,
-      /\bkoszulk/i,
-      /\bt-?shirt\b/i,
-      /\btank top\b/i,
-    ],
-  },
-
-  {
-    category:
-      "Akcesoria",
-
-    patterns: [
-      /\bopask/i,
-      /\bspink/i,
-      /\bokular/i,
-      /\bszal\b/i,
-      /\bpasek\b/i,
-      /\baccessor/i,
-    ],
-  },
+const BAD_PRICE_CONTEXT = [
+  "dostawa",
+  "wysylka",
+  "shipping",
+  "kupon",
+  "coupon",
+  "kod rabatowy",
+  "punkty",
+  "points",
+  "cashback",
+  "minimalne zamowienie",
+  "minimum order",
+  "darmowa dostawa",
+  "bezplatna dostawa",
 ];
 
 function normalizeText(
   value: string
 ) {
   return value
-    .replace(/\r/g, "\n")
+    .replace(
+      /\r\n?/g,
+      "\n"
+    )
     .replace(
       /\u00a0/g,
       " "
@@ -362,11 +891,48 @@ function normalizeText(
       /[\u200B-\u200D\uFEFF]/g,
       ""
     )
-    .replace(/\t/g, " ")
+    .replace(
+      /\t/g,
+      " "
+    )
+    .replace(
+      /[ ]{2,}/g,
+      " "
+    )
     .replace(
       /\n{3,}/g,
       "\n\n"
-    );
+    )
+    .trim();
+}
+
+function normalizeForMatch(
+  value: string
+) {
+  return value
+    .toLocaleLowerCase(
+      "pl"
+    )
+    .normalize(
+      "NFD"
+    )
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /ł/g,
+      "l"
+    )
+    .replace(
+      /[^a-z0-9%+.,:/\-\s]/g,
+      " "
+    )
+    .replace(
+      /\s+/g,
+      " "
+    )
+    .trim();
 }
 
 function cleanLine(
@@ -374,7 +940,7 @@ function cleanLine(
 ) {
   return value
     .replace(
-      /^[•·●▪▫►▶✓✔★☆]+\s*/,
+      /^[•·●▪▫►▶✓✔★☆◆◇]+\s*/,
       ""
     )
     .replace(
@@ -384,29 +950,52 @@ function cleanLine(
     .trim();
 }
 
-function normalizePrice(
+function isUrl(
   value: string
 ) {
-  return value
-    .replace(/\s/g, "")
-    .replace(".", ",");
+  return /https?:\/\//i.test(
+    value
+  );
 }
 
-function numericPrice(
+function hasCurrency(
   value: string
 ) {
-  const parsed =
-    Number(
+  return (
+    /\d[\d\s]*(?:[.,]\d{1,2})?\s*(?:zł|zl|pln)\b/i.test(
       value
-        .replace(/\s/g, "")
-        .replace(",", ".")
+    ) ||
+    /\bpln\s*\d/i.test(
+      value
+    )
+  );
+}
+
+function isUiLine(
+  value: string
+) {
+  const normalized =
+    normalizeForMatch(
+      value
     );
 
-  return Number.isFinite(
-    parsed
-  )
-    ? parsed
-    : null;
+  return UI_PATTERNS.some(
+    (
+      pattern
+    ) =>
+      pattern.test(
+        normalized
+      )
+  );
+}
+
+function escapeRegExp(
+  value: string
+) {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
 }
 
 function truncateAtWord(
@@ -423,43 +1012,35 @@ function truncateAtWord(
     return clean;
   }
 
-  const shortened =
+  const sliced =
     clean.slice(
       0,
-      maxLength + 1
+      maxLength +
+        1
     );
 
-  const lastSpace =
-    shortened.lastIndexOf(
+  const space =
+    sliced.lastIndexOf(
       " "
     );
 
   if (
-    lastSpace >=
-    Math.floor(
-      maxLength * 0.65
-    )
+    space <
+    maxLength *
+      0.6
   ) {
-    return shortened
+    return clean
       .slice(
         0,
-        lastSpace
-      )
-      .replace(
-        /[,;:\-–—]+$/,
-        ""
+        maxLength
       )
       .trim();
   }
 
-  return clean
+  return sliced
     .slice(
       0,
-      maxLength
-    )
-    .replace(
-      /[,;:\-–—]+$/,
-      ""
+      space
     )
     .trim();
 }
@@ -468,35 +1049,23 @@ function cleanProductName(
   value: string
 ) {
   let result =
-    cleanLine(value)
-      .replace(
-        /\s*\|\s*SHEIN.*$/i,
-        ""
-      )
-      .replace(
-        /\s*[-–—]\s*SHEIN.*$/i,
-        ""
-      )
-      .replace(
-        /^produkt\s*[:\-–—]\s*/i,
-        ""
-      )
-      .replace(
-        /^nazwa\s*[:\-–—]\s*/i,
-        ""
-      )
-      .replace(
-        /^SHEIN\s+/i,
-        ""
-      )
-      .trim();
+    cleanLine(
+      value
+    );
 
-  for (
-    let index = 0;
-    index < 2;
-    index += 1
+  result =
+    result.replace(
+      /^SHEIN\s+/i,
+      ""
+    );
+
+  let changed =
+    true;
+
+  while (
+    changed
   ) {
-    let changed =
+    changed =
       false;
 
     for (
@@ -530,20 +1099,16 @@ function cleanProductName(
         break;
       }
     }
-
-    if (!changed) {
-      break;
-    }
   }
 
-  result =
+  return truncateAtWord(
     result
       .replace(
-        /\bSKU\s*[:#]?\s*[A-Z0-9-]+\b/gi,
+        /\bSKU\s*[:#]?\s*[A-Z0-9_-]+\b/gi,
         ""
       )
       .replace(
-        /\bID\s*[:#]?\s*[A-Z0-9-]+\b/gi,
+        /\bID\s*(?:produktu)?\s*[:#]?\s*[A-Z0-9_-]+\b/gi,
         ""
       )
       .replace(
@@ -551,251 +1116,207 @@ function cleanProductName(
         " "
       )
       .replace(
-        /^[,;:\-–—\s]+/,
+        /^[,;:\-–—|\s]+/,
         ""
       )
       .replace(
-        /[,;:\-–—\s]+$/,
+        /[,;:\-–—|\s]+$/,
         ""
       )
-      .trim();
-
-  return truncateAtWord(
-    result,
-    180
+      .trim(),
+    190
   );
 }
 
-function createShortName(
+function recognizeProduct(
   value: string
-) {
-  const name =
-    cleanProductName(
+):
+  | {
+      type:
+        string;
+
+      category:
+        string;
+    }
+  | null {
+  const normalized =
+    normalizeForMatch(
       value
     );
 
-  if (!name) {
-    return "";
+  if (
+    !normalized
+  ) {
+    return null;
   }
 
-  const clauses =
-    name
-      .split(
-        /[,;|]/
+  for (
+    const rule
+    of PRODUCT_RULES
+  ) {
+    if (
+      rule.patterns.some(
+        (
+          pattern
+        ) =>
+          pattern.test(
+            normalized
+          )
       )
-      .map(
-        (item) =>
-          item.trim()
-      )
-      .filter(
-        Boolean
-      );
+    ) {
+      return {
+        type:
+          rule.type,
 
-  const firstClause =
-    clauses[0] ??
-    name;
+        category:
+          rule.category,
+      };
+    }
+  }
 
-  const base =
-    firstClause.length >=
-      18 &&
-    firstClause.length <=
-      78
-      ? firstClause
-      : name;
-
-  return truncateAtWord(
-    base,
-    68
-  );
+  return null;
 }
 
-function escapeRegExp(
-  value: string
-) {
-  return value.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
-}
-
-function looksLikeUrl(
-  value: string
-) {
-  return /https?:\/\//i.test(
-    value
-  );
-}
-
-function containsCurrency(
+function containsProductSignal(
   value: string
 ) {
   return (
-    /(?:\d[\d\s]*(?:[.,]\d{1,2})?)\s*(?:zł|zl|pln)\b/i.test(
+    recognizeProduct(
       value
-    ) ||
-    /\bpln\s*\d/i.test(
-      value
-    )
+    ) !==
+    null
   );
 }
 
-function looksLikeUiLine(
-  value: string
+function scoreTitle(
+  line: string,
+  lineIndex: number
 ) {
-  return UI_LINE_PATTERNS.some(
-    (pattern) =>
-      pattern.test(
-        value
-      )
-  );
-}
-
-function hasProductKeyword(
-  value: string
-) {
-  const normalized =
-    value.toLocaleLowerCase(
-      "pl"
+  const clean =
+    cleanLine(
+      line
     );
 
-  return PRODUCT_KEYWORDS.some(
-    (keyword) =>
-      normalized.includes(
-        keyword
-      )
-  );
-}
-
-function scoreTitleLine(
-  value: string
-) {
-  const line =
-    cleanLine(value);
-
   if (
-    !line ||
-    looksLikeUrl(line) ||
-    containsCurrency(line) ||
-    looksLikeUiLine(line)
-  ) {
-    return -1000;
-  }
-
-  if (
-    /^\d+(?:[.,]\d+)?%?$/.test(
-      line
+    !clean ||
+    isUrl(
+      clean
+    ) ||
+    hasCurrency(
+      clean
+    ) ||
+    isUiLine(
+      clean
     )
   ) {
     return -1000;
   }
 
   if (
-    /^[-+]?\d+\s*%/.test(
-      line
-    )
-  ) {
-    return -1000;
-  }
-
-  if (
-    line.length < 8
+    clean.length <
+    7
   ) {
     return -100;
   }
 
   if (
-    line.length > 240
+    clean.length >
+    260
   ) {
-    return -50;
+    return -70;
   }
 
-  const words =
-    line
-      .split(/\s+/)
-      .filter(Boolean);
-
-  const letters =
-    line.match(
-      /[a-ząćęłńóśźż]/gi
-    )?.length ?? 0;
-
-  const letterRatio =
-    letters /
-    Math.max(
-      line.length,
-      1
+  const normalized =
+    normalizeForMatch(
+      clean
     );
 
-  let score = 0;
+  const words =
+    clean
+      .split(
+        /\s+/
+      )
+      .filter(
+        Boolean
+      );
+
+  let score =
+    0;
 
   if (
-    hasProductKeyword(
-      line
+    containsProductSignal(
+      clean
     )
   ) {
-    score += 28;
+    score +=
+      42;
   }
 
   if (
-    /^SHEIN\b/i.test(
-      line
-    )
+    words.length >=
+      3 &&
+    words.length <=
+      24
   ) {
-    score += 12;
-  }
-
-  if (
-    words.length >= 4 &&
-    words.length <= 24
-  ) {
-    score += 12;
+    score +=
+      15;
   } else if (
-    words.length >= 2 &&
-    words.length <= 30
+    words.length ===
+    2
   ) {
-    score += 5;
+    score +=
+      5;
   }
 
   if (
-    line.length >= 20 &&
-    line.length <= 150
+    clean.length >=
+      18 &&
+    clean.length <=
+      150
   ) {
-    score += 10;
+    score +=
+      12;
   }
 
   if (
-    letterRatio >= 0.65
-  ) {
-    score += 8;
-  } else if (
-    letterRatio <
-    0.45
-  ) {
-    score -= 12;
-  }
-
-  if (
-    /damsk|męsk|kobiet|dziewcz|oversize|dekolt|kapturem|dzianin|bawełn|jednolit|paski|krótki rękaw|długi rękaw/i.test(
-      line
+    /damsk|mesk|kobiet|oversize|dekolt|rekaw|dzianin|dopasowan|eleganck|casual|wide leg|slim|regular/i.test(
+      normalized
     )
   ) {
-    score += 7;
+    score +=
+      8;
   }
 
   if (
-    /promocj|rabat|kupon|gratis|dostaw|zwrot|punkty|aplikacj/i.test(
-      line
+    /promocj|rabat|kupon|gratis|dostaw|zwrot|punkty|aplikacj|wyprzedaz/i.test(
+      normalized
     )
   ) {
-    score -= 30;
+    score -=
+      40;
   }
 
   if (
     /\d{5,}/.test(
-      line
+      clean
     )
   ) {
-    score -= 15;
+    score -=
+      18;
+  }
+
+  if (
+    lineIndex <=
+    5
+  ) {
+    score +=
+      8;
+  } else if (
+    lineIndex <=
+    12
+  ) {
+    score +=
+      3;
   }
 
   return score;
@@ -803,232 +1324,269 @@ function scoreTitleLine(
 
 function extractName(
   lines: string[]
-): {
-  name: string;
-  shortName: string;
-  score: number;
-} {
-  const candidates: TitleCandidate[] =
-    lines
-      .map(
-        (
-          line
-        ): TitleCandidate => ({
-          original:
-            line,
+) {
+  const candidates:
+    TitleCandidate[] =
+    [];
 
-          cleaned:
+  lines.forEach(
+    (
+      line,
+      index
+    ) => {
+      const score =
+        scoreTitle(
+          line,
+          index
+        );
+
+      if (
+        score >
+        -100
+      ) {
+        candidates.push({
+          value:
             cleanProductName(
               line
             ),
 
-          score:
-            scoreTitleLine(
-              line
-            ),
-        })
-      )
-      .filter(
-        (candidate) =>
-          candidate.cleaned
-            .length >= 8 &&
-          candidate.score >
-            -100
-      )
-      .sort(
-        (a, b) =>
-          b.score -
-          a.score
-      );
+          score,
+        });
+      }
+
+      const next =
+        lines[
+          index +
+            1
+        ];
+
+      if (
+        !next
+      ) {
+        return;
+      }
+
+      if (
+        isUrl(
+          line
+        ) ||
+        isUrl(
+          next
+        ) ||
+        hasCurrency(
+          line
+        ) ||
+        hasCurrency(
+          next
+        ) ||
+        isUiLine(
+          line
+        ) ||
+        isUiLine(
+          next
+        )
+      ) {
+        return;
+      }
+
+      const combined =
+        `${line} ${next}`;
+
+      if (
+        combined.length >
+        190
+      ) {
+        return;
+      }
+
+      if (
+        !containsProductSignal(
+          combined
+        )
+      ) {
+        return;
+      }
+
+      candidates.push({
+        value:
+          cleanProductName(
+            combined
+          ),
+
+        score:
+          scoreTitle(
+            combined,
+            index
+          ) +
+          3,
+      });
+    }
+  );
+
+  candidates.sort(
+    (
+      first,
+      second
+    ) =>
+      second.score -
+      first.score
+  );
 
   const winner =
-    candidates[0];
-
-  if (!winner) {
-    return {
-      name: "",
-      shortName: "",
-      score: 0,
-    };
-  }
-
-  const name =
-    winner.cleaned;
-
-  return {
-    name,
-    shortName:
-      createShortName(
-        name
-      ),
-    score:
-      winner.score,
-  };
-}
-
-function extractUrls(
-  text: string
-) {
-  const matches =
-    text.match(
-      /https?:\/\/[^\s<>"']+/gi
-    ) ?? [];
-
-  return matches
-    .map(
-      (url) =>
-        url.replace(
-          /[)\],.;!?]+$/,
-          ""
-        )
-    )
-    .filter(
-      (url) => {
-        try {
-          new URL(url);
-
-          return true;
-        } catch {
-          return false;
-        }
-      }
-    );
-}
-
-function extractAffiliateUrl(
-  text: string
-) {
-  const urls =
-    extractUrls(
-      text
+    candidates.find(
+      (
+        candidate
+      ) =>
+        candidate.value.length >=
+        7
     );
 
   if (
-    urls.length === 0
+    !winner
+  ) {
+    return {
+      name:
+        "",
+
+      score:
+        0,
+
+      confidence:
+        "none" as const,
+    };
+  }
+
+  const confidence:
+    DetectionConfidence =
+    winner.score >=
+    55
+      ? "high"
+      : winner.score >=
+          28
+        ? "medium"
+        : "low";
+
+  return {
+    name:
+      winner.value,
+
+    score:
+      winner.score,
+
+    confidence,
+  };
+}
+
+function createShortName(
+  name: string
+) {
+  const clean =
+    cleanProductName(
+      name
+    );
+
+  if (
+    !clean
   ) {
     return "";
   }
 
-  const onelink =
-    urls.find(
-      (url) =>
-        /onelink\.shein\.com/i.test(
-          url
-        )
-    );
+  const parts =
+    clean
+      .split(
+        /[,;|]/
+      )
+      .map(
+        (
+          value
+        ) =>
+          value.trim()
+      )
+      .filter(
+        Boolean
+      );
 
-  if (onelink) {
-    return onelink;
+  let result =
+    parts[0] ??
+    clean;
+
+  if (
+    result.length <
+      16 &&
+    parts[1]
+  ) {
+    const combined =
+      `${result} ${parts[1]}`;
+
+    if (
+      combined.length <=
+      68
+    ) {
+      result =
+        combined;
+    }
   }
 
-  const sheinUrl =
-    urls.find(
-      (url) =>
-        /(?:^|\.)shein\.com/i.test(
-          getHostname(
-            url
-          )
-        ) ||
-        /shein\.com/i.test(
-          url
-        )
-    );
-
-  return (
-    sheinUrl ??
-    urls[0]
+  return truncateAtWord(
+    result,
+    68
   );
 }
 
-function getHostname(
-  url: string
-) {
-  try {
-    return new URL(
-      url
-    ).hostname;
-  } catch {
-    return "";
-  }
-}
-
-function extractExplicitCurrentPrice(
-  text: string
-) {
-  const patterns = [
-    /(?:aktualna\s+cena|cena\s+promocyjna|cena\s+teraz|cena|price)\s*[:=\[\-–—]?\s*(?:PLN\s*)?(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|PLN)?/i,
-
-    /(?:teraz|now)\s*[:=\[\-–—]?\s*(?:PLN\s*)?(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|PLN)/i,
-  ];
-
-  for (
-    const pattern
-    of patterns
-  ) {
-    const match =
-      text.match(
-        pattern
-      );
-
-    if (
-      match?.[1]
-    ) {
-      return normalizePrice(
-        match[1]
-      );
-    }
-  }
-
-  return "";
-}
-
-function extractExplicitOldPrice(
-  text: string
-) {
-  const patterns = [
-    /(?:stara\s+cena|cena\s+regularna|regularna\s+cena|cena\s+detaliczna|pierwotna\s+cena|old\s+price|regular\s+price|retail\s+price|było|przedtem)\s*[:=\[\-–—]?\s*(?:PLN\s*)?(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|PLN)?/i,
-  ];
-
-  for (
-    const pattern
-    of patterns
-  ) {
-    const match =
-      text.match(
-        pattern
-      );
-
-    if (
-      match?.[1]
-    ) {
-      return normalizePrice(
-        match[1]
-      );
-    }
-  }
-
-  return "";
-}
-
-function extractCurrencyPrices(
+function normalizePrice(
   value: string
 ) {
-  const result: string[] =
-    [];
-
-  const afterNumber =
-    value.matchAll(
-      /(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|PLN)\b/gi
+  return value
+    .replace(
+      /\s/g,
+      ""
+    )
+    .replace(
+      ".",
+      ","
     );
+}
+
+function numericPrice(
+  value: string
+) {
+  const number =
+    Number(
+      value
+        .replace(
+          /\s/g,
+          ""
+        )
+        .replace(
+          ",",
+          "."
+        )
+    );
+
+  return Number.isFinite(
+    number
+  )
+    ? number
+    : null;
+}
+
+function extractPricesFromLine(
+  line: string
+) {
+  const values:
+    string[] =
+    [];
 
   for (
     const match
-    of afterNumber
+    of line.matchAll(
+      /(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|pln)\b/gi
+    )
   ) {
     if (
       match[1]
     ) {
-      result.push(
+      values.push(
         normalizePrice(
           match[1]
         )
@@ -1036,19 +1594,16 @@ function extractCurrencyPrices(
     }
   }
 
-  const beforeNumber =
-    value.matchAll(
-      /\bPLN\s*(\d{1,5}(?:[.,]\d{1,2})?)/gi
-    );
-
   for (
     const match
-    of beforeNumber
+    of line.matchAll(
+      /\bpln\s*(\d{1,5}(?:[.,]\d{1,2})?)/gi
+    )
   ) {
     if (
       match[1]
     ) {
-      result.push(
+      values.push(
         normalizePrice(
           match[1]
         )
@@ -1058,204 +1613,554 @@ function extractCurrencyPrices(
 
   return [
     ...new Set(
-      result
+      values
     ),
   ].filter(
-    (price) => {
-      const numeric =
+    (
+      value
+    ) => {
+      const number =
         numericPrice(
-          price
+          value
         );
 
       return (
-        numeric !== null &&
-        numeric >= 1 &&
-        numeric <= 50000
+        number !==
+          null &&
+        number >=
+          1 &&
+        number <=
+          50000
       );
     }
   );
 }
 
-function extractPrices(
-  text: string,
-  lines: string[]
+function containsMarker(
+  value: string,
+  markers: string[]
 ) {
-  let price =
-    extractExplicitCurrentPrice(
-      text
+  const normalized =
+    normalizeForMatch(
+      value
     );
 
-  let oldPrice =
-    extractExplicitOldPrice(
-      text
-    );
-
-  const priceLines =
-    lines
-      .map(
-        (line) => ({
-          line,
-          prices:
-            extractCurrencyPrices(
-              line
-            ),
-        })
+  return markers.some(
+    (
+      marker
+    ) =>
+      normalized.includes(
+        normalizeForMatch(
+          marker
+        )
       )
-      .filter(
-        (item) =>
-          item.prices
-            .length > 0
-      );
+  );
+}
 
-  if (
-    !price &&
-    priceLines.length > 0
-  ) {
-    price =
-      priceLines[0]
-        .prices[0] ??
-      "";
-  }
+function extractPrices(
+  lines: string[]
+): PriceResult {
+  const current:
+    PriceCandidate[] =
+    [];
 
-  if (!oldPrice) {
-    for (
-      const item
-      of priceLines
-    ) {
+  const old:
+    PriceCandidate[] =
+    [];
+
+  lines.forEach(
+    (
+      line,
+      lineIndex
+    ) => {
+      const prices =
+        extractPricesFromLine(
+          line
+        );
+
       if (
-        item.prices.length <
-        2
+        prices.length ===
+        0
       ) {
-        continue;
+        return;
       }
 
-      const values =
-        item.prices
-          .map(
-            (itemPrice) => ({
-              raw:
-                itemPrice,
+      const badContext =
+        containsMarker(
+          line,
+          BAD_PRICE_CONTEXT
+        );
 
-              numeric:
-                numericPrice(
-                  itemPrice
-                ),
-            })
+      const currentMarker =
+        containsMarker(
+          line,
+          CURRENT_PRICE_MARKERS
+        );
+
+      const oldMarker =
+        containsMarker(
+          line,
+          OLD_PRICE_MARKERS
+        );
+
+      const numbers =
+        prices
+          .map(
+            numericPrice
           )
           .filter(
             (
-              itemPrice
-            ): itemPrice is {
-              raw: string;
-              numeric: number;
-            } =>
-              itemPrice.numeric !==
+              value
+            ): value is number =>
+              value !==
               null
-          )
-          .sort(
-            (a, b) =>
-              a.numeric -
-              b.numeric
           );
 
-      if (
-        values.length <
-        2
-      ) {
-        continue;
-      }
+      const minimum =
+        numbers.length
+          ? Math.min(
+              ...numbers
+            )
+          : null;
 
-      if (!price) {
-        price =
-          values[0].raw;
-      }
+      const maximum =
+        numbers.length
+          ? Math.max(
+              ...numbers
+            )
+          : null;
 
-      const currentNumeric =
-        numericPrice(
-          price
-        );
+      prices.forEach(
+        (
+          raw,
+          valueIndex
+        ) => {
+          const numeric =
+            numericPrice(
+              raw
+            );
 
-      const bigger =
-        values.find(
-          (value) =>
-            currentNumeric !==
+          if (
+            numeric ===
+            null
+          ) {
+            return;
+          }
+
+          let currentScore =
+            20;
+
+          let oldScore =
+            5;
+
+          if (
+            badContext
+          ) {
+            currentScore -=
+              80;
+
+            oldScore -=
+              80;
+          }
+
+          if (
+            currentMarker
+          ) {
+            currentScore +=
+              50;
+          }
+
+          if (
+            oldMarker
+          ) {
+            oldScore +=
+              70;
+
+            currentScore -=
+              30;
+          }
+
+          if (
+            lineIndex <=
+            12
+          ) {
+            currentScore +=
+              5;
+          }
+
+          if (
+            minimum !==
               null &&
-            value.numeric >
-              currentNumeric *
-                1.02
-        );
+            numbers.length >
+              1 &&
+            numeric ===
+              minimum
+          ) {
+            currentScore +=
+              18;
+          }
 
-      if (bigger) {
-        oldPrice =
-          bigger.raw;
+          if (
+            minimum !==
+              null &&
+            maximum !==
+              null &&
+            maximum >
+              minimum *
+                1.02 &&
+            numeric ===
+              maximum
+          ) {
+            oldScore +=
+              28;
+          }
 
-        break;
-      }
+          currentScore -=
+            valueIndex *
+            2;
+
+          current.push({
+            raw,
+            numeric,
+            lineIndex,
+            score:
+              currentScore,
+          });
+
+          old.push({
+            raw,
+            numeric,
+            lineIndex,
+            score:
+              oldScore,
+          });
+        }
+      );
     }
-  }
+  );
+
+  current.sort(
+    (
+      first,
+      second
+    ) =>
+      second.score -
+      first.score
+  );
+
+  old.sort(
+    (
+      first,
+      second
+    ) =>
+      second.score -
+      first.score
+  );
+
+  const selected =
+    current.find(
+      (
+        candidate
+      ) =>
+        candidate.score >
+        0
+    );
 
   if (
-    price &&
-    oldPrice
+    !selected
   ) {
-    const current =
-      numericPrice(
-        price
-      );
+    return {
+      price:
+        "",
 
-    const old =
-      numericPrice(
-        oldPrice
+      oldPrice:
+        "",
+
+      confidence:
+        "none",
+
+      oldPriceInferred:
+        false,
+    };
+  }
+
+  let oldPrice =
+    "";
+
+  let oldPriceInferred =
+    false;
+
+  const explicitOld =
+    old.find(
+      (
+        candidate
+      ) =>
+        candidate.score >=
+          55 &&
+        candidate.numeric >
+          selected.numeric *
+            1.02
+    );
+
+  if (
+    explicitOld
+  ) {
+    oldPrice =
+      explicitOld.raw;
+  } else {
+    const sameLineHigher =
+      current.find(
+        (
+          candidate
+        ) =>
+          candidate.lineIndex ===
+            selected.lineIndex &&
+          candidate.numeric >
+            selected.numeric *
+              1.02
       );
 
     if (
-      current !== null &&
-      old !== null &&
-      old <= current
+      sameLineHigher
     ) {
-      oldPrice = "";
+      oldPrice =
+        sameLineHigher.raw;
+
+      oldPriceInferred =
+        true;
     }
   }
 
+  const confidence:
+    DetectionConfidence =
+    selected.score >=
+    65
+      ? "high"
+      : selected.score >=
+          35
+        ? "medium"
+        : "low";
+
   return {
-    price,
+    price:
+      selected.raw,
+
     oldPrice,
+
+    confidence,
+
+    oldPriceInferred,
   };
 }
 
-function inferCategory(
-  name: string
+function extractUrls(
+  text: string
 ) {
-  if (!name) {
+  const matches =
+    text.match(
+      /https?:\/\/[^\s<>"']+/gi
+    ) ??
+    [];
+
+  return [
+    ...new Set(
+      matches
+        .map(
+          (
+            url
+          ) =>
+            url.replace(
+              /[)\],.;!?]+$/,
+              ""
+            )
+        )
+        .filter(
+          (
+            url
+          ) => {
+            try {
+              const parsed =
+                new URL(
+                  url
+                );
+
+              return (
+                parsed.protocol ===
+                  "https:" ||
+                parsed.protocol ===
+                  "http:"
+              );
+            } catch {
+              return false;
+            }
+          }
+        )
+    ),
+  ];
+}
+
+function getHostname(
+  value: string
+) {
+  try {
+    return new URL(
+      value
+    ).hostname.toLowerCase();
+  } catch {
     return "";
   }
+}
 
-  for (
-    const rule
-    of CATEGORY_RULES
+function extractAffiliateUrl(
+  text: string
+): AffiliateResult {
+  const urls =
+    extractUrls(
+      text
+    );
+
+  if (
+    urls.length ===
+    0
   ) {
-    if (
-      rule.patterns.some(
-        (pattern) =>
-          pattern.test(
-            name
-          )
-      )
-    ) {
-      return rule.category;
-    }
+    return {
+      url:
+        "",
+
+      kind:
+        "none",
+    };
   }
 
-  return "";
+  const oneLink =
+    urls.find(
+      (
+        url
+      ) =>
+        getHostname(
+          url
+        ) ===
+        "onelink.shein.com"
+    );
+
+  if (
+    oneLink
+  ) {
+    return {
+      url:
+        oneLink,
+
+      kind:
+        "onelink",
+    };
+  }
+
+  const shein =
+    urls.find(
+      (
+        url
+      ) => {
+        const host =
+          getHostname(
+            url
+          );
+
+        return (
+          host ===
+            "shein.com" ||
+          host.endsWith(
+            ".shein.com"
+          )
+        );
+      }
+    );
+
+  if (
+    shein
+  ) {
+    return {
+      url:
+        shein,
+
+      kind:
+        "shein",
+    };
+  }
+
+  return {
+    url:
+      urls[0],
+
+    kind:
+      "other",
+  };
+}
+
+function recognizeCategory({
+  name,
+  text,
+}: {
+  name: string;
+  text: string;
+}): ProductRecognition {
+  const nameRecognition =
+    recognizeProduct(
+      name
+    );
+
+  if (
+    nameRecognition
+  ) {
+    return {
+      ...nameRecognition,
+
+      confidence:
+        "high",
+    };
+  }
+
+  const textRecognition =
+    recognizeProduct(
+      text
+    );
+
+  if (
+    textRecognition
+  ) {
+    return {
+      ...textRecognition,
+
+      confidence:
+        "medium",
+    };
+  }
+
+  return {
+    type:
+      "",
+
+    category:
+      "",
+
+    confidence:
+      "none",
+  };
 }
 
 function extractSoldText(
   text: string
 ) {
-  const patterns = [
-    /(\d+(?:[.,]\d+)?\s*[kK]?\+?)\s*(?:sprzedanych|sprzedano|sprzedaży)/i,
+  const normalized =
+    normalizeForMatch(
+      text
+    );
 
-    /(\d+(?:[.,]\d+)?\s*[kK]?\+?)\s*(?:sold)/i,
+  const patterns = [
+    /(\d+(?:[.,]\d+)?\s*k?\+?)\s*(?:sprzedanych|sprzedano|sprzedazy)/i,
+
+    /(?:sprzedano|sprzedanych)\s*(\d+(?:[.,]\d+)?\s*k?\+?)/i,
+
+    /(\d+(?:[.,]\d+)?\s*k?\+?)\s*sold\b/i,
   ];
 
   for (
@@ -1263,7 +2168,7 @@ function extractSoldText(
     of patterns
   ) {
     const match =
-      text.match(
+      normalized.match(
         pattern
       );
 
@@ -1285,72 +2190,139 @@ function extractSoldText(
   return "";
 }
 
-function calculateConfidence({
-  titleScore,
-  name,
-  price,
-  affiliateUrl,
+function confidencePoints(
+  value:
+    DetectionConfidence
+) {
+  switch (
+    value
+  ) {
+    case "high":
+      return 25;
+
+    case "medium":
+      return 18;
+
+    case "low":
+      return 8;
+
+    default:
+      return 0;
+  }
+}
+
+function calculateOverallConfidence({
+  nameConfidence,
+  priceConfidence,
+  categoryConfidence,
+  affiliateKind,
 }: {
-  titleScore: number;
-  name: string;
-  price: string;
-  affiliateUrl: string;
+  nameConfidence:
+    DetectionConfidence;
+
+  priceConfidence:
+    DetectionConfidence;
+
+  categoryConfidence:
+    DetectionConfidence;
+
+  affiliateKind:
+    AffiliateKind;
 }): ParserConfidence {
-  let score = 0;
+  let score =
+    confidencePoints(
+      nameConfidence
+    ) +
+    confidencePoints(
+      priceConfidence
+    ) +
+    confidencePoints(
+      categoryConfidence
+    );
 
   if (
-    name &&
-    titleScore >= 35
+    affiliateKind ===
+    "onelink"
   ) {
-    score += 3;
+    score +=
+      30;
   } else if (
-    name &&
-    titleScore >= 20
+    affiliateKind ===
+    "shein"
   ) {
-    score += 2;
-  } else if (name) {
-    score += 1;
-  }
-
-  if (price) {
-    score += 2;
+    score +=
+      20;
+  } else if (
+    affiliateKind ===
+    "other"
+  ) {
+    score +=
+      5;
   }
 
   if (
-    affiliateUrl &&
-    /onelink\.shein\.com/i.test(
-      affiliateUrl
-    )
+    score >=
+    80
   ) {
-    score += 3;
-  } else if (
-    affiliateUrl
-  ) {
-    score += 1;
-  }
-
-  if (score >= 7) {
     return "high";
   }
 
-  if (score >= 4) {
+  if (
+    score >=
+    50
+  ) {
     return "medium";
   }
 
   return "low";
 }
 
-export function parseOfferText(
-  text: string
-): ParsedOffer {
-  const normalizedText =
-    normalizeText(
+function detectSourceKind(
+  text: string,
+  affiliateKind:
+    AffiliateKind
+):
+  | "shein"
+  | "mixed"
+  | "unknown" {
+  if (
+    affiliateKind ===
+      "onelink" ||
+    affiliateKind ===
+      "shein" ||
+    normalizeForMatch(
       text
+    ).includes(
+      "shein"
+    )
+  ) {
+    return "shein";
+  }
+
+  if (
+    /https?:\/\//i.test(
+      text
+    )
+  ) {
+    return "mixed";
+  }
+
+  return "unknown";
+}
+
+export function parseOfferText(
+  input: string
+): ParsedOffer {
+  const text =
+    normalizeText(
+      input
     );
 
-  const lines =
-    normalizedText
-      .split("\n")
+  const rawLines =
+    text
+      .split(
+        "\n"
+      )
       .map(
         cleanLine
       )
@@ -1358,113 +2330,281 @@ export function parseOfferText(
         Boolean
       );
 
-  const title =
+  const usefulLines =
+    rawLines.filter(
+      (
+        line
+      ) =>
+        !isUiLine(
+          line
+        )
+    );
+
+  const ignoredNoiseLines =
+    rawLines.length -
+    usefulLines.length;
+
+  const nameResult =
     extractName(
-      lines
+      usefulLines
     );
 
-  const {
-    price,
-    oldPrice,
-  } =
+  const shortName =
+    createShortName(
+      nameResult.name
+    );
+
+  const priceResult =
     extractPrices(
-      normalizedText,
-      lines
+      rawLines
     );
 
-  const affiliateUrl =
+  const product =
+    recognizeCategory({
+      name:
+        nameResult.name,
+
+      text:
+        usefulLines.join(
+          "\n"
+        ),
+    });
+
+  const affiliate =
     extractAffiliateUrl(
-      normalizedText
-    );
-
-  const category =
-    inferCategory(
-      title.name
+      text
     );
 
   const soldText =
     extractSoldText(
-      normalizedText
+      text
     );
 
-  const confidence =
-    calculateConfidence({
-      titleScore:
-        title.score,
-
-      name:
-        title.name,
-
-      price,
-
-      affiliateUrl,
-    });
-
-  const warnings: string[] =
+  const signals:
+    string[] =
     [];
 
-  if (!title.name) {
-    warnings.push(
-      "Nie udało się pewnie rozpoznać nazwy produktu."
-    );
-  } else if (
-    title.score < 20
+  if (
+    nameResult.name
   ) {
-    warnings.push(
-      "Nazwa została rozpoznana z niską pewnością — sprawdź ją ręcznie."
-    );
-  }
-
-  if (!price) {
-    warnings.push(
-      "Nie znaleziono jednoznacznej ceny."
+    signals.push(
+      "nazwa"
     );
   }
 
   if (
-    !affiliateUrl
+    product.type
   ) {
-    warnings.push(
-      "Nie znaleziono linku wklejonego razem z ofertą."
-    );
-  } else if (
-    !/onelink\.shein\.com/i.test(
-      affiliateUrl
-    )
-  ) {
-    warnings.push(
-      "Znaleziony link nie wygląda jak standardowy link afiliacyjny SHEIN OneLink."
+    signals.push(
+      product.type
     );
   }
 
   if (
-    !category &&
-    title.name
+    priceResult.price
   ) {
-    warnings.push(
-      "Nie rozpoznano automatycznie kategorii."
+    signals.push(
+      "cena"
     );
   }
+
+  if (
+    product.category
+  ) {
+    signals.push(
+      product.category
+    );
+  }
+
+  if (
+    affiliate.kind ===
+    "onelink"
+  ) {
+    signals.push(
+      "SHEIN OneLink"
+    );
+  } else if (
+    affiliate.kind ===
+    "shein"
+  ) {
+    signals.push(
+      "link SHEIN"
+    );
+  }
+
+  if (
+    soldText
+  ) {
+    signals.push(
+      "sprzedaż"
+    );
+  }
+
+  const warnings:
+    string[] =
+    [];
+
+  if (
+    !nameResult.name
+  ) {
+    warnings.push(
+      "Nie udało się jednoznacznie rozpoznać nazwy produktu."
+    );
+  } else if (
+    nameResult.confidence ===
+    "low"
+  ) {
+    warnings.push(
+      "Nazwa produktu została rozpoznana z niską pewnością."
+    );
+  }
+
+  if (
+    !priceResult.price
+  ) {
+    warnings.push(
+      "Nie znaleziono jednoznacznej aktualnej ceny."
+    );
+  } else if (
+    priceResult.confidence ===
+    "low"
+  ) {
+    warnings.push(
+      "Sprawdź cenę — system nie ma pełnej pewności, czy rozpoznana kwota jest ceną produktu."
+    );
+  }
+
+  if (
+    priceResult.oldPrice
+  ) {
+    warnings.push(
+      priceResult.oldPriceInferred
+        ? "Stara cena została wywnioskowana z dwóch kwot obok siebie. Sprawdź ją przed publikacją."
+        : "Rozpoznano starą cenę. Sprawdź, czy faktycznie jest wcześniejszą ceną produktu."
+    );
+  }
+
+  if (
+    !product.category
+  ) {
+    warnings.push(
+      "Nie udało się automatycznie dobrać kategorii."
+    );
+  } else if (
+    product.confidence ===
+    "medium"
+  ) {
+    warnings.push(
+      "Kategoria została rozpoznana na podstawie dodatkowej treści, a nie samej nazwy."
+    );
+  }
+
+  if (
+    !affiliate.url
+  ) {
+    warnings.push(
+      "Nie znaleziono linku we wklejonej treści."
+    );
+  } else if (
+    affiliate.kind ===
+    "other"
+  ) {
+    warnings.push(
+      "Znaleziony link nie wygląda jak link SHEIN."
+    );
+  } else if (
+    affiliate.kind ===
+    "shein"
+  ) {
+    warnings.push(
+      "Rozpoznano zwykły link SHEIN. Sprawdź, czy jest właściwym linkiem afiliacyjnym."
+    );
+  }
+
+  if (
+    soldText
+  ) {
+    warnings.push(
+      "Informację o sprzedaży publikuj tylko wtedy, gdy nadal jest aktualna."
+    );
+  }
+
+  const confidence =
+    calculateOverallConfidence({
+      nameConfidence:
+        nameResult.confidence,
+
+      priceConfidence:
+        priceResult.confidence,
+
+      categoryConfidence:
+        product.confidence,
+
+      affiliateKind:
+        affiliate.kind,
+    });
 
   return {
     name:
-      title.name,
+      nameResult.name,
 
-    shortName:
-      title.shortName,
+    shortName,
 
-    price,
+    price:
+      priceResult.price,
 
-    oldPrice,
+    oldPrice:
+      priceResult.oldPrice,
 
-    affiliateUrl,
+    affiliateUrl:
+      affiliate.url,
 
-    category,
+    category:
+      product.category,
 
     soldText,
 
     confidence,
 
-    warnings,
+    warnings: [
+      ...new Set(
+        warnings
+      ),
+    ],
+
+    diagnostics: {
+      sourceKind:
+        detectSourceKind(
+          text,
+          affiliate.kind
+        ),
+
+      sourceLines:
+        rawLines.length,
+
+      ignoredNoiseLines,
+
+      productType:
+        product.type,
+
+      nameConfidence:
+        nameResult.confidence,
+
+      priceConfidence:
+        priceResult.confidence,
+
+      categoryConfidence:
+        product.confidence,
+
+      affiliateKind:
+        affiliate.kind,
+
+      signals:
+        [
+          ...new Set(
+            signals
+          ),
+        ],
+    },
   };
 }
