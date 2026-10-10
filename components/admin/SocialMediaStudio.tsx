@@ -25,24 +25,18 @@ type SocialProduct = {
 type SlideType = "cover" | "product" | "outro";
 type TemplateType = "minimal" | "fashion" | "deal";
 type ImageFit = "contain" | "cover";
-type ImageStatus =
-  | "idle"
-  | "loading"
-  | "ready"
-  | "fallback"
-  | "error";
+type ImageStatus = "idle" | "loading" | "ready" | "fallback" | "error";
 
 type SlideTitles = Record<SlideType, string>;
 
 type StudioDraft = {
-  version: 4;
+  version: 3;
   template: TemplateType;
   imageFit: ImageFit;
   showPrice: boolean;
   showOldPrice: boolean;
   showSheinSource: boolean;
   showCategory: boolean;
-  showCropGuide: boolean;
   titles: SlideTitles;
 };
 
@@ -54,7 +48,6 @@ type ExportState = {
 
 type SlideTheme = {
   page: string;
-  core: string;
   panel: string;
   panelStrong: string;
   border: string;
@@ -68,14 +61,11 @@ type SlideTheme = {
   exportBackground: string;
 };
 
-const DEFAULT_COVER_TITLE =
-  "Modowe znalezisko, które warto zobaczyć";
-
+const DEFAULT_COVER_TITLE = "Modowe znalezisko warte uwagi";
 const DEFAULT_OUTRO_TITLE =
   "Więcej modowych okazji znajdziesz na Trend za Mniej";
 
-const MAX_NORMALIZED_IMAGE_SIDE =
-  2048;
+const MAX_NORMALIZED_IMAGE_SIDE = 2048;
 
 const EXPORT_ORDER: SlideType[] = [
   "cover",
@@ -97,19 +87,17 @@ const SLIDE_DESCRIPTIONS: Record<
   string
 > = {
   cover:
-    "Pierwszy slajd z marką, reklamą i produktem w bezpiecznym kadrze.",
+    "Mocny pierwszy slajd, który zatrzymuje uwagę.",
 
   product:
-    "Cena i najważniejsze dane pozostają widoczne również po cropie 1:1.",
+    "Najważniejsze informacje o produkcie i cenie.",
 
   outro:
-    "Adres strony i CTA są ustawione w centralnej strefie widoczności.",
+    "Czytelne zakończenie z adresem strony.",
 };
 
 function formatPrice(
-  value:
-    | number
-    | string
+  value: number | string
 ) {
   const numericValue =
     Number(
@@ -142,9 +130,7 @@ function formatPrice(
 }
 
 function getDiscountPercent(
-  price:
-    | number
-    | string,
+  price: number | string,
   oldPrice:
     | number
     | string
@@ -215,7 +201,7 @@ function getStorageKey(
   productId:
     string
 ) {
-  return `trend-za-mniej:social-studio:v4:${productId}`;
+  return `trend-za-mniej:social-studio:v3:${productId}`;
 }
 
 function getSlideFileName(
@@ -307,7 +293,7 @@ async function waitForExportPaint() {
       ) => {
         window.setTimeout(
           resolve,
-          160
+          140
         );
       }
     );
@@ -472,11 +458,7 @@ async function normalizeRemoteImage(
       try {
         await image.decode();
       } catch {
-        /*
-         * WebKit potrafi
-         * odrzucić decode()
-         * mimo poprawnego onload.
-         */
+        // Safari potrafi odrzucić decode() mimo poprawnego onload.
       }
     }
 
@@ -676,11 +658,7 @@ async function waitForImages(
           try {
             await image.decode();
           } catch {
-            /*
-             * onload pozostaje
-             * fallbackiem
-             * dla Safari.
-             */
+            // onload jest wystarczającym fallbackiem dla WebKit.
           }
         }
 
@@ -841,11 +819,11 @@ export default function SocialMediaStudio({
     );
 
   const [
-    showCropGuide,
-    setShowCropGuide,
+    showSafeArea,
+    setShowSafeArea,
   ] =
     useState(
-      true
+      false
     );
 
   const [
@@ -1047,7 +1025,7 @@ export default function SocialMediaStudio({
 
         if (
           parsed.version !==
-          4
+          3
         ) {
           setDraftReady(
             true
@@ -1117,15 +1095,6 @@ export default function SocialMediaStudio({
         }
 
         if (
-          typeof parsed.showCropGuide ===
-          "boolean"
-        ) {
-          setShowCropGuide(
-            parsed.showCropGuide
-          );
-        }
-
-        if (
           parsed.titles
         ) {
           setTitles({
@@ -1175,7 +1144,7 @@ export default function SocialMediaStudio({
             const draft:
               StudioDraft = {
               version:
-                4,
+                3,
 
               template,
 
@@ -1188,8 +1157,6 @@ export default function SocialMediaStudio({
               showSheinSource,
 
               showCategory,
-
-              showCropGuide,
 
               titles,
             };
@@ -1238,7 +1205,6 @@ export default function SocialMediaStudio({
       imageFit,
       product.id,
       showCategory,
-      showCropGuide,
       showOldPrice,
       showPrice,
       showSheinSource,
@@ -1299,8 +1265,8 @@ export default function SocialMediaStudio({
       true
     );
 
-    setShowCropGuide(
-      true
+    setShowSafeArea(
+      false
     );
 
     setTitles(
@@ -1328,11 +1294,7 @@ export default function SocialMediaStudio({
           )
         );
     } catch {
-      /*
-       * localStorage
-       * może być
-       * niedostępny.
-       */
+      // localStorage może być niedostępny w niektórych trybach prywatnych.
     }
   }
 
@@ -1404,10 +1366,10 @@ export default function SocialMediaStudio({
 
     const productImages =
       Array.from(
-        node.querySelectorAll(
+        node.querySelectorAll<HTMLImageElement>(
           '[data-social-product-image="true"]'
         )
-      ) as HTMLImageElement[];
+      );
 
     for (
       const image
@@ -1437,9 +1399,7 @@ export default function SocialMediaStudio({
     if (
       document.fonts
     ) {
-      await document
-        .fonts
-        .ready;
+      await document.fonts.ready;
     }
 
     await waitForExportPaint();
@@ -1913,8 +1873,8 @@ export default function SocialMediaStudio({
         showCategory={
           showCategory
         }
-        showCropGuide={
-          showCropGuide
+        showSafeArea={
+          showSafeArea
         }
         title={
           titles[
@@ -1940,8 +1900,8 @@ export default function SocialMediaStudio({
                     Social Media Studio
                   </h1>
 
-                  <span className="rounded-full bg-[#ff375f] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-white">
-                    TikTok Safe 4.0
+                  <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-stone-500">
+                    Studio 9:16
                   </span>
                 </div>
 
@@ -1960,12 +1920,6 @@ export default function SocialMediaStudio({
 
               <StatusChip>
                 1080 × 1920
-              </StatusChip>
-
-              <StatusChip
-                success
-              >
-                1:1 crop-safe
               </StatusChip>
 
               <StatusChip
@@ -2018,27 +1972,10 @@ export default function SocialMediaStudio({
             </div>
           </div>
 
-          <div className="border-t border-black/[0.05] bg-[#fff7f8] px-4 py-3 sm:px-5">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-              <span className="inline-flex w-fit rounded-full bg-[#ff375f] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white">
-                Nowy układ
-              </span>
-
-              <p className="text-[10px] font-bold leading-4 text-[#8f4150]">
-                Wszystkie kluczowe
-                dane są teraz
-                w centralnym
-                kwadracie
-                1080 × 1080.
-                Góra i dół 9:16
-                są tylko
-                rozszerzeniem tła,
-                więc crop TikToka
-                nie usuwa marki,
-                reklamy, ceny ani
-                adresu strony.
-              </p>
-            </div>
+          <div className="border-t border-black/[0.05] bg-[#fafafa] px-4 py-2.5 sm:px-5">
+            <p className="text-[9px] font-bold leading-4 text-stone-400">
+              Czyste slajdy 9:16 · PNG 1080 × 1920 · bez technicznych napisów w gotowej grafice
+            </p>
           </div>
         </section>
 
@@ -2140,7 +2077,7 @@ export default function SocialMediaStudio({
 
             <ControlGroup
               title={`Tekst · ${currentSlideLabel}`}
-              subtitle="Najważniejszy tekst zostaje wewnątrz kadru 1:1"
+              subtitle="Krótko, konkretnie i czytelnie na telefonie"
             >
               <textarea
                 value={
@@ -2182,7 +2119,7 @@ export default function SocialMediaStudio({
                 "cover") && (
               <ControlGroup
                 title="Zdjęcie produktu"
-                subtitle="Kadrowanie pionowe z ochroną centralnego kwadratu"
+                subtitle="Kadrowanie zoptymalizowane pod pionowy format"
               >
                 <SegmentedControl
                   value={
@@ -2219,15 +2156,15 @@ export default function SocialMediaStudio({
                   <p className="text-[10px] font-black text-stone-700">
                     {imageFit ===
                     "contain"
-                      ? "Pełny produkt bez obcięcia"
-                      : "Mocniejszy kadr zdjęcia"}
+                      ? "Bez obcinania produktu"
+                      : "Mocniejszy kadr"}
                   </p>
 
                   <p className="mt-1 text-[9px] leading-4 text-stone-400">
                     {imageFit ===
                     "contain"
-                      ? "Najbezpieczniejsza opcja. Produkt pozostaje w całości widoczny także w centralnym cropie."
-                      : "Zdjęcie wypełnia całą strefę produktu. Używaj, gdy obiekt jest dobrze wycentrowany."}
+                      ? "Zdjęcie zachowuje pełny produkt i dostaje eleganckie tło zamiast pustych pasów."
+                      : "Obraz wypełnia całą kartę. Najlepiej działa na zdjęciach z produktem blisko środka."}
                   </p>
                 </div>
               </ControlGroup>
@@ -2237,7 +2174,7 @@ export default function SocialMediaStudio({
               "product" && (
               <ControlGroup
                 title="Informacje produktu"
-                subtitle="Dane widoczne także w kaflu i przy cropie"
+                subtitle="Kontroluj ilość informacji na slajdzie"
               >
                 <div className="overflow-hidden rounded-[17px] border border-black/[0.06] bg-white">
                   <SwitchRow
@@ -2264,7 +2201,7 @@ export default function SocialMediaStudio({
                       product.oldPrice ===
                       null
                         ? "Produkt nie ma zapisanej starej ceny"
-                        : "Pokaż starą cenę i procent obniżki"
+                        : "Pokaż starą cenę oraz procent obniżki"
                     }
                     active={
                       showOldPrice
@@ -2287,7 +2224,7 @@ export default function SocialMediaStudio({
 
                   <SwitchRow
                     label="Kategoria"
-                    description="Pokaż kategorię produktu"
+                    description="Pokaż kategorię nad nazwą produktu"
                     active={
                       showCategory
                     }
@@ -2305,7 +2242,7 @@ export default function SocialMediaStudio({
 
                   <SwitchRow
                     label="Źródło SHEIN"
-                    description="Pokaż źródło przy produkcie"
+                    description="Pokaż oznaczenie źródła przy zdjęciu"
                     active={
                       showSheinSource
                     }
@@ -2326,12 +2263,12 @@ export default function SocialMediaStudio({
               "cover" && (
               <ControlGroup
                 title="Okładka"
-                subtitle="Informacja o źródle pozostaje w kadrze 1:1"
+                subtitle="Dodatkowe informacje na pierwszym slajdzie"
               >
                 <div className="overflow-hidden rounded-[17px] border border-black/[0.06] bg-white">
                   <SwitchRow
                     label="Źródło SHEIN"
-                    description="Pokaż źródło produktu"
+                    description="Pokaż źródło produktu na zdjęciu"
                     active={
                       showSheinSource
                     }
@@ -2349,18 +2286,18 @@ export default function SocialMediaStudio({
             )}
 
             <ControlGroup
-              title="Kadr TikTok"
-              subtitle="Sprawdź dokładnie, co zostanie widoczne po cropie"
+              title="Bezpieczne marginesy"
+              subtitle="Pomocniczy podgląd elementów interfejsu aplikacji"
             >
               <div className="overflow-hidden rounded-[17px] border border-black/[0.06] bg-white">
                 <SwitchRow
-                  label="Pokaż centralny crop 1:1"
-                  description="Przyciemnia obszar poza bezpiecznym kwadratem"
+                  label="Pokaż marginesy"
+                  description="Wyświetla tylko w podglądzie obszary, których lepiej nie zasłaniać treścią"
                   active={
-                    showCropGuide
+                    showSafeArea
                   }
                   onClick={() =>
-                    setShowCropGuide(
+                    setShowSafeArea(
                       (
                         current
                       ) =>
@@ -2370,29 +2307,20 @@ export default function SocialMediaStudio({
                 />
               </div>
 
-              <div className="mt-3 rounded-[15px] bg-[#fff0f3] px-3.5 py-3">
-                <p className="text-[10px] font-black text-[#a52943]">
-                  Najważniejsza zasada
+              <div className="mt-3 rounded-[15px] bg-amber-50 px-3.5 py-3">
+                <p className="text-[10px] font-black text-amber-900">
+                  Materiał reklamowy
                 </p>
 
-                <p className="mt-1 text-[9px] leading-4 text-[#a52943]/70">
-                  Logo, oznaczenie
-                  reklamowe, produkt,
-                  cena i
-                  trendzamniej.pl
-                  są zawsze
-                  wewnątrz centralnego
-                  kwadratu. Nic
-                  ważnego nie opiera
-                  się już o samą
-                  górę lub dół 9:16.
+                <p className="mt-1 text-[9px] leading-4 text-amber-700/70">
+                  Każdy slajd ma widoczne oznaczenie „Materiał reklamowy · SHEIN”.
                 </p>
               </div>
             </ControlGroup>
 
             <ControlGroup
               title="Eksport"
-              subtitle="PNG 1080 × 1920 · crop-safe 1:1"
+              subtitle="PNG 1080 × 1920"
             >
               <button
                 type="button"
@@ -2467,13 +2395,13 @@ export default function SocialMediaStudio({
 
           <section className="order-1 xl:order-2 xl:sticky xl:top-24">
             <div className="overflow-hidden rounded-[30px] border border-black/[0.06] bg-[#e9e9ed] shadow-[0_20px_70px_rgba(15,23,42,0.10)]">
-              <div className="flex flex-col gap-3 border-b border-black/[0.05] bg-white/85 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="flex flex-col gap-3 border-b border-black/[0.05] bg-white/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-[0.14em] text-stone-400">
                     Podgląd publikacji
                   </p>
 
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <div className="mt-1 flex items-center gap-2">
                     <p className="text-sm font-black text-stone-900">
                       {
                         currentSlideLabel
@@ -2483,8 +2411,11 @@ export default function SocialMediaStudio({
                     <span className="h-1 w-1 rounded-full bg-stone-300" />
 
                     <p className="text-[10px] font-semibold text-stone-400">
-                      środek odporny
-                      na crop 1:1
+                      {
+                        SLIDE_DESCRIPTIONS[
+                          slideType
+                        ]
+                      }
                     </p>
                   </div>
                 </div>
@@ -2494,8 +2425,8 @@ export default function SocialMediaStudio({
                     1080 × 1920
                   </span>
 
-                  <span className="rounded-full bg-[#ff375f] px-2.5 py-1.5 text-[9px] font-black text-white">
-                    1:1 SAFE
+                  <span className="rounded-full bg-stone-950 px-2.5 py-1.5 text-[9px] font-black text-white">
+                    9:16
                   </span>
                 </div>
               </div>
@@ -2623,7 +2554,7 @@ export default function SocialMediaStudio({
                 showCategory={
                   showCategory
                 }
-                showCropGuide={
+                showSafeArea={
                   false
                 }
                 title={
@@ -2649,7 +2580,7 @@ function SocialSlide({
   showOldPrice,
   showSheinSource,
   showCategory,
-  showCropGuide,
+  showSafeArea,
   title,
 }: {
   product:
@@ -2676,7 +2607,7 @@ function SocialSlide({
   showCategory:
     boolean;
 
-  showCropGuide:
+  showSafeArea:
     boolean;
 
   title:
@@ -2702,230 +2633,74 @@ function SocialSlide({
         }
       />
 
-      <DecorativeTop
-        template={
-          template
-        }
-        slideType={
-          slideType
-        }
-      />
+      <div className="relative z-10 h-full px-[5.2cqw] pb-[6.2cqw] pt-[5cqw]">
+        {slideType ===
+          "cover" && (
+          <CoverSlide
+            product={
+              product
+            }
+            template={
+              template
+            }
+            imageFit={
+              imageFit
+            }
+            showSheinSource={
+              showSheinSource
+            }
+            title={
+              title
+            }
+          />
+        )}
 
-      <DecorativeBottom
-        template={
-          template
-        }
-      />
+        {slideType ===
+          "product" && (
+          <ProductSlide
+            product={
+              product
+            }
+            template={
+              template
+            }
+            imageFit={
+              imageFit
+            }
+            showPrice={
+              showPrice
+            }
+            showOldPrice={
+              showOldPrice
+            }
+            showSheinSource={
+              showSheinSource
+            }
+            showCategory={
+              showCategory
+            }
+            title={
+              title
+            }
+          />
+        )}
 
-      <div className="absolute inset-x-0 top-[38.888cqw] z-10 h-[100cqw]">
-        <div className="h-full px-[5.2cqw] py-[4cqw]">
-          <div
-            className={[
-              "h-full overflow-hidden rounded-[6cqw] border shadow-[0_4cqw_16cqw_rgba(0,0,0,0.10)]",
-
-              theme.core,
-              theme.border,
-            ].join(
-              " "
-            )}
-          >
-            {slideType ===
-              "cover" && (
-              <CoverCore
-                product={
-                  product
-                }
-                template={
-                  template
-                }
-                imageFit={
-                  imageFit
-                }
-                showSheinSource={
-                  showSheinSource
-                }
-                title={
-                  title
-                }
-              />
-            )}
-
-            {slideType ===
-              "product" && (
-              <ProductCore
-                product={
-                  product
-                }
-                template={
-                  template
-                }
-                imageFit={
-                  imageFit
-                }
-                showPrice={
-                  showPrice
-                }
-                showOldPrice={
-                  showOldPrice
-                }
-                showSheinSource={
-                  showSheinSource
-                }
-                showCategory={
-                  showCategory
-                }
-                title={
-                  title
-                }
-              />
-            )}
-
-            {slideType ===
-              "outro" && (
-              <OutroCore
-                template={
-                  template
-                }
-                title={
-                  title
-                }
-              />
-            )}
-          </div>
-        </div>
+        {slideType ===
+          "outro" && (
+          <OutroSlide
+            template={
+              template
+            }
+            title={
+              title
+            }
+          />
+        )}
       </div>
 
-      {showCropGuide && (
-        <SquareCropOverlay />
+      {showSafeArea && (
+        <SafeAreaOverlay />
       )}
-    </div>
-  );
-}
-
-function CoreBrandHeader({
-  template,
-  compact = false,
-}: {
-  template:
-    TemplateType;
-
-  compact?:
-    boolean;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <div className="flex items-center justify-between gap-[2cqw]">
-      <div className="flex min-w-0 items-center gap-[1.7cqw]">
-        <div
-          className={[
-            "flex shrink-0 items-center justify-center rounded-[1.8cqw] font-black",
-
-            compact
-              ? "h-[5.4cqw] w-[5.4cqw] text-[2.1cqw]"
-              : "h-[6cqw] w-[6cqw] text-[2.3cqw]",
-
-            theme.logo,
-          ].join(
-            " "
-          )}
-        >
-          T
-        </div>
-
-        <div className="min-w-0">
-          <p
-            className={[
-              "truncate font-black tracking-[-0.035em]",
-
-              compact
-                ? "text-[2cqw]"
-                : "text-[2.2cqw]",
-
-              theme.text,
-            ].join(
-              " "
-            )}
-          >
-            Trend za Mniej
-          </p>
-
-          <p
-            className={[
-              "mt-[0.1cqw] font-semibold",
-
-              compact
-                ? "text-[1.15cqw]"
-                : "text-[1.3cqw]",
-
-              theme.muted,
-            ].join(
-              " "
-            )}
-          >
-            modowe okazje
-            i znaleziska
-          </p>
-        </div>
-      </div>
-
-      <span
-        className={[
-          "rounded-full px-[1.8cqw] py-[0.8cqw] text-[1.15cqw] font-black uppercase tracking-[0.08em]",
-          theme.pill,
-        ].join(
-          " "
-        )}
-      >
-        TikTok
-      </span>
-    </div>
-  );
-}
-
-function CoreDisclosure({
-  template,
-}: {
-  template:
-    TemplateType;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <div className="mt-[1.7cqw] flex items-center justify-between gap-[2cqw]">
-      <span
-        className={[
-          "inline-flex items-center gap-[0.8cqw] rounded-full border px-[1.8cqw] py-[0.7cqw] text-[1.12cqw] font-black uppercase tracking-[0.07em]",
-
-          theme.panel,
-          theme.border,
-          theme.text,
-        ].join(
-          " "
-        )}
-      >
-        <span className="h-[0.8cqw] w-[0.8cqw] rounded-full bg-[#ff375f]" />
-
-        Materiał reklamowy ·
-        SHEIN
-      </span>
-
-      <span
-        className={[
-          "shrink-0 text-[1.15cqw] font-black",
-          theme.accent,
-        ].join(
-          " "
-        )}
-      >
-        trendzamniej.pl
-      </span>
     </div>
   );
 }
@@ -2937,6 +2712,7 @@ function ProductImageStage({
   featured,
   showSheinSource,
   discountPercent,
+  compact = false,
 }: {
   product:
     SocialProduct;
@@ -2955,6 +2731,9 @@ function ProductImageStage({
 
   discountPercent:
     number | null;
+
+  compact?:
+    boolean;
 }) {
   const theme =
     getSlideTheme(
@@ -2964,9 +2743,13 @@ function ProductImageStage({
   return (
     <div
       className={[
-        "relative h-full w-full overflow-hidden rounded-[3.5cqw] border",
+        "relative h-full w-full overflow-hidden",
+
+        compact
+          ? "rounded-[4.4cqw]"
+          : "rounded-[4.8cqw]",
+
         theme.imageSurface,
-        theme.border,
       ].join(
         " "
       )}
@@ -2980,17 +2763,17 @@ function ProductImageStage({
 
               template ===
               "deal"
-                ? "bg-gradient-to-br from-[#2d2d33] via-[#1b1b1f] to-[#101012]"
+                ? "bg-gradient-to-br from-[#29292f] via-[#18181b] to-[#101012]"
                 : template ===
                     "fashion"
-                  ? "bg-gradient-to-br from-[#fffaf7] via-[#f3e6df] to-[#e7d7ce]"
-                  : "bg-gradient-to-br from-white via-[#f5f5f8] to-[#e8e8ed]",
+                  ? "bg-gradient-to-br from-[#fffaf7] via-[#f4e9e3] to-[#eadbd3]"
+                  : "bg-gradient-to-br from-white via-[#f6f6f8] to-[#e9e9ee]",
             ].join(
               " "
             )}
           />
 
-          <div className="absolute inset-[7%] rounded-[3cqw] border border-white/35 bg-white/10" />
+          <div className="absolute inset-[8%] rounded-[4cqw] border border-white/35 bg-white/10" />
         </div>
       )}
 
@@ -3014,24 +2797,26 @@ function ProductImageStage({
           imageFit ===
           "cover"
             ? "object-cover object-center"
-            : "object-contain p-[3cqw]",
+            : compact
+              ? "object-contain p-[3.4cqw]"
+              : "object-contain p-[4.2cqw]",
         ].join(
           " "
         )}
       />
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[27%] bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[30%] bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
-      <div className="absolute left-[2cqw] top-[2cqw] z-[3] flex max-w-[80%] flex-wrap gap-[0.9cqw]">
+      <div className="absolute left-[2.5cqw] top-[2.5cqw] z-[3] flex max-w-[78%] flex-wrap gap-[1.1cqw]">
         {featured && (
-          <span className="rounded-full border border-white/55 bg-white px-[2cqw] py-[0.8cqw] text-[1.3cqw] font-black text-stone-900 shadow-sm">
+          <span className="rounded-full border border-white/55 bg-white px-[2.35cqw] py-[1cqw] text-[1.65cqw] font-black text-stone-900 shadow-[0_1cqw_3cqw_rgba(0,0,0,0.10)]">
             🔥 Wybrane
           </span>
         )}
 
         {discountPercent !==
           null && (
-          <span className="rounded-full bg-[#ff375f] px-[2cqw] py-[0.8cqw] text-[1.3cqw] font-black text-white shadow-sm">
+          <span className="rounded-full bg-[#ff375f] px-[2.35cqw] py-[1cqw] text-[1.65cqw] font-black text-white shadow-[0_1cqw_3cqw_rgba(0,0,0,0.10)]">
             -
             {
               discountPercent
@@ -3042,9 +2827,9 @@ function ProductImageStage({
       </div>
 
       {showSheinSource && (
-        <div className="absolute bottom-[2cqw] left-[2cqw] z-[3]">
-          <span className="inline-flex items-center gap-[0.8cqw] rounded-full bg-black/72 px-[2cqw] py-[0.85cqw] text-[1.25cqw] font-black text-white">
-            <span className="h-[0.8cqw] w-[0.8cqw] rounded-full bg-[#ff6b81]" />
+        <div className="absolute bottom-[2.5cqw] left-[2.5cqw] z-[3]">
+          <span className="inline-flex items-center gap-[1cqw] rounded-full bg-black/72 px-[2.5cqw] py-[1.1cqw] text-[1.65cqw] font-black text-white">
+            <span className="h-[0.9cqw] w-[0.9cqw] rounded-full bg-[#ff6b81]" />
 
             Znalezisko z SHEIN
           </span>
@@ -3054,148 +2839,7 @@ function ProductImageStage({
   );
 }
 
-function CoverCore({
-  product,
-  template,
-  imageFit,
-  showSheinSource,
-  title,
-}: {
-  product:
-    SocialProduct;
-
-  template:
-    TemplateType;
-
-  imageFit:
-    ImageFit;
-
-  showSheinSource:
-    boolean;
-
-  title:
-    string;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  const discountPercent =
-    getDiscountPercent(
-      product.price,
-      product.oldPrice
-    );
-
-  return (
-    <div className="flex h-full flex-col px-[4cqw] py-[3.7cqw]">
-      <CoreBrandHeader
-        template={
-          template
-        }
-      />
-
-      <CoreDisclosure
-        template={
-          template
-        }
-      />
-
-      <div className="mt-[2.4cqw] grid min-h-0 flex-1 grid-cols-[0.93fr_1.07fr] gap-[2.4cqw]">
-        <div className="flex min-w-0 flex-col justify-center">
-          <p
-            className={[
-              "text-[1.35cqw] font-black uppercase tracking-[0.15em]",
-              theme.accent,
-            ].join(
-              " "
-            )}
-          >
-            Dzisiejsze
-            znalezisko
-          </p>
-
-          <h2
-            className={[
-              "mt-[1.3cqw] line-clamp-4 text-[4.5cqw] font-black leading-[0.94] tracking-[-0.058em]",
-              theme.text,
-            ].join(
-              " "
-            )}
-          >
-            {
-              title
-            }
-          </h2>
-
-          <p
-            className={[
-              "mt-[1.7cqw] text-[1.45cqw] font-semibold leading-[1.45]",
-              theme.muted,
-            ].join(
-              " "
-            )}
-          >
-            Przesuń dalej,
-            aby zobaczyć
-            cenę i najważniejsze
-            informacje.
-          </p>
-
-          <div className="mt-[2cqw] flex flex-wrap gap-[0.8cqw]">
-            <InfoPill
-              template={
-                template
-              }
-            >
-              SHEIN
-            </InfoPill>
-
-            <InfoPill
-              template={
-                template
-              }
-            >
-              Wybrane ręcznie
-            </InfoPill>
-          </div>
-        </div>
-
-        <div className="min-h-0">
-          <ProductImageStage
-            product={
-              product
-            }
-            imageFit={
-              imageFit
-            }
-            template={
-              template
-            }
-            featured={
-              product.featured
-            }
-            showSheinSource={
-              showSheinSource
-            }
-            discountPercent={
-              discountPercent
-            }
-          />
-        </div>
-      </div>
-
-      <CoreWebsiteBar
-        template={
-          template
-        }
-        label="Cena i szczegóły na kolejnym slajdzie"
-      />
-    </div>
-  );
-}
-
-function ProductCore({
+function ProductSlide({
   product,
   template,
   imageFit,
@@ -3243,81 +2887,118 @@ function ProductCore({
       : null;
 
   return (
-    <div className="flex h-full flex-col px-[4cqw] py-[3.7cqw]">
-      <CoreBrandHeader
+    <div className="flex h-full flex-col">
+      <SlideHeader
         template={
           template
         }
       />
 
-      <CoreDisclosure
-        template={
-          template
-        }
-      />
+      <div className="mt-[2cqw]">
+        <DisclosureBadge
+          template={
+            template
+          }
+        />
+      </div>
 
-      <div className="mt-[2.2cqw] grid min-h-0 flex-1 grid-cols-[1.08fr_0.92fr] gap-[2.4cqw]">
-        <div className="min-h-0">
-          <ProductImageStage
-            product={
-              product
-            }
-            imageFit={
-              imageFit
-            }
-            template={
-              template
-            }
-            featured={
-              product.featured
-            }
-            showSheinSource={
-              showSheinSource
-            }
-            discountPercent={
-              discountPercent
-            }
-          />
-        </div>
+      <div
+        className={[
+          "mt-[3.2cqw] h-[86cqw] rounded-[6.2cqw] border p-[1.7cqw] shadow-[0_4cqw_13cqw_rgba(0,0,0,0.10)]",
 
-        <div className="flex min-w-0 flex-col justify-center">
-          {showCategory && (
-            <div className="flex items-center gap-[1cqw]">
-              <span className="h-[0.85cqw] w-[0.85cqw] rounded-full bg-[#ff375f]" />
+          theme.panelStrong,
+          theme.border,
+        ].join(
+          " "
+        )}
+      >
+        <ProductImageStage
+          product={
+            product
+          }
+          imageFit={
+            imageFit
+          }
+          template={
+            template
+          }
+          featured={
+            product.featured
+          }
+          showSheinSource={
+            showSheinSource
+          }
+          discountPercent={
+            discountPercent
+          }
+        />
+      </div>
 
-              <p
-                className={[
-                  "max-w-[33cqw] truncate text-[1.25cqw] font-black uppercase tracking-[0.11em]",
-                  theme.accent,
-                ].join(
-                  " "
-                )}
-              >
-                {
-                  product.category
-                }
-              </p>
-            </div>
-          )}
+      <div
+        className={[
+          "mt-[3cqw] rounded-[5cqw] border px-[4.1cqw] py-[3.5cqw] shadow-[0_2cqw_7cqw_rgba(0,0,0,0.055)]",
 
-          <h2
-            className={[
-              "mt-[1.1cqw] line-clamp-3 text-[4.2cqw] font-black leading-[0.95] tracking-[-0.055em]",
-              theme.text,
-            ].join(
-              " "
-            )}
-          >
-            {
-              title
-            }
-          </h2>
+          theme.panel,
+          theme.border,
+        ].join(
+          " "
+        )}
+      >
+        {showCategory && (
+          <div className="flex items-center gap-[1.35cqw]">
+            <span className="h-[1cqw] w-[1cqw] rounded-full bg-[#ff375f]" />
+
+            <p
+              className={[
+                "max-w-[62cqw] truncate text-[1.8cqw] font-black uppercase tracking-[0.12em]",
+
+                theme.accent,
+              ].join(
+                " "
+              )}
+            >
+              {
+                product.category
+              }
+            </p>
+          </div>
+        )}
+
+        <div className="mt-[1.65cqw] flex items-start gap-[3.2cqw]">
+          <div className="min-w-0 flex-1">
+            <h2
+              className={[
+                "line-clamp-2 text-[5.35cqw] font-black leading-[0.98] tracking-[-0.055em]",
+
+                theme.text,
+              ].join(
+                " "
+              )}
+            >
+              {
+                title
+              }
+            </h2>
+
+            <p
+              className={[
+                "mt-[1.55cqw] text-[1.55cqw] font-semibold leading-[1.35]",
+
+                theme.muted,
+              ].join(
+                " "
+              )}
+            >
+              Cena i dostępność mogą zmienić się po przejściu do SHEIN.
+            </p>
+          </div>
 
           {showPrice && (
-            <div className="mt-[2cqw]">
+            <div className="shrink-0 text-right">
               <p
                 className={[
-                  "whitespace-nowrap text-[5.2cqw] font-black tracking-[-0.06em]",
+                  "whitespace-nowrap text-[4.9cqw] font-black tracking-[-0.055em]",
+
                   theme.text,
                 ].join(
                   " "
@@ -3331,16 +3012,16 @@ function ProductCore({
               {showOldPrice &&
                 product.oldPrice !==
                   null && (
-                  <div className="mt-[0.6cqw] flex flex-wrap items-center gap-[0.8cqw]">
-                    <span className="text-[1.6cqw] font-bold text-stone-400 line-through">
+                  <div className="mt-[0.45cqw] flex items-center justify-end gap-[0.9cqw]">
+                    <p className="text-[1.9cqw] font-bold text-stone-400 line-through">
                       {formatPrice(
                         product.oldPrice
                       )}
-                    </span>
+                    </p>
 
                     {discountPercent !==
                       null && (
-                      <span className="rounded-full bg-[#ff375f] px-[1.5cqw] py-[0.55cqw] text-[1.2cqw] font-black text-white">
+                      <span className="rounded-full bg-[#ff375f]/10 px-[1.2cqw] py-[0.45cqw] text-[1.35cqw] font-black text-[#ff375f]">
                         -
                         {
                           discountPercent
@@ -3350,54 +3031,182 @@ function ProductCore({
                     )}
                   </div>
                 )}
+
+              <p
+                className={[
+                  "mt-[0.6cqw] text-[1.35cqw] font-semibold",
+
+                  theme.muted,
+                ].join(
+                  " "
+                )}
+              >
+                cena zapisana
+              </p>
             </div>
           )}
-
-          <p
-            className={[
-              "mt-[1.5cqw] text-[1.3cqw] font-semibold leading-[1.4]",
-              theme.muted,
-            ].join(
-              " "
-            )}
-          >
-            Cena i dostępność
-            mogą zmienić się
-            po przejściu
-            do sklepu.
-          </p>
-
-          <div className="mt-[1.7cqw] flex flex-wrap gap-[0.8cqw]">
-            <InfoPill
-              template={
-                template
-              }
-            >
-              SHEIN
-            </InfoPill>
-
-            <InfoPill
-              template={
-                template
-              }
-            >
-              Trend za Mniej
-            </InfoPill>
-          </div>
         </div>
       </div>
 
-      <CoreWebsiteBar
-        template={
-          template
-        }
-        label="Sprawdź aktualną ofertę"
-      />
+      <div className="mt-auto pt-[2.7cqw]">
+        <SlideFooter
+          template={
+            template
+          }
+        />
+      </div>
     </div>
   );
 }
 
-function OutroCore({
+function CoverSlide({
+  product,
+  template,
+  imageFit,
+  showSheinSource,
+  title,
+}: {
+  product:
+    SocialProduct;
+
+  template:
+    TemplateType;
+
+  imageFit:
+    ImageFit;
+
+  showSheinSource:
+    boolean;
+
+  title:
+    string;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  const discountPercent =
+    getDiscountPercent(
+      product.price,
+      product.oldPrice
+    );
+
+  return (
+    <div className="flex h-full flex-col">
+      <SlideHeader
+        template={
+          template
+        }
+      />
+
+      <div className="mt-[2cqw]">
+        <DisclosureBadge
+          template={
+            template
+          }
+        />
+      </div>
+
+      <div className="mt-[3cqw]">
+        <p
+          className={[
+            "text-[1.8cqw] font-black uppercase tracking-[0.15em]",
+
+            theme.accent,
+          ].join(
+            " "
+          )}
+        >
+          Dzisiejsze znalezisko
+        </p>
+
+        <h2
+          className={[
+            "mt-[1.5cqw] max-w-[84cqw] text-[7.1cqw] font-black leading-[0.93] tracking-[-0.062em]",
+
+            theme.text,
+          ].join(
+            " "
+          )}
+        >
+          {
+            title
+          }
+        </h2>
+
+        <p
+          className={[
+            "mt-[2cqw] max-w-[73cqw] text-[1.9cqw] font-semibold leading-[1.45]",
+
+            theme.muted,
+          ].join(
+            " "
+          )}
+        >
+          Produkt, który zwrócił naszą uwagę — zobacz cenę i szczegóły na kolejnym slajdzie.
+        </p>
+      </div>
+
+      <div
+        className={[
+          "relative mt-[3.5cqw] h-[91cqw] rounded-[6.3cqw] border p-[1.7cqw] shadow-[0_5cqw_16cqw_rgba(0,0,0,0.12)]",
+
+          theme.panelStrong,
+          theme.border,
+        ].join(
+          " "
+        )}
+      >
+        <ProductImageStage
+          product={
+            product
+          }
+          imageFit={
+            imageFit
+          }
+          template={
+            template
+          }
+          featured={
+            product.featured
+          }
+          showSheinSource={
+            false
+          }
+          discountPercent={
+            discountPercent
+          }
+          compact
+        />
+
+        <div className="absolute inset-x-[4.2cqw] bottom-[4.2cqw] z-[5] flex items-end justify-between gap-[2cqw]">
+          {showSheinSource && (
+            <span className="inline-flex items-center gap-[0.8cqw] rounded-full bg-black/[0.72] px-[2.2cqw] py-[0.95cqw] text-[1.45cqw] font-black text-white">
+              <span className="h-[0.8cqw] w-[0.8cqw] rounded-full bg-[#ff6b81]" />
+
+              SHEIN
+            </span>
+          )}
+
+          <p className="ml-auto rounded-full bg-white px-[2.6cqw] py-[1.15cqw] text-[1.65cqw] font-black text-stone-950 shadow-[0_1cqw_4cqw_rgba(0,0,0,0.14)]">
+            Cena i szczegóły →
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-auto pt-[2.8cqw]">
+        <SlideFooter
+          template={
+            template
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function OutroSlide({
   template,
   title,
 }: {
@@ -3413,24 +3222,36 @@ function OutroCore({
     );
 
   return (
-    <div className="flex h-full flex-col px-[4cqw] py-[3.7cqw]">
-      <CoreBrandHeader
+    <div className="flex h-full flex-col">
+      <SlideHeader
         template={
           template
         }
       />
 
-      <CoreDisclosure
-        template={
-          template
-        }
-      />
+      <div className="mt-[2cqw]">
+        <DisclosureBadge
+          template={
+            template
+          }
+        />
+      </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center py-[2cqw] text-center">
-        <div className="w-full max-w-[72cqw]">
+      <div className="flex flex-1 items-center justify-center py-[4cqw]">
+        <div
+          className={[
+            "w-full rounded-[7cqw] border px-[6cqw] py-[7.5cqw] text-center shadow-[0_5cqw_16cqw_rgba(0,0,0,0.08)]",
+
+            theme.panel,
+            theme.border,
+          ].join(
+            " "
+          )}
+        >
           <div
             className={[
-              "mx-auto flex h-[11cqw] w-[11cqw] items-center justify-center rounded-[3.5cqw] text-[4cqw] font-black shadow-[0_2cqw_6cqw_rgba(0,0,0,0.09)]",
+              "mx-auto flex h-[14cqw] w-[14cqw] items-center justify-center rounded-[4.4cqw] text-[5cqw] font-black shadow-[0_2cqw_6cqw_rgba(0,0,0,0.10)]",
+
               theme.logo,
             ].join(
               " "
@@ -3441,7 +3262,8 @@ function OutroCore({
 
           <p
             className={[
-              "mt-[2.2cqw] text-[1.35cqw] font-black uppercase tracking-[0.16em]",
+              "mt-[4cqw] text-[1.8cqw] font-black uppercase tracking-[0.17em]",
+
               theme.accent,
             ].join(
               " "
@@ -3452,7 +3274,8 @@ function OutroCore({
 
           <h2
             className={[
-              "mx-auto mt-[1.6cqw] line-clamp-3 max-w-[70cqw] text-[5cqw] font-black leading-[0.94] tracking-[-0.06em]",
+              "mx-auto mt-[2.5cqw] max-w-[78cqw] text-[6.9cqw] font-black leading-[0.95] tracking-[-0.06em]",
+
               theme.text,
             ].join(
               " "
@@ -3465,70 +3288,62 @@ function OutroCore({
 
           <p
             className={[
-              "mx-auto mt-[2cqw] max-w-[58cqw] text-[1.45cqw] font-semibold leading-[1.5]",
+              "mx-auto mt-[3cqw] max-w-[66cqw] text-[1.95cqw] font-semibold leading-[1.5]",
+
               theme.muted,
             ].join(
               " "
             )}
           >
-            Modowe produkty,
-            okazje i inspiracje
-            wybrane w jednym
-            miejscu.
+            Selekcjonujemy modowe produkty i okazje, żeby szybciej znaleźć rzeczy warte uwagi.
           </p>
 
-          <div className="mx-auto mt-[2.3cqw] flex max-w-[58cqw] justify-center gap-[0.9cqw]">
-            <InfoPill
-              template={
-                template
-              }
-            >
-              Moda
-            </InfoPill>
+          <div
+            className={[
+              "mx-auto mt-[5cqw] flex min-h-[10.5cqw] max-w-[64cqw] items-center justify-between rounded-full pl-[4cqw] pr-[1.4cqw] shadow-[0_2cqw_7cqw_rgba(0,0,0,0.08)]",
 
-            <InfoPill
-              template={
-                template
-              }
-            >
-              Okazje
-            </InfoPill>
+              theme.cta,
+            ].join(
+              " "
+            )}
+          >
+            <span className="text-[2.25cqw] font-black">
+              Zobacz więcej
+            </span>
 
-            <InfoPill
-              template={
-                template
-              }
-            >
-              Inspiracje
-            </InfoPill>
+            <span className="flex h-[7.7cqw] w-[7.7cqw] items-center justify-center rounded-full bg-white/15 text-[3.4cqw] font-black">
+              →
+            </span>
           </div>
+
+          <p
+            className={[
+              "mt-[4.2cqw] text-[3cqw] font-black tracking-[-0.035em]",
+
+              theme.text,
+            ].join(
+              " "
+            )}
+          >
+            trendzamniej.pl
+          </p>
         </div>
       </div>
 
-      <CoreWebsiteBar
+      <SlideFooter
         template={
           template
         }
-        label="Zobacz więcej wybranych okazji"
-        strong
       />
     </div>
   );
 }
 
-function CoreWebsiteBar({
+function SlideHeader({
   template,
-  label,
-  strong = false,
 }: {
   template:
     TemplateType;
-
-  label:
-    string;
-
-  strong?:
-    boolean;
 }) {
   const theme =
     getSlideTheme(
@@ -3538,157 +3353,45 @@ function CoreWebsiteBar({
   return (
     <div
       className={[
-        "mt-[2cqw] flex min-h-[7.5cqw] items-center justify-between gap-[2cqw] rounded-[2.8cqw] px-[2.5cqw]",
+        "flex min-h-[10cqw] items-center justify-between rounded-[4cqw] border px-[3cqw] shadow-[0_1.5cqw_5cqw_rgba(0,0,0,0.045)]",
 
-        strong
-          ? theme.cta
-          : theme.panel,
-
-        strong
-          ? ""
-          : `border ${theme.border}`,
+        theme.panel,
+        theme.border,
       ].join(
         " "
       )}
     >
-      <div className="min-w-0">
-        <p
+      <div className="flex min-w-0 items-center gap-[2cqw]">
+        <div
           className={[
-            "truncate text-[1.15cqw] font-semibold",
+            "flex h-[6.6cqw] w-[6.6cqw] shrink-0 items-center justify-center rounded-[2cqw] text-[2.45cqw] font-black",
 
-            strong
-              ? "opacity-65"
-              : theme.muted,
+            theme.logo,
           ].join(
             " "
           )}
         >
-          {
-            label
-          }
-        </p>
+          T
+        </div>
 
         <p
           className={[
-            "mt-[0.15cqw] text-[2.25cqw] font-black tracking-[-0.04em]",
+            "truncate text-[2.35cqw] font-black tracking-[-0.03em]",
 
-            strong
-              ? ""
-              : theme.text,
-          ].join(
-            " "
-          )}
-        >
-          trendzamniej.pl
-        </p>
-      </div>
-
-      <span
-        className={[
-          "flex h-[5.2cqw] w-[5.2cqw] shrink-0 items-center justify-center rounded-full text-[2.4cqw] font-black",
-
-          strong
-            ? "bg-white/15"
-            : theme.cta,
-        ].join(
-          " "
-        )}
-      >
-        →
-      </span>
-    </div>
-  );
-}
-
-function DecorativeTop({
-  template,
-  slideType,
-}: {
-  template:
-    TemplateType;
-
-  slideType:
-    SlideType;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <div className="absolute inset-x-[6cqw] top-[8cqw] z-[2] flex items-center justify-between">
-      <div>
-        <p
-          className={[
-            "text-[1.35cqw] font-black uppercase tracking-[0.16em] opacity-55",
             theme.text,
           ].join(
             " "
           )}
         >
-          Trend za Mniej ·
-          Social
-        </p>
-
-        <p
-          className={[
-            "mt-[0.7cqw] text-[2.5cqw] font-black tracking-[-0.04em] opacity-35",
-            theme.text,
-          ].join(
-            " "
-          )}
-        >
-          {
-            SLIDE_LABELS[
-              slideType
-            ]
-          }
+          Trend za Mniej
         </p>
       </div>
 
       <span
         className={[
-          "rounded-full px-[2cqw] py-[0.8cqw] text-[1.2cqw] font-black opacity-55",
-          theme.pill,
-        ].join(
-          " "
-        )}
-      >
-        9:16
-      </span>
-    </div>
-  );
-}
+          "text-[1.55cqw] font-black",
 
-function DecorativeBottom({
-  template,
-}: {
-  template:
-    TemplateType;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <div className="absolute inset-x-[6cqw] bottom-[7cqw] z-[2] flex items-center justify-between opacity-40">
-      <span
-        className={[
-          "text-[1.3cqw] font-bold",
-          theme.text,
-        ].join(
-          " "
-        )}
-      >
-        Pełny format TikTok
-        1080 × 1920
-      </span>
-
-      <span
-        className={[
-          "text-[1.3cqw] font-black",
-          theme.text,
+          theme.muted,
         ].join(
           " "
         )}
@@ -3699,18 +3402,113 @@ function DecorativeBottom({
   );
 }
 
-function SquareCropOverlay() {
+function DisclosureBadge({
+  template,
+}: {
+  template:
+    TemplateType;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
   return (
-    <div className="pointer-events-none absolute inset-0 z-50 [container-type:size]">
-      <div className="absolute inset-x-0 top-0 h-[38.888cqw] bg-black/30" />
+    <span
+      className={[
+        "inline-flex items-center gap-[0.9cqw] rounded-full border px-[2.15cqw] py-[0.9cqw] text-[1.42cqw] font-black uppercase tracking-[0.075em]",
 
-      <div className="absolute inset-x-0 bottom-0 h-[38.888cqw] bg-black/30" />
+        theme.panel,
+        theme.border,
+        theme.text,
+      ].join(
+        " "
+      )}
+    >
+      <span className="h-[0.85cqw] w-[0.85cqw] rounded-full bg-[#ff375f]" />
 
-      <div className="absolute inset-x-0 top-[38.888cqw] h-[100cqw] border-y-2 border-dashed border-[#ff375f]/90">
-        <span className="absolute left-[3cqw] top-[2cqw] rounded-full bg-[#ff375f] px-[2cqw] py-[0.75cqw] text-[1.4cqw] font-black text-white shadow-sm">
-          Kadr 1:1 —
-          wszystko ważne
-          musi zostać tutaj
+      Materiał reklamowy
+
+      <span className="opacity-30">
+        •
+      </span>
+
+      SHEIN
+    </span>
+  );
+}
+
+function SlideFooter({
+  template,
+}: {
+  template:
+    TemplateType;
+}) {
+  const theme =
+    getSlideTheme(
+      template
+    );
+
+  return (
+    <div
+      className={[
+        "flex min-h-[10cqw] items-center justify-between rounded-[4cqw] border px-[3.4cqw] shadow-[0_1.5cqw_5cqw_rgba(0,0,0,0.04)]",
+
+        theme.panel,
+        theme.border,
+      ].join(
+        " "
+      )}
+    >
+      <div className="min-w-0">
+        <p
+          className={[
+            "text-[1.35cqw] font-semibold",
+
+            theme.muted,
+          ].join(
+            " "
+          )}
+        >
+          Więcej wybranych okazji
+        </p>
+
+        <p
+          className={[
+            "mt-[0.2cqw] text-[2.35cqw] font-black tracking-[-0.03em]",
+
+            theme.text,
+          ].join(
+            " "
+          )}
+        >
+          trendzamniej.pl
+        </p>
+      </div>
+
+      <div className="flex items-center gap-[1.3cqw]">
+        <span
+          className={[
+            "rounded-full px-[2cqw] py-[0.85cqw] text-[1.4cqw] font-black",
+
+            theme.pill,
+          ].join(
+            " "
+          )}
+        >
+          Sprawdź
+        </span>
+
+        <span
+          className={[
+            "flex h-[6.8cqw] w-[6.8cqw] items-center justify-center rounded-full text-[2.9cqw] font-black",
+
+            theme.cta,
+          ].join(
+            " "
+          )}
+        >
+          →
         </span>
       </div>
     </div>
@@ -3729,11 +3527,11 @@ function SlideBackground({
   ) {
     return (
       <>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#222228] via-[#131316] to-[#09090a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1f1f23] via-[#121214] to-[#09090a]" />
 
-        <div className="absolute -left-[20cqw] top-[18cqh] h-[70cqw] w-[70cqw] rounded-full bg-[#ff375f]/[0.09] blur-[36px]" />
+        <div className="absolute -left-[18cqw] top-[21cqh] h-[65cqw] w-[65cqw] rounded-full bg-[#ff375f]/[0.08] blur-[36px]" />
 
-        <div className="absolute -right-[24cqw] bottom-[7cqh] h-[72cqw] w-[72cqw] rounded-full bg-white/[0.04] blur-[40px]" />
+        <div className="absolute -right-[24cqw] bottom-[8cqh] h-[70cqw] w-[70cqw] rounded-full bg-white/[0.035] blur-[40px]" />
       </>
     );
   }
@@ -3744,23 +3542,35 @@ function SlideBackground({
   ) {
     return (
       <>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fffaf7] via-[#f4e8e1] to-[#e8d7cd]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fcf8f5] via-[#f5ebe5] to-[#eadbd3]" />
 
-        <div className="absolute -left-[18cqw] top-[20cqh] h-[68cqw] w-[68cqw] rounded-full bg-[#d8bfb4]/45 blur-[40px]" />
+        <div className="absolute -left-[18cqw] top-[21cqh] h-[68cqw] w-[68cqw] rounded-full bg-[#d8bfb4]/45 blur-[40px]" />
 
-        <div className="absolute -right-[18cqw] bottom-[6cqh] h-[62cqw] w-[62cqw] rounded-full bg-white/60 blur-[40px]" />
+        <div className="absolute -right-[18cqw] bottom-[6cqh] h-[60cqw] w-[60cqw] rounded-full bg-white/60 blur-[40px]" />
       </>
     );
   }
 
   return (
     <>
-      <div className="absolute inset-0 bg-gradient-to-b from-[#fcfcfd] via-[#f2f2f6] to-[#e7e7ec]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#fbfbfc] via-[#f3f3f6] to-[#e8e8ed]" />
 
       <div className="absolute -right-[18cqw] top-[15cqh] h-[68cqw] w-[68cqw] rounded-full bg-white/80 blur-[38px]" />
 
       <div className="absolute -left-[18cqw] bottom-[7cqh] h-[55cqw] w-[55cqw] rounded-full bg-[#dcdce4]/50 blur-[38px]" />
     </>
+  );
+}
+
+function SafeAreaOverlay() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-50 [container-type:size]">
+      <div className="absolute bottom-[18cqh] left-[4cqw] right-[15cqw] top-[7cqh] rounded-[4cqw] border border-dashed border-[#ff375f]/55" />
+
+      <div className="absolute bottom-0 left-0 right-0 h-[17cqh] bg-[#ff375f]/[0.035]" />
+
+      <div className="absolute bottom-[17cqh] right-0 top-[14cqh] w-[14cqw] bg-[#ff375f]/[0.035]" />
+    </div>
   );
 }
 
@@ -3776,11 +3586,8 @@ function getSlideTheme(
       page:
         "bg-[#111113]",
 
-      core:
-        "bg-[#171719]",
-
       panel:
-        "bg-[#202024]",
+        "bg-[#1f1f23]",
 
       panelStrong:
         "bg-[#25252a]",
@@ -3822,14 +3629,11 @@ function getSlideTheme(
       page:
         "bg-[#f5ebe5]",
 
-      core:
+      panel:
         "bg-[#fffaf7]",
 
-      panel:
-        "bg-[#fff7f2]",
-
       panelStrong:
-        "bg-[#fff4ee]",
+        "bg-[#fff7f2]",
 
       border:
         "border-[#d9c7be]/55",
@@ -3864,11 +3668,8 @@ function getSlideTheme(
     page:
       "bg-[#f2f2f5]",
 
-    core:
-      "bg-white",
-
     panel:
-      "bg-[#f7f7f9]",
+      "bg-white",
 
     panelStrong:
       "bg-[#fafafa]",
@@ -3900,37 +3701,6 @@ function getSlideTheme(
     exportBackground:
       "#f2f2f5",
   };
-}
-
-function InfoPill({
-  template,
-  children,
-}: {
-  template:
-    TemplateType;
-
-  children:
-    ReactNode;
-}) {
-  const theme =
-    getSlideTheme(
-      template
-    );
-
-  return (
-    <span
-      className={[
-        "rounded-full px-[1.7cqw] py-[0.7cqw] text-[1.15cqw] font-black",
-        theme.pill,
-      ].join(
-        " "
-      )}
-    >
-      {
-        children
-      }
-    </span>
-  );
 }
 
 function ControlGroup({
