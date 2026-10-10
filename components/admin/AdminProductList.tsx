@@ -3,9 +3,15 @@
 import Link from "next/link";
 
 import {
+  useEffect,
   useMemo,
   useState,
+  useTransition,
 } from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
 
 import AdminProductActions from "@/components/admin/AdminProductActions";
 import AdminProductOwnerSelect from "@/components/admin/AdminProductOwnerSelect";
@@ -16,12 +22,15 @@ import {
   type AdminTeamMember,
 } from "@/lib/admin-permissions";
 
+import {
+  createClient,
+} from "@/lib/supabase/client";
+
 type AdminProduct = {
   id: string;
   slug: string;
   name: string;
   short_name: string;
-  description: string;
 
   price:
     | number
@@ -34,13 +43,7 @@ type AdminProduct = {
 
   category: string;
   image_url: string;
-  affiliate_url: string;
   featured: boolean;
-
-  sold_text:
-    | string
-    | null;
-
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -48,6 +51,14 @@ type AdminProduct = {
   created_by:
     | string
     | null;
+};
+
+type ProductStatRow = {
+  product_id: string;
+
+  clicks:
+    | number
+    | string;
 };
 
 type StatusFilter =
@@ -73,12 +84,6 @@ type Props = {
   products:
     AdminProduct[];
 
-  productStats:
-    Record<
-      string,
-      number
-    >;
-
   currentUserId:
     string;
 
@@ -92,12 +97,11 @@ type Props = {
     AdminTeamMember[];
 };
 
-function formatPrice(
-  price:
-    | number
-    | string
-) {
-  return new Intl.NumberFormat(
+const PAGE_SIZE =
+  20;
+
+const priceFormatter =
+  new Intl.NumberFormat(
     "pl-PL",
     {
       style:
@@ -106,17 +110,10 @@ function formatPrice(
       currency:
         "PLN",
     }
-  ).format(
-    Number(
-      price
-    )
   );
-}
 
-function formatDate(
-  value: string
-) {
-  return new Intl.DateTimeFormat(
+const dateFormatter =
+  new Intl.DateTimeFormat(
     "pl-PL",
     {
       day:
@@ -128,7 +125,25 @@ function formatDate(
       year:
         "numeric",
     }
-  ).format(
+  );
+
+function formatPrice(
+  price:
+    | number
+    | string
+) {
+  return priceFormatter.format(
+    Number(
+      price
+    )
+  );
+}
+
+function formatDate(
+  value:
+    string
+) {
+  return dateFormatter.format(
     new Date(
       value
     )
@@ -137,16 +152,72 @@ function formatDate(
 
 export default function AdminProductList({
   products,
-  productStats,
   currentUserId,
   currentRole,
   ownerModeActive,
   teamMembers,
 }: Props) {
+  const router =
+    useRouter();
+
+  const [
+    isRefreshing,
+    startRefreshTransition,
+  ] =
+    useTransition();
+
+  const [
+    supabase,
+  ] =
+    useState(
+      () =>
+        createClient()
+    );
+
+  /*
+   * Lokalne produkty pozwalają
+   * aktualizować interfejs
+   * natychmiast bez czekania
+   * na router.refresh().
+   */
+  const [
+    localProducts,
+    setLocalProducts,
+  ] =
+    useState<
+      AdminProduct[]
+    >(
+      products
+    );
+
+  const [
+    productStats,
+    setProductStats,
+  ] =
+    useState<
+      Record<
+        string,
+        number
+      >
+    >(
+      {}
+    );
+
+  const [
+    statsLoaded,
+    setStatsLoaded,
+  ] =
+    useState(
+      false
+    );
+
   const [
     query,
     setQuery,
-  ] = useState("");
+  ] =
+    useState(
+      ""
+    );
 
   const [
     status,
@@ -167,9 +238,10 @@ export default function AdminProductList({
   const [
     category,
     setCategory,
-  ] = useState(
-    "all"
-  );
+  ] =
+    useState(
+      "all"
+    );
 
   const [
     sort,
@@ -182,15 +254,234 @@ export default function AdminProductList({
   const [
     filtersOpen,
     setFiltersOpen,
-  ] = useState(
-    false
+  ] =
+    useState(
+      false
+    );
+
+  const [
+    visibleLimit,
+    setVisibleLimit,
+  ] =
+    useState(
+      PAGE_SIZE
+    );
+
+  /*
+   * Gdy Next.js zakończy
+   * synchronizację w tle,
+   * przyjmujemy świeże dane
+   * z serwera.
+   */
+  useEffect(
+    () => {
+      setLocalProducts(
+        products
+      );
+    },
+    [
+      products,
+    ]
   );
 
+  /*
+   * Statystyki kliknięć nie
+   * blokują już pierwszego
+   * renderu panelu.
+   */
+  useEffect(
+    () => {
+      let cancelled =
+        false;
+
+      async function loadStats() {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            "get_product_click_stats",
+            {
+              p_days:
+                30,
+            }
+          );
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        if (
+          error
+        ) {
+          console.error(
+            "Nie udało się pobrać statystyk produktów:",
+            error
+          );
+
+          setStatsLoaded(
+            true
+          );
+
+          return;
+        }
+
+        const nextStats =
+          (
+            (
+              data ??
+              []
+            ) as
+              ProductStatRow[]
+          ).reduce<
+            Record<
+              string,
+              number
+            >
+          >(
+            (
+              result,
+              item
+            ) => {
+              result[
+                item.product_id
+              ] =
+                Number(
+                  item.clicks
+                ) ||
+                0;
+
+              return result;
+            },
+            {}
+          );
+
+        setProductStats(
+          nextStats
+        );
+
+        setStatsLoaded(
+          true
+        );
+      }
+
+      void loadStats();
+
+      return () => {
+        cancelled =
+          true;
+      };
+    },
+    [
+      supabase,
+    ]
+  );
+
+  /*
+   * Po zmianie filtrów wracamy
+   * do pierwszych 20 ofert.
+   */
+  useEffect(
+    () => {
+      setVisibleLimit(
+        PAGE_SIZE
+      );
+    },
+    [
+      query,
+      status,
+      ownership,
+      category,
+      sort,
+    ]
+  );
+
+  function refreshInBackground() {
+    startRefreshTransition(
+      () => {
+        router.refresh();
+      }
+    );
+  }
+
+  function updateProduct(
+    id:
+      string,
+    patch:
+      Partial<AdminProduct>
+  ) {
+    setLocalProducts(
+      (
+        current
+      ) =>
+        current.map(
+          (
+            product
+          ) =>
+            product.id ===
+            id
+              ? {
+                  ...product,
+                  ...patch,
+                }
+              : product
+        )
+    );
+  }
+
+  function removeProduct(
+    id:
+      string
+  ) {
+    setLocalProducts(
+      (
+        current
+      ) =>
+        current.filter(
+          (
+            product
+          ) =>
+            product.id !==
+            id
+        )
+    );
+  }
+
+  function restoreProduct(
+    product:
+      AdminProduct
+  ) {
+    setLocalProducts(
+      (
+        current
+      ) => {
+        if (
+          current.some(
+            (
+              item
+            ) =>
+              item.id ===
+              product.id
+          )
+        ) {
+          return current;
+        }
+
+        return [
+          ...current,
+          product,
+        ];
+      }
+    );
+  }
+
   const categories =
-    useMemo(() => {
-      return [
+    useMemo(
+      () => [
         ...new Set(
-          products
+          localProducts
             .map(
               (
                 product
@@ -203,70 +494,73 @@ export default function AdminProductList({
         ),
       ].sort(
         (
-          a,
-          b
+          first,
+          second
         ) =>
-          a.localeCompare(
-            b,
+          first.localeCompare(
+            second,
             "pl"
           )
-      );
-    }, [
-      products,
-    ]);
+      ),
+      [
+        localProducts,
+      ]
+    );
 
   const membersById =
-    useMemo(() => {
-      return new Map(
-        teamMembers.map(
-          (
-            member
-          ) => [
-            member.userId,
-            member,
-          ]
-        )
-      );
-    }, [
-      teamMembers,
-    ]);
+    useMemo(
+      () =>
+        new Map(
+          teamMembers.map(
+            (
+              member
+            ) => [
+              member.userId,
+              member,
+            ]
+          )
+        ),
+      [
+        teamMembers,
+      ]
+    );
 
   const activeCount =
     useMemo(
       () =>
-        products.filter(
+        localProducts.filter(
           (
             product
           ) =>
             product.active
         ).length,
       [
-        products,
+        localProducts,
       ]
     );
 
   const hiddenCount =
-    products.length -
+    localProducts.length -
     activeCount;
 
   const featuredCount =
     useMemo(
       () =>
-        products.filter(
+        localProducts.filter(
           (
             product
           ) =>
             product.featured
         ).length,
       [
-        products,
+        localProducts,
       ]
     );
 
   const mineCount =
     useMemo(
       () =>
-        products.filter(
+        localProducts.filter(
           (
             product
           ) =>
@@ -274,7 +568,7 @@ export default function AdminProductList({
             currentUserId
         ).length,
       [
-        products,
+        localProducts,
         currentUserId,
       ]
     );
@@ -282,7 +576,7 @@ export default function AdminProductList({
   const othersCount =
     useMemo(
       () =>
-        products.filter(
+        localProducts.filter(
           (
             product
           ) =>
@@ -293,7 +587,7 @@ export default function AdminProductList({
               currentUserId
         ).length,
       [
-        products,
+        localProducts,
         currentUserId,
       ]
     );
@@ -301,188 +595,211 @@ export default function AdminProductList({
   const unassignedCount =
     useMemo(
       () =>
-        products.filter(
+        localProducts.filter(
           (
             product
           ) =>
             !product.created_by
         ).length,
       [
-        products,
+        localProducts,
       ]
     );
 
   const filteredProducts =
-    useMemo(() => {
-      const normalizedQuery =
-        query
-          .trim()
-          .toLowerCase();
-
-      const result =
-        products.filter(
-          (
-            product
-          ) => {
-            const haystack =
-              [
-                product.name,
-                product.short_name,
-                product.category,
-                product.description,
-              ]
-                .join(
-                  " "
-                )
-                .toLowerCase();
-
-            const matchesQuery =
-              !normalizedQuery ||
-              haystack.includes(
-                normalizedQuery
-              );
-
-            const matchesCategory =
-              category ===
-                "all" ||
-              product.category ===
-                category;
-
-            let matchesStatus =
-              true;
-
-            if (
-              status ===
-              "active"
-            ) {
-              matchesStatus =
-                product.active;
-            }
-
-            if (
-              status ===
-              "hidden"
-            ) {
-              matchesStatus =
-                !product.active;
-            }
-
-            if (
-              status ===
-              "featured"
-            ) {
-              matchesStatus =
-                product.featured;
-            }
-
-            let matchesOwnership =
-              true;
-
-            if (
-              ownership ===
-              "mine"
-            ) {
-              matchesOwnership =
-                product.created_by ===
-                currentUserId;
-            }
-
-            if (
-              ownership ===
-              "others"
-            ) {
-              matchesOwnership =
-                Boolean(
-                  product.created_by
-                ) &&
-                product.created_by !==
-                  currentUserId;
-            }
-
-            if (
-              ownership ===
-              "unassigned"
-            ) {
-              matchesOwnership =
-                !product.created_by;
-            }
-
-            return (
-              matchesQuery &&
-              matchesCategory &&
-              matchesStatus &&
-              matchesOwnership
+    useMemo(
+      () => {
+        const normalizedQuery =
+          query
+            .trim()
+            .toLocaleLowerCase(
+              "pl"
             );
+
+        const result =
+          localProducts.filter(
+            (
+              product
+            ) => {
+              const haystack =
+                [
+                  product.name,
+                  product.short_name,
+                  product.category,
+                ]
+                  .join(
+                    " "
+                  )
+                  .toLocaleLowerCase(
+                    "pl"
+                  );
+
+              const matchesQuery =
+                !normalizedQuery ||
+                haystack.includes(
+                  normalizedQuery
+                );
+
+              const matchesCategory =
+                category ===
+                  "all" ||
+                product.category ===
+                  category;
+
+              let matchesStatus =
+                true;
+
+              if (
+                status ===
+                "active"
+              ) {
+                matchesStatus =
+                  product.active;
+              }
+
+              if (
+                status ===
+                "hidden"
+              ) {
+                matchesStatus =
+                  !product.active;
+              }
+
+              if (
+                status ===
+                "featured"
+              ) {
+                matchesStatus =
+                  product.featured;
+              }
+
+              let matchesOwnership =
+                true;
+
+              if (
+                ownership ===
+                "mine"
+              ) {
+                matchesOwnership =
+                  product.created_by ===
+                  currentUserId;
+              }
+
+              if (
+                ownership ===
+                "others"
+              ) {
+                matchesOwnership =
+                  Boolean(
+                    product.created_by
+                  ) &&
+                  product.created_by !==
+                    currentUserId;
+              }
+
+              if (
+                ownership ===
+                "unassigned"
+              ) {
+                matchesOwnership =
+                  !product.created_by;
+              }
+
+              return (
+                matchesQuery &&
+                matchesCategory &&
+                matchesStatus &&
+                matchesOwnership
+              );
+            }
+          );
+
+        result.sort(
+          (
+            first,
+            second
+          ) => {
+            switch (
+              sort
+            ) {
+              case "oldest":
+                return (
+                  new Date(
+                    first.created_at
+                  ).getTime() -
+                  new Date(
+                    second.created_at
+                  ).getTime()
+                );
+
+              case "price-asc":
+                return (
+                  Number(
+                    first.price
+                  ) -
+                  Number(
+                    second.price
+                  )
+                );
+
+              case "price-desc":
+                return (
+                  Number(
+                    second.price
+                  ) -
+                  Number(
+                    first.price
+                  )
+                );
+
+              case "name":
+                return first.short_name.localeCompare(
+                  second.short_name,
+                  "pl"
+                );
+
+              default:
+                return (
+                  new Date(
+                    second.created_at
+                  ).getTime() -
+                  new Date(
+                    first.created_at
+                  ).getTime()
+                );
+            }
           }
         );
 
-      result.sort(
-        (
-          a,
-          b
-        ) => {
-          switch (
-            sort
-          ) {
-            case "oldest":
-              return (
-                new Date(
-                  a.created_at
-                ).getTime() -
-                new Date(
-                  b.created_at
-                ).getTime()
-              );
+        return result;
+      },
+      [
+        localProducts,
+        query,
+        status,
+        ownership,
+        category,
+        sort,
+        currentUserId,
+      ]
+    );
 
-            case "price-asc":
-              return (
-                Number(
-                  a.price
-                ) -
-                Number(
-                  b.price
-                )
-              );
+  const visibleProducts =
+    useMemo(
+      () =>
+        filteredProducts.slice(
+          0,
+          visibleLimit
+        ),
+      [
+        filteredProducts,
+        visibleLimit,
+      ]
+    );
 
-            case "price-desc":
-              return (
-                Number(
-                  b.price
-                ) -
-                Number(
-                  a.price
-                )
-              );
-
-            case "name":
-              return a.short_name.localeCompare(
-                b.short_name,
-                "pl"
-              );
-
-            default:
-              return (
-                new Date(
-                  b.created_at
-                ).getTime() -
-                new Date(
-                  a.created_at
-                ).getTime()
-              );
-          }
-        }
-      );
-
-      return result;
-    }, [
-      products,
-      query,
-      status,
-      ownership,
-      category,
-      sort,
-      currentUserId,
-    ]);
+  const hasMoreProducts =
+    visibleProducts.length <
+    filteredProducts.length;
 
   const hasFilters =
     query.trim() !==
@@ -497,19 +814,26 @@ export default function AdminProductList({
       "newest";
 
   function clearFilters() {
-    setQuery("");
+    setQuery(
+      ""
+    );
+
     setStatus(
       "all"
     );
+
     setOwnership(
       "all"
     );
+
     setCategory(
       "all"
     );
+
     setSort(
       "newest"
     );
+
     setFiltersOpen(
       false
     );
@@ -551,19 +875,30 @@ export default function AdminProductList({
     <section className="mt-7">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
-            Zarządzanie ofertami
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
+              Zarządzanie ofertami
+            </p>
+
+            {isRefreshing && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-2 py-1 text-[8px] font-black text-stone-400">
+                <span className="h-2 w-2 animate-spin rounded-full border border-stone-400 border-r-transparent" />
+
+                synchronizacja
+              </span>
+            )}
+          </div>
 
           <h2 className="mt-1 text-2xl font-black tracking-[-0.035em] sm:text-3xl">
             Oferty
           </h2>
 
           <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm">
-            Widzisz cały katalog.
-            Uprawnienia do edycji
-            zależą od właściciela
-            oferty.
+            Zmiany widoczności,
+            usuwanie i przypisanie
+            właściciela działają
+            natychmiast. Synchronizacja
+            odbywa się w tle.
           </p>
         </div>
 
@@ -578,23 +913,7 @@ export default function AdminProductList({
       <div className="mt-4 rounded-[20px] border border-stone-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <circle
-                cx="11"
-                cy="11"
-                r="7"
-              />
-
-              <path d="m20 20-4-4" />
-            </svg>
+            <SearchIcon />
 
             <input
               type="search"
@@ -637,18 +956,7 @@ export default function AdminProductList({
               " "
             )}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M4 6h16" />
-              <path d="M7 12h10" />
-              <path d="M10 18h4" />
-            </svg>
+            <FilterIcon />
 
             Filtry
           </button>
@@ -668,7 +976,7 @@ export default function AdminProductList({
           >
             Wszystkie{" "}
             {
-              products.length
+              localProducts.length
             }
           </StatusChip>
 
@@ -885,7 +1193,7 @@ export default function AdminProductList({
             </strong>{" "}
             z{" "}
             {
-              products.length
+              localProducts.length
             }
           </p>
 
@@ -903,7 +1211,7 @@ export default function AdminProductList({
         </div>
       </div>
 
-      {products.length ===
+      {localProducts.length ===
       0 ? (
         <EmptyProducts />
       ) : filteredProducts.length ===
@@ -914,188 +1222,279 @@ export default function AdminProductList({
           }
         />
       ) : (
-        <div className="mt-4 grid gap-3">
-          {filteredProducts.map(
-            (
-              product
-            ) => {
-              const clicks =
-                productStats[
-                  product.id
-                ] ?? 0;
-
-              const canManage =
-                canManageOffer({
-                  currentUserId,
-                  currentRole,
-                  ownerModeActive,
-
-                  productOwnerId:
-                    product.created_by,
-                });
-
-              const ownerLabel =
-                getOwnerLabel(
-                  product
-                );
-
-              return (
-                <article
-                  key={
+        <>
+          <div className="mt-4 grid gap-3">
+            {visibleProducts.map(
+              (
+                product
+              ) => {
+                const clicks =
+                  productStats[
                     product.id
-                  }
-                  className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm"
-                >
-                  <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_210px]">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[14px] bg-stone-100">
-                      <img
-                        src={
-                          product.image_url
-                        }
-                        alt={
-                          product.name
-                        }
-                        className="h-full w-full object-cover"
-                      />
+                  ] ??
+                  0;
 
-                      {product.featured && (
-                        <span className="absolute left-1.5 top-1.5 rounded-full bg-white/95 px-2 py-1 text-[9px] font-black text-orange-700 shadow-sm">
-                          🔥
-                        </span>
-                      )}
-                    </div>
+                const canManage =
+                  canManageOffer({
+                    currentUserId,
+                    currentRole,
+                    ownerModeActive,
 
-                    <div className="min-w-0 py-0.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <StatusBadge
-                          active={
-                            product.active
+                    productOwnerId:
+                      product.created_by,
+                  });
+
+                const ownerLabel =
+                  getOwnerLabel(
+                    product
+                  );
+
+                return (
+                  <article
+                    key={
+                      product.id
+                    }
+                    className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm"
+                  >
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_210px]">
+                      <div className="relative aspect-[4/5] overflow-hidden rounded-[14px] bg-stone-100">
+                        <img
+                          src={
+                            product.image_url
                           }
+                          alt={
+                            product.name
+                          }
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
                         />
 
-                        <span className="max-w-full truncate rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-black text-stone-600 sm:text-[10px]">
-                          {
-                            product.category
-                          }
-                        </span>
-
-                        <span
-                          className={[
-                            "max-w-full truncate rounded-full px-2.5 py-1 text-[9px] font-black sm:text-[10px]",
-                            product.created_by ===
-                            currentUserId
-                              ? "bg-blue-50 text-blue-700"
-                              : !product.created_by
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-violet-50 text-violet-700",
-                          ].join(
-                            " "
-                          )}
-                        >
-                          {product.created_by ===
-                          currentUserId
-                            ? "👤 Moja"
-                            : !product.created_by
-                              ? "⚠ Nieprzypisana"
-                              : `👤 ${ownerLabel}`}
-                        </span>
-                      </div>
-
-                      <h3 className="mt-2 line-clamp-2 text-sm font-black leading-5 text-stone-900 sm:text-lg sm:leading-6">
-                        {
-                          product.short_name
-                        }
-                      </h3>
-
-                      <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
-                        <span className="text-base font-black text-stone-900 sm:text-xl">
-                          {formatPrice(
-                            product.price
-                          )}
-                        </span>
-
-                        {product.old_price !==
-                          null && (
-                          <span className="text-[10px] font-semibold text-stone-400 line-through sm:text-xs">
-                            {formatPrice(
-                              product.old_price
-                            )}
+                        {product.featured && (
+                          <span className="absolute left-1.5 top-1.5 rounded-full bg-white/95 px-2 py-1 text-[9px] font-black text-orange-700 shadow-sm">
+                            🔥
                           </span>
                         )}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-stone-400 sm:text-xs">
-                        <span>
-                          🖱️{" "}
-                          <strong className="text-stone-700">
-                            {
-                              clicks
-                            }
-                          </strong>
-                        </span>
-
-                        <span>
-                          {formatDate(
-                            product.created_at
-                          )}
-                        </span>
-
-                        {product.active && (
-                          <Link
-                            href={`/produkt/${product.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-black text-rose-600"
-                          >
-                            Podgląd ↗
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="col-span-2 border-t border-stone-100 pt-3 lg:col-span-1 lg:flex lg:items-center lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-                      <div className="w-full">
-                        <AdminProductActions
-                          id={
-                            product.id
-                          }
-                          slug={
-                            product.slug
-                          }
-                          active={
-                            product.active
-                          }
-                          imageUrl={
-                            product.image_url
-                          }
-                          canManage={
-                            canManage
-                          }
-                        />
-
-                        {currentRole ===
-                          "owner" &&
-                          ownerModeActive && (
-                          <AdminProductOwnerSelect
-                            productId={
-                              product.id
-                            }
-                            ownerId={
-                              product.created_by
-                            }
-                            members={
-                              teamMembers
+                      <div className="min-w-0 py-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <StatusBadge
+                            active={
+                              product.active
                             }
                           />
-                        )}
+
+                          <span className="max-w-full truncate rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-black text-stone-600 sm:text-[10px]">
+                            {
+                              product.category
+                            }
+                          </span>
+
+                          <span
+                            className={[
+                              "max-w-full truncate rounded-full px-2.5 py-1 text-[9px] font-black sm:text-[10px]",
+                              product.created_by ===
+                              currentUserId
+                                ? "bg-blue-50 text-blue-700"
+                                : !product.created_by
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-violet-50 text-violet-700",
+                            ].join(
+                              " "
+                            )}
+                          >
+                            {product.created_by ===
+                            currentUserId
+                              ? "👤 Moja"
+                              : !product.created_by
+                                ? "⚠ Nieprzypisana"
+                                : `👤 ${ownerLabel}`}
+                          </span>
+                        </div>
+
+                        <h3 className="mt-2 line-clamp-2 text-sm font-black leading-5 text-stone-900 sm:text-lg sm:leading-6">
+                          {
+                            product.short_name
+                          }
+                        </h3>
+
+                        <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
+                          <span className="text-base font-black text-stone-900 sm:text-xl">
+                            {formatPrice(
+                              product.price
+                            )}
+                          </span>
+
+                          {product.old_price !==
+                            null && (
+                            <span className="text-[10px] font-semibold text-stone-400 line-through sm:text-xs">
+                              {formatPrice(
+                                product.old_price
+                              )}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-stone-400 sm:text-xs">
+                          <span>
+                            🖱️{" "}
+                            <strong className="text-stone-700">
+                              {statsLoaded
+                                ? clicks
+                                : "…"}
+                            </strong>
+                          </span>
+
+                          <span>
+                            {formatDate(
+                              product.created_at
+                            )}
+                          </span>
+
+                          {product.active && (
+                            <Link
+                              href={`/produkt/${product.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-black text-rose-600"
+                            >
+                              Podgląd ↗
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="col-span-2 border-t border-stone-100 pt-3 lg:col-span-1 lg:flex lg:items-center lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+                        <div className="w-full">
+                          <AdminProductActions
+                            id={
+                              product.id
+                            }
+                            slug={
+                              product.slug
+                            }
+                            active={
+                              product.active
+                            }
+                            imageUrl={
+                              product.image_url
+                            }
+                            canManage={
+                              canManage
+                            }
+                            onActiveChange={(
+                              nextActive
+                            ) =>
+                              updateProduct(
+                                product.id,
+                                {
+                                  active:
+                                    nextActive,
+
+                                  updated_at:
+                                    new Date()
+                                      .toISOString(),
+                                }
+                              )
+                            }
+                            onDeleteOptimistic={() =>
+                              removeProduct(
+                                product.id
+                              )
+                            }
+                            onDeleteRollback={() =>
+                              restoreProduct(
+                                product
+                              )
+                            }
+                            onCommitted={
+                              refreshInBackground
+                            }
+                          />
+
+                          {currentRole ===
+                            "owner" &&
+                            ownerModeActive && (
+                            <AdminProductOwnerSelect
+                              productId={
+                                product.id
+                              }
+                              ownerId={
+                                product.created_by
+                              }
+                              members={
+                                teamMembers
+                              }
+                              onOwnerChange={(
+                                ownerId
+                              ) =>
+                                updateProduct(
+                                  product.id,
+                                  {
+                                    created_by:
+                                      ownerId ||
+                                      null,
+
+                                    updated_at:
+                                      new Date()
+                                        .toISOString(),
+                                  }
+                                )
+                              }
+                              onCommitted={
+                                refreshInBackground
+                              }
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              );
-            }
+                  </article>
+                );
+              }
+            )}
+          </div>
+
+          {hasMoreProducts && (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleLimit(
+                    (
+                      current
+                    ) =>
+                      current +
+                      PAGE_SIZE
+                  )
+                }
+                className="min-h-11 rounded-xl border border-stone-200 bg-white px-5 text-sm font-black text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-rose-700 active:scale-[0.98]"
+              >
+                Pokaż kolejne{" "}
+                {
+                  Math.min(
+                    PAGE_SIZE,
+                    filteredProducts.length -
+                      visibleProducts.length
+                  )
+                }
+
+                <span className="ml-1 text-stone-400">
+                  (
+                  {
+                    visibleProducts.length
+                  }
+                  /
+                  {
+                    filteredProducts.length
+                  }
+                  )
+                </span>
+              </button>
+            </div>
           )}
-        </div>
+        </>
       )}
 
       <Link
@@ -1108,13 +1507,56 @@ export default function AdminProductList({
   );
 }
 
+function SearchIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="7"
+      />
+
+      <path d="m20 20-4-4" />
+    </svg>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16" />
+      <path d="M7 12h10" />
+      <path d="M10 18h4" />
+    </svg>
+  );
+}
+
 function StatusChip({
   active,
   onClick,
   children,
 }: {
-  active: boolean;
-  onClick: () => void;
+  active:
+    boolean;
+
+  onClick:
+    () => void;
 
   children:
     React.ReactNode;
@@ -1126,7 +1568,7 @@ function StatusChip({
         onClick
       }
       className={[
-        "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black transition",
+        "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black transition active:scale-[0.98]",
         active
           ? "border-rose-200 bg-rose-50 text-rose-700"
           : "border-stone-200 bg-white text-stone-500",
@@ -1142,7 +1584,8 @@ function StatusChip({
 function StatusBadge({
   active,
 }: {
-  active: boolean;
+  active:
+    boolean;
 }) {
   return active ? (
     <span className="rounded-full bg-green-50 px-2.5 py-1 text-[9px] font-black text-green-700 sm:text-[10px]">
@@ -1161,12 +1604,17 @@ function FilterSelect({
   onChange,
   children,
 }: {
-  label: string;
-  value: string;
+  label:
+    string;
 
-  onChange: (
-    value: string
-  ) => void;
+  value:
+    string;
+
+  onChange:
+    (
+      value:
+        string
+    ) => void;
 
   children:
     React.ReactNode;

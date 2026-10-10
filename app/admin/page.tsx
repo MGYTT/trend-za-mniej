@@ -19,14 +19,6 @@ import {
   createClient,
 } from "@/lib/supabase/server";
 
-type ProductStatRow = {
-  product_id: string;
-
-  clicks:
-    | number
-    | string;
-};
-
 type AdminRow = {
   user_id: string;
 
@@ -72,6 +64,10 @@ export default async function AdminPage({
     );
   }
 
+  /*
+   * Najpierw pobieramy tylko dane
+   * potrzebne do ustalenia roli.
+   */
   const [
     currentAdminResult,
     ownerModeResult,
@@ -125,11 +121,59 @@ export default async function AdminPage({
     0
   );
 
+  /*
+   * Dla właściciela lista zespołu
+   * ładuje się równolegle z
+   * produktami i licznikami.
+   *
+   * Nie czekamy najpierw na
+   * produkty, a dopiero później
+   * na administratorów.
+   */
+  const adminRowsPromise =
+    currentRole ===
+    "owner"
+      ? supabase
+          .from(
+            "admins"
+          )
+          .select(
+            "user_id, display_name, role"
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                true,
+            }
+          )
+      : Promise.resolve({
+          data: [
+            currentAdmin,
+          ] as AdminRow[],
+
+          error:
+            null,
+        });
+
+  /*
+   * Nie używamy select("*").
+   *
+   * Opisy, linki afiliacyjne
+   * i pozostałe duże pola nie są
+   * potrzebne do listy produktów
+   * w panelu.
+   *
+   * Statystyki poszczególnych
+   * produktów pobierze już
+   * AdminProductList po
+   * wyświetleniu panelu.
+   */
   const [
     productsResult,
     clicksResult,
     todayClicksResult,
-    productStatsResult,
+    adminsResult,
   ] =
     await Promise.all([
       supabase
@@ -137,7 +181,7 @@ export default async function AdminPage({
           "products"
         )
         .select(
-          "*"
+          "id, slug, name, short_name, price, old_price, category, image_url, featured, active, created_at, updated_at, created_by, shein_product_key, shein_identity_status"
         )
         .order(
           "created_at",
@@ -152,7 +196,7 @@ export default async function AdminPage({
           "affiliate_clicks"
         )
         .select(
-          "*",
+          "id",
           {
             count:
               "exact",
@@ -167,7 +211,7 @@ export default async function AdminPage({
           "affiliate_clicks"
         )
         .select(
-          "*",
+          "id",
           {
             count:
               "exact",
@@ -181,53 +225,20 @@ export default async function AdminPage({
           today.toISOString()
         ),
 
-      supabase.rpc(
-        "get_product_click_stats",
-        {
-          p_days:
-            30,
-        }
-      ),
+      adminRowsPromise,
     ]);
 
   const products =
     productsResult.data ??
     [];
 
-  let adminRows:
-    AdminRow[] = [
-      currentAdmin,
-    ];
-
-  if (
-    currentRole ===
-    "owner"
-  ) {
-    const {
-      data:
-        adminsData,
-    } =
-      await supabase
-        .from(
-          "admins"
-        )
-        .select(
-          "user_id, display_name, role"
-        )
-        .order(
-          "created_at",
-          {
-            ascending:
-              true,
-          }
-        );
-
-    adminRows =
-      (
-        adminsData ??
-        []
-      ) as AdminRow[];
-  }
+  const adminRows =
+    (
+      adminsResult.data ??
+      [
+        currentAdmin,
+      ]
+    ) as AdminRow[];
 
   const productCounts =
     new Map<
@@ -341,33 +352,6 @@ export default async function AdminPage({
           "conflict"
       ).length,
   };
-
-  const productStats = (
-    (
-      productStatsResult.data ??
-      []
-    ) as ProductStatRow[]
-  ).reduce<
-    Record<
-      string,
-      number
-    >
-  >(
-    (
-      result,
-      item
-    ) => {
-      result[
-        item.product_id
-      ] =
-        Number(
-          item.clicks
-        );
-
-      return result;
-    },
-    {}
-  );
 
   const recentProducts =
     products
@@ -643,9 +627,6 @@ export default async function AdminPage({
           <AdminProductList
             products={
               products
-            }
-            productStats={
-              productStats
             }
             currentUserId={
               userId

@@ -1,10 +1,6 @@
 "use client";
 
 import {
-  useRouter,
-} from "next/navigation";
-
-import {
   useState,
 } from "react";
 
@@ -25,16 +21,24 @@ type Props = {
 
   members:
     AdminTeamMember[];
+
+  onOwnerChange:
+    (
+      ownerId:
+        string
+    ) => void;
+
+  onCommitted:
+    () => void;
 };
 
 export default function AdminProductOwnerSelect({
   productId,
   ownerId,
   members,
+  onOwnerChange,
+  onCommitted,
 }: Props) {
-  const router =
-    useRouter();
-
   const [
     supabase,
   ] =
@@ -46,16 +50,21 @@ export default function AdminProductOwnerSelect({
   const [
     loading,
     setLoading,
-  ] = useState(false);
+  ] =
+    useState(
+      false
+    );
 
   const currentValue =
     ownerId ??
     "";
 
   async function changeOwner(
-    value: string
+    value:
+      string
   ) {
     if (
+      loading ||
       !value ||
       value ===
         currentValue
@@ -65,12 +74,16 @@ export default function AdminProductOwnerSelect({
 
     const member =
       members.find(
-        (item) =>
+        (
+          item
+        ) =>
           item.userId ===
           value
       );
 
-    if (!member) {
+    if (
+      !member
+    ) {
       return;
     }
 
@@ -79,9 +92,22 @@ export default function AdminProductOwnerSelect({
         `Przypisać tę ofertę do administratora „${member.displayName}”? Od tego momentu ta osoba będzie właścicielem oferty.`
       );
 
-    if (!confirmed) {
+    if (
+      !confirmed
+    ) {
       return;
     }
+
+    const previousOwner =
+      currentValue;
+
+    /*
+     * Natychmiast aktualizujemy
+     * kartę produktu.
+     */
+    onOwnerChange(
+      value
+    );
 
     setLoading(
       true
@@ -101,17 +127,28 @@ export default function AdminProductOwnerSelect({
         }
       );
 
-    if (error) {
-      console.error(
-        error
-      );
-
-      alert(
-        "Nie udało się zmienić właściciela oferty."
+    if (
+      error
+    ) {
+      /*
+       * Cofnięcie optimistic UI
+       * przy błędzie.
+       */
+      onOwnerChange(
+        previousOwner
       );
 
       setLoading(
         false
+      );
+
+      console.error(
+        "Błąd zmiany właściciela:",
+        error
+      );
+
+      window.alert(
+        "Nie udało się zmienić właściciela oferty."
       );
 
       return;
@@ -121,7 +158,7 @@ export default function AdminProductOwnerSelect({
       false
     );
 
-    router.refresh();
+    onCommitted();
   }
 
   return (
@@ -130,54 +167,63 @@ export default function AdminProductOwnerSelect({
         Właściciel oferty
       </label>
 
-      <select
-        value={
-          currentValue
-        }
-        disabled={
-          loading
-        }
-        onChange={(
-          event
-        ) =>
-          changeOwner(
-            event.target
-              .value
-          )
-        }
-        className="min-h-10 w-full rounded-xl border border-stone-200 bg-white px-2.5 text-xs font-bold text-stone-700 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 disabled:opacity-50"
-      >
-        {!ownerId && (
-          <option value="">
-            Nieprzypisana
-          </option>
-        )}
-
-        {members.map(
-          (member) => (
-            <option
-              key={
-                member.userId
-              }
-              value={
-                member.userId
-              }
-            >
-              {
-                member.displayName
-              }
-              {member.role ===
-              "owner"
-                ? " • właściciel"
-                : ""}
+      <div className="relative">
+        <select
+          value={
+            currentValue
+          }
+          disabled={
+            loading
+          }
+          onChange={(
+            event
+          ) =>
+            changeOwner(
+              event.target
+                .value
+            )
+          }
+          className="min-h-10 w-full rounded-xl border border-stone-200 bg-white px-2.5 pr-8 text-xs font-bold text-stone-700 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 disabled:opacity-60"
+        >
+          {!ownerId && (
+            <option value="">
+              Nieprzypisana
             </option>
-          )
+          )}
+
+          {members.map(
+            (
+              member
+            ) => (
+              <option
+                key={
+                  member.userId
+                }
+                value={
+                  member.userId
+                }
+              >
+                {
+                  member.displayName
+                }
+
+                {member.role ===
+                "owner"
+                  ? " • właściciel"
+                  : ""}
+              </option>
+            )
+          )}
+        </select>
+
+        {loading && (
+          <span className="pointer-events-none absolute right-8 top-1/2 h-3 w-3 -translate-y-1/2 animate-spin rounded-full border-2 border-rose-500 border-r-transparent" />
         )}
-      </select>
+      </div>
 
       {loading && (
         <p className="mt-1 text-[9px] font-semibold text-stone-400">
-          Zapisywanie…
+          Synchronizacja w tle…
         </p>
       )}
     </div>
