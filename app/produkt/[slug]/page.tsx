@@ -45,7 +45,7 @@ function buildMetaDescription(
   shortName: string
 ) {
   const description =
-    `Sprawdź ${shortName}: opis, cenę zapisaną przy publikacji oraz link do aktualnej oferty SHEIN. Zobacz dostępność, warianty i aktualną cenę w sklepie.`;
+    `Zobacz ${shortName} w Trend za Mniej. Strona afiliacyjna z opisem, ceną zapisaną przy publikacji i linkiem do aktualnej oferty w SHEIN. Zakup odbywa się w SHEIN.`;
 
   return description.length >
     160
@@ -90,7 +90,7 @@ export async function generateMetadata({
     `/produkt/${product.slug}`;
 
   const title =
-    `${product.shortName} – cena i oferta SHEIN`;
+    `${product.shortName} – cena zapisana i link do SHEIN`;
 
   const description =
     buildMetaDescription(
@@ -174,16 +174,6 @@ export async function generateMetadata({
         product.image,
       ],
     },
-
-    other: {
-      "product:price:amount":
-        product.price.toFixed(
-          2
-        ),
-
-      "product:price:currency":
-        "PLN",
-    },
   };
 }
 
@@ -239,6 +229,31 @@ export default async function ProductPage({
   const categoryUrl =
     `${siteUrl}/kategoria/${categorySlug}`;
 
+  /*
+   * WAŻNE:
+   *
+   * Celowo NIE używamy tutaj:
+   *
+   * - Product
+   * - Offer
+   * - AggregateOffer
+   * - MerchantReturnPolicy
+   * - OfferShippingDetails
+   * - AggregateRating
+   * - Review
+   *
+   * Trend za Mniej nie jest sklepem
+   * ani sprzedawcą produktu.
+   *
+   * Strona opisuje produkt i kieruje
+   * użytkownika przez link afiliacyjny
+   * do SHEIN, gdzie odbywa się
+   * właściwy zakup.
+   *
+   * Dzięki temu nie deklarujemy
+   * Google, że Trend za Mniej
+   * jest merchantem.
+   */
   const structuredData = {
     "@context":
       "https://schema.org",
@@ -258,7 +273,9 @@ export default async function ProductPage({
           product.name,
 
         description:
-          product.description,
+          buildMetaDescription(
+            product.shortName
+          ),
 
         inLanguage:
           SITE_LANGUAGE,
@@ -268,23 +285,59 @@ export default async function ProductPage({
             `${siteUrl}/#website`,
         },
 
+        publisher: {
+          "@id":
+            `${siteUrl}/#organization`,
+        },
+
         breadcrumb: {
           "@id":
             `${productUrl}#breadcrumb`,
         },
 
-        mainEntity: {
+        primaryImageOfPage: {
           "@id":
-            `${productUrl}#product`,
+            `${productUrl}#primaryimage`,
+        },
+
+        about: {
+          "@id":
+            `${productUrl}#topic`,
         },
       },
 
       {
         "@type":
-          "Product",
+          "ImageObject",
 
         "@id":
-          `${productUrl}#product`,
+          `${productUrl}#primaryimage`,
+
+        url:
+          product.image,
+
+        contentUrl:
+          product.image,
+
+        caption:
+          product.name,
+
+        representativeOfPage:
+          true,
+      },
+
+      {
+        /*
+         * "Thing" opisuje temat strony
+         * bez deklarowania obiektu
+         * jako produktu sprzedawanego
+         * przez Trend za Mniej.
+         */
+        "@type":
+          "Thing",
+
+        "@id":
+          `${productUrl}#topic`,
 
         name:
           product.name,
@@ -292,36 +345,13 @@ export default async function ProductPage({
         description:
           product.description,
 
-        image: [
-          product.image,
-        ],
+        image: {
+          "@id":
+            `${productUrl}#primaryimage`,
+        },
 
         url:
           productUrl,
-
-        category:
-          product.category,
-
-        mainEntityOfPage: {
-          "@id":
-            `${productUrl}#webpage`,
-        },
-
-        offers: {
-          "@type":
-            "Offer",
-
-          url:
-            productUrl,
-
-          priceCurrency:
-            "PLN",
-
-          price:
-            product.price.toFixed(
-              2
-            ),
-        },
       },
 
       {
@@ -496,6 +526,10 @@ export default async function ProductPage({
                 }
               </Link>
 
+              <span className="inline-flex min-h-9 items-center rounded-full bg-stone-100 px-3.5 text-xs font-black text-stone-600">
+                Link afiliacyjny
+              </span>
+
               {product.featured && (
                 <span className="inline-flex min-h-9 items-center rounded-full bg-orange-50 px-3.5 text-xs font-black text-orange-700">
                   Popularny wybór
@@ -523,12 +557,12 @@ export default async function ProductPage({
 
               <FlowStep
                 number="2"
-                label="Sprawdź SHEIN"
+                label="Przejdź do SHEIN"
               />
 
               <FlowStep
                 number="3"
-                label="Zdecyduj"
+                label="Kup w sklepie"
               />
             </div>
 
@@ -587,14 +621,16 @@ export default async function ProductPage({
                 </span>
 
                 <p className="text-[11px] leading-5 text-amber-800">
+                  To cena zapisana
+                  przez nas przy
+                  publikacji oferty.
                   Aktualna cena,
                   dostępność,
-                  rozmiary, warianty
-                  i promocje mogą
-                  się zmienić.
-                  Sprawdzisz je
-                  po przejściu
-                  do SHEIN.
+                  warianty, rozmiary
+                  i promocje mogą się
+                  zmienić. Sprawdź je
+                  bezpośrednio
+                  w SHEIN.
                 </p>
               </div>
 
@@ -605,7 +641,7 @@ export default async function ProductPage({
                 className="mt-5 flex min-h-14 w-full items-center justify-center rounded-2xl bg-rose-600 px-5 text-center text-base font-black text-white shadow-sm transition hover:bg-rose-700 hover:shadow-md sm:text-lg"
               >
                 Sprawdź aktualną
-                cenę w SHEIN
+                ofertę w SHEIN
 
                 <svg
                   viewBox="0 0 24 24"
@@ -624,10 +660,41 @@ export default async function ProductPage({
               </a>
 
               <p className="mt-2 text-center text-[10px] font-semibold leading-5 text-stone-400">
-                Otworzy stronę lub
-                aplikację SHEIN
-                w nowej karcie
+                Link prowadzi do
+                zewnętrznego sklepu
+                SHEIN
               </p>
+            </div>
+
+            <div className="mt-3 rounded-[18px] border border-blue-100 bg-blue-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-blue-700 shadow-sm">
+                  i
+                </span>
+
+                <div>
+                  <p className="text-sm font-black text-blue-950">
+                    Trend za Mniej
+                    nie jest sprzedawcą
+                  </p>
+
+                  <p className="mt-1 text-[11px] leading-5 text-blue-800 sm:text-xs sm:leading-6">
+                    Prezentujemy
+                    wybrane produkty
+                    i kierujemy do
+                    zewnętrznego sklepu
+                    przez link
+                    afiliacyjny. Zakup,
+                    płatność, dostawa,
+                    dostępność,
+                    reklamacje
+                    i zwroty odbywają
+                    się zgodnie
+                    z warunkami
+                    sklepu SHEIN.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="mt-3 rounded-[18px] border border-rose-100 bg-rose-50 p-4">
@@ -674,7 +741,7 @@ export default async function ProductPage({
               <MiniFeature
                 icon="size"
                 title="Rozmiar"
-                text="sprawdź tabelę"
+                text="sprawdź w SHEIN"
               />
 
               <MiniFeature
@@ -692,20 +759,25 @@ export default async function ProductPage({
 
                 <div>
                   <p className="text-xs font-black text-stone-800">
-                    Link afiliacyjny
+                    Informacja
+                    afiliacyjna
                   </p>
 
                   <p className="mt-1 text-[11px] leading-5 text-stone-500">
+                    Trend za Mniej
+                    jest serwisem
+                    afiliacyjnym,
+                    a nie sklepem.
                     Możemy otrzymać
                     prowizję, jeśli
                     dokonasz
                     kwalifikującego
                     się zakupu po
                     przejściu przez
-                    link. Nie
-                    doliczamy z tego
-                    powodu dodatkowej
-                    opłaty.
+                    nasz link.
+                    Nie doliczamy
+                    z tego powodu
+                    dodatkowej opłaty.
                   </p>
 
                   <Link
@@ -769,7 +841,8 @@ export default async function ProductPage({
 
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-rose-600">
-                  Przed zakupem
+                  Przed przejściem
+                  do sklepu
                 </p>
 
                 <h2 className="text-lg font-black text-stone-900">
@@ -805,7 +878,9 @@ export default async function ProductPage({
               <ChecklistItem>
                 Koszt dostawy,
                 termin wysyłki
-                i warunki zwrotu.
+                i warunki zwrotu
+                obowiązujące
+                w SHEIN.
               </ChecklistItem>
             </div>
 
@@ -818,6 +893,13 @@ export default async function ProductPage({
               Przejdź do produktu
               w SHEIN ↗
             </a>
+
+            <p className="mt-3 text-center text-[10px] leading-5 text-stone-400">
+              Trend za Mniej
+              nie prowadzi
+              sprzedaży ani
+              realizacji zamówień.
+            </p>
           </div>
         </div>
       </section>
