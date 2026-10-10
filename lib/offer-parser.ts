@@ -1,3 +1,7 @@
+import {
+  recognizeProductType,
+} from "@/lib/product-recognition";
+
 export type ParserConfidence =
   | "high"
   | "medium"
@@ -39,17 +43,31 @@ export type ParsedOfferDiagnostics = {
   affiliateKind:
     AffiliateKind;
 
-  signals: string[];
+  signals:
+    string[];
 };
 
 export type ParsedOffer = {
-  name: string;
-  shortName: string;
-  price: string;
-  oldPrice: string;
-  affiliateUrl: string;
-  category: string;
-  soldText: string;
+  name:
+    string;
+
+  shortName:
+    string;
+
+  price:
+    string;
+
+  oldPrice:
+    string;
+
+  affiliateUrl:
+    string;
+
+  category:
+    string;
+
+  soldText:
+    string;
 
   confidence:
     ParserConfidence;
@@ -62,20 +80,30 @@ export type ParsedOffer = {
 };
 
 type TitleCandidate = {
-  value: string;
-  score: number;
+  value:
+    string;
+
+  score:
+    number;
 };
 
 type PriceCandidate = {
-  raw: string;
-  numeric: number;
-  lineIndex: number;
-  score: number;
+  raw:
+    string;
+
+  numeric:
+    number;
+
+  score:
+    number;
 };
 
 type PriceResult = {
-  price: string;
-  oldPrice: string;
+  price:
+    string;
+
+  oldPrice:
+    string;
 
   confidence:
     DetectionConfidence;
@@ -84,17 +112,12 @@ type PriceResult = {
     boolean;
 };
 
-type ProductRecognition = {
-  type: string;
-  category: string;
-
-  confidence:
-    DetectionConfidence;
-};
-
 type AffiliateResult = {
-  url: string;
-  kind: AffiliateKind;
+  url:
+    string;
+
+  kind:
+    AffiliateKind;
 };
 
 const SHEIN_COLLECTIONS = [
@@ -113,641 +136,6 @@ const SHEIN_COLLECTIONS = [
   "CURVE",
   "TALL",
   "Young",
-];
-
-const PRODUCT_RULES: Array<{
-  type: string;
-  category: string;
-  patterns: RegExp[];
-}> = [
-  {
-    type:
-      "Kardigan",
-
-    category:
-      "Kardigany",
-
-    patterns: [
-      /\bkardigan/i,
-      /\bcardigan/i,
-    ],
-  },
-
-  {
-    type:
-      "Koszulka / T-shirt",
-
-    category:
-      "Topy",
-
-    patterns: [
-      /\bkoszulk/i,
-      /\bt shirt\b/i,
-      /\btshirt\b/i,
-      /\btee\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Bluzka",
-
-    category:
-      "Topy",
-
-    patterns: [
-      /\bbluzk/i,
-      /\bblouse\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Body",
-
-    category:
-      "Topy",
-
-    patterns: [
-      /\bbody\b/i,
-      /\bbodysuit/i,
-    ],
-  },
-
-  {
-    type:
-      "Crop top",
-
-    category:
-      "Topy",
-
-    patterns: [
-      /\bcrop top\b/i,
-      /\bcropped top\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Top na ramiączkach",
-
-    category:
-      "Topy",
-
-    patterns: [
-      /\btank top\b/i,
-      /\bcami top\b/i,
-      /\bcamisole\b/i,
-      /\btop na ramiaczk/i,
-    ],
-  },
-
-  {
-    type:
-      "Koszula",
-
-    category:
-      "Koszule",
-
-    patterns: [
-      /\bkoszula\b/i,
-      /\bkoszule\b/i,
-      /\bkoszuli\b/i,
-      /\bshirt\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Bluza z kapturem",
-
-    category:
-      "Bluzy",
-
-    patterns: [
-      /\bbluza z kapturem\b/i,
-      /\bhoodie\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Bluza",
-
-    category:
-      "Bluzy",
-
-    patterns: [
-      /\bbluza\b/i,
-      /\bbluzy\b/i,
-      /\bbluze\b/i,
-      /\bsweatshirt\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Golf",
-
-    category:
-      "Swetry",
-
-    patterns: [
-      /\bgolf\b/i,
-      /\bturtleneck\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Sweter",
-
-    category:
-      "Swetry",
-
-    patterns: [
-      /\bsweter/i,
-      /\bsweater\b/i,
-      /\bpullover\b/i,
-      /\bjumper\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Top",
-
-    category:
-      "Topy",
-
-    patterns: [
-      /\btop\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Sukienka",
-
-    category:
-      "Sukienki",
-
-    patterns: [
-      /\bsukienk/i,
-      /\bdress\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Spódnica",
-
-    category:
-      "Spódnice",
-
-    patterns: [
-      /\bspodnic/i,
-      /\bskirt\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Jeansy",
-
-    category:
-      "Spodnie",
-
-    patterns: [
-      /\bjeans/i,
-      /\bdenim pants\b/i,
-      /\bdenim trousers\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Legginsy",
-
-    category:
-      "Spodnie",
-
-    patterns: [
-      /\bleggins/i,
-      /\bleggings/i,
-    ],
-  },
-
-  {
-    type:
-      "Szorty",
-
-    category:
-      "Spodnie",
-
-    patterns: [
-      /\bszort/i,
-      /\bshorts?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Spodnie cargo",
-
-    category:
-      "Spodnie",
-
-    patterns: [
-      /\bspodn[a-z]* cargo\b/i,
-      /\bcargo pants?\b/i,
-      /\bcargo trousers?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Spodnie",
-
-    category:
-      "Spodnie",
-
-    patterns: [
-      /\bspodn/i,
-      /\btrousers?\b/i,
-      /\bpants?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Marynarka / żakiet",
-
-    category:
-      "Kurtki i płaszcze",
-
-    patterns: [
-      /\bmarynark/i,
-      /\bzakiet/i,
-      /\bblazer\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Kamizelka",
-
-    category:
-      "Kurtki i płaszcze",
-
-    patterns: [
-      /\bkamizelk/i,
-      /\bwaistcoat\b/i,
-      /\bvest\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Płaszcz",
-
-    category:
-      "Kurtki i płaszcze",
-
-    patterns: [
-      /\bplaszcz/i,
-      /\bcoat\b/i,
-      /\bovercoat\b/i,
-      /\btrench\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Kurtka",
-
-    category:
-      "Kurtki i płaszcze",
-
-    patterns: [
-      /\bkurtk/i,
-      /\bjacket\b/i,
-      /\bparka\b/i,
-      /\bbomber\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Torebka crossbody",
-
-    category:
-      "Torebki",
-
-    patterns: [
-      /\bcrossbody\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Torebka na ramię",
-
-    category:
-      "Torebki",
-
-    patterns: [
-      /\bshoulder bag\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Shopperka",
-
-    category:
-      "Torebki",
-
-    patterns: [
-      /\bshopper\b/i,
-      /\btote bag\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Torebka / torba",
-
-    category:
-      "Torebki",
-
-    patterns: [
-      /\btorebk/i,
-      /\btorba\b/i,
-      /\bhandbag\b/i,
-      /\bbag\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Sneakersy",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\bsneaker/i,
-    ],
-  },
-
-  {
-    type:
-      "Sandały",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\bsandal/i,
-    ],
-  },
-
-  {
-    type:
-      "Botki",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\bbotk/i,
-      /\bankle boots?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Kozaki",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\bkozak/i,
-      /\bknee high boots?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Szpilki / obcasy",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\bszpilk/i,
-      /\bhigh heels?\b/i,
-      /\bheels?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Trampki",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\btrampk/i,
-      /\bcanvas shoes?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Buty",
-
-    category:
-      "Buty",
-
-    patterns: [
-      /\bbuty\b/i,
-      /\bshoes?\b/i,
-      /\bfootwear\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Kolczyki",
-
-    category:
-      "Biżuteria",
-
-    patterns: [
-      /\bkolczyk/i,
-      /\bearrings?\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Naszyjnik",
-
-    category:
-      "Biżuteria",
-
-    patterns: [
-      /\bnaszyjnik/i,
-      /\bnecklace\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Bransoletka",
-
-    category:
-      "Biżuteria",
-
-    patterns: [
-      /\bbransolet/i,
-      /\bbracelet\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Pierścionek",
-
-    category:
-      "Biżuteria",
-
-    patterns: [
-      /\bpierscion/i,
-      /\bring\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Biżuteria",
-
-    category:
-      "Biżuteria",
-
-    patterns: [
-      /\bbizuter/i,
-      /\bjewelry\b/i,
-      /\bjewellery\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Pędzel kosmetyczny",
-
-    category:
-      "Akcesoria kosmetyczne",
-
-    patterns: [
-      /\bpedzel/i,
-      /\bmakeup brush\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Gąbka kosmetyczna",
-
-    category:
-      "Akcesoria kosmetyczne",
-
-    patterns: [
-      /\bgabk/i,
-      /\bbeauty blender\b/i,
-      /\bmakeup sponge\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Akcesoria kosmetyczne",
-
-    category:
-      "Akcesoria kosmetyczne",
-
-    patterns: [
-      /\bzalotk/i,
-      /\baplikator/i,
-      /\bmakeup tool/i,
-    ],
-  },
-
-  {
-    type:
-      "Kosmetyk",
-
-    category:
-      "Uroda",
-
-    patterns: [
-      /\bszmink/i,
-      /\bpomadk/i,
-      /\bblyszczyk/i,
-      /\bmascara\b/i,
-      /\beyeliner\b/i,
-      /\bconcealer\b/i,
-      /\bfoundation\b/i,
-      /\blipstick\b/i,
-      /\blip gloss\b/i,
-      /\bserum\b/i,
-    ],
-  },
-
-  {
-    type:
-      "Akcesoria",
-
-    category:
-      "Akcesoria",
-
-    patterns: [
-      /\bpasek\b/i,
-      /\bbelt\b/i,
-      /\bokular/i,
-      /\bsunglasses\b/i,
-      /\bczapk/i,
-      /\bkapelusz/i,
-      /\bszal\b/i,
-      /\bscarf\b/i,
-      /\bopask/i,
-      /\bspink/i,
-    ],
-  },
-
-  {
-    type:
-      "Produkt do domu",
-
-    category:
-      "Dom i lifestyle",
-
-    patterns: [
-      /\borganizer/i,
-      /\bposzewk/i,
-      /\bposciel/i,
-      /\bkoc\b/i,
-      /\bdekorac/i,
-      /\bhome decor\b/i,
-      /\bkitchen\b/i,
-      /\bpojemnik/i,
-      /\brecznik/i,
-    ],
-  },
 ];
 
 const UI_PATTERNS = [
@@ -782,33 +170,29 @@ const UI_PATTERNS = [
   /^add to cart/i,
   /^buy now/i,
 
-  /^dostawa/i,
-  /^wysylka/i,
-  /^shipping/i,
+  /^dostawa$/i,
+  /^wysylka$/i,
+  /^shipping$/i,
 
-  /^zwrot/i,
+  /^zwrot$/i,
   /^returns?$/i,
 
   /^opis$/i,
-  /^opis produktu/i,
+  /^opis produktu$/i,
 
   /^szczegoly$/i,
-  /^szczegoly produktu/i,
+  /^szczegoly produktu$/i,
 
-  /^specyfikacja/i,
+  /^specyfikacja$/i,
 
-  /^recenzje/i,
-  /^opinie/i,
-  /^oceny/i,
-  /^reviews?/i,
+  /^recenzje$/i,
+  /^opinie$/i,
+  /^oceny$/i,
+  /^reviews?$/i,
 
-  /^kod produktu/i,
+  /^kod produktu$/i,
   /^sku\b/i,
-  /^id produktu/i,
-
-  /^promocja$/i,
-  /^kupon$/i,
-  /^rabat$/i,
+  /^id produktu$/i,
 
   /^zaloguj/i,
   /^rejestracja/i,
@@ -820,13 +204,9 @@ const UI_PATTERNS = [
   /^podobne produkty/i,
   /^polecane/i,
 
-  /^sprzedano$/i,
-  /^sprzedanych$/i,
-
   /^[xsml]{1,4}$/i,
 
   /^\d+(?:[.,]\d+)?\s*\/\s*5$/i,
-
   /^\d+(?:[.,]\d+)?\s*gwiazdek?$/i,
 
   /^[-–—]+$/,
@@ -834,12 +214,11 @@ const UI_PATTERNS = [
 
 const CURRENT_PRICE_MARKERS = [
   "aktualna cena",
+  "cena aktualna",
   "cena promocyjna",
   "cena teraz",
   "sale price",
   "current price",
-  "teraz",
-  "now",
   "price",
   "cena",
 ];
@@ -875,8 +254,229 @@ const BAD_PRICE_CONTEXT = [
   "bezplatna dostawa",
 ];
 
-function normalizeText(
-  value: string
+function decodeHtmlEntities(
+  value:
+    string
+) {
+  return value
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (
+        _match,
+        hex:
+          string
+      ) => {
+        const code =
+          Number.parseInt(
+            hex,
+            16
+          );
+
+        return Number.isFinite(
+          code
+        )
+          ? String.fromCodePoint(
+              code
+            )
+          : " ";
+      }
+    )
+    .replace(
+      /&#(\d+);/g,
+      (
+        _match,
+        decimal:
+          string
+      ) => {
+        const code =
+          Number.parseInt(
+            decimal,
+            10
+          );
+
+        return Number.isFinite(
+          code
+        )
+          ? String.fromCodePoint(
+              code
+            )
+          : " ";
+      }
+    )
+    .replace(
+      /&nbsp;/gi,
+      " "
+    )
+    .replace(
+      /&amp;/gi,
+      "&"
+    )
+    .replace(
+      /&quot;/gi,
+      '"'
+    )
+    .replace(
+      /&#39;|&apos;/gi,
+      "'"
+    )
+    .replace(
+      /&lt;/gi,
+      "<"
+    )
+    .replace(
+      /&gt;/gi,
+      ">"
+    );
+}
+
+function getHostname(
+  value:
+    string
+) {
+  try {
+    return new URL(
+      value
+    ).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function isFacebookAssetUrl(
+  value:
+    string
+) {
+  const hostname =
+    getHostname(
+      value
+    );
+
+  return (
+    hostname ===
+      "fbcdn.net" ||
+    hostname.endsWith(
+      ".fbcdn.net"
+    ) ||
+    hostname ===
+      "facebook.com" ||
+    hostname.endsWith(
+      ".facebook.com"
+    )
+  );
+}
+
+function isSheinHostname(
+  hostname:
+    string
+) {
+  return (
+    hostname ===
+      "shein.com" ||
+    hostname.endsWith(
+      ".shein.com"
+    )
+  );
+}
+
+function stripMarkdownLinks(
+  value:
+    string
+) {
+  return value.replace(
+    /\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/gi,
+    (
+      _full,
+      label:
+        string,
+      url:
+        string
+    ) => {
+      const cleanLabel =
+        label
+          .replace(
+            /\*\*/g,
+            ""
+          )
+          .replace(
+            /__/g,
+            ""
+          )
+          .trim();
+
+      /*
+       * Linki Facebooka prowadzące
+       * do obrazków emoji są tylko
+       * technicznym śmieciem.
+       *
+       * Zamieniamy je na separator,
+       * dzięki czemu:
+       *
+       * 💰 Cena
+       * 🛒 Produkt
+       * 🎁 Kupon
+       *
+       * stają się osobnymi blokami.
+       */
+      if (
+        isFacebookAssetUrl(
+          url
+        )
+      ) {
+        return "\n";
+      }
+
+      const hostname =
+        getHostname(
+          url
+        );
+
+      /*
+       * Gdy tekst linku jest samym
+       * adresem, zachowujemy tylko
+       * czysty adres.
+       */
+      if (
+        /^https?:\/\//i.test(
+          cleanLabel
+        )
+      ) {
+        return `\n${cleanLabel}\n`;
+      }
+
+      /*
+       * Dla linków SHEIN zachowujemy
+       * adres, nawet jeśli link ma
+       * inny tekst widoczny.
+       */
+      if (
+        hostname ===
+          "onelink.shein.com" ||
+        isSheinHostname(
+          hostname
+        )
+      ) {
+        return cleanLabel
+          ? `\n${cleanLabel}\n${url}\n`
+          : `\n${url}\n`;
+      }
+
+      /*
+       * Zwykły Markdown:
+       *
+       * [nazwa](url)
+       *
+       * pozostawiamy jako nazwę.
+       */
+      return cleanLabel
+        ? ` ${cleanLabel} `
+        : "\n";
+    }
+  );
+}
+
+function normalizeWhitespace(
+  value:
+    string
 ) {
   return value
     .replace(
@@ -900,14 +500,115 @@ function normalizeText(
       " "
     )
     .replace(
-      /\n{3,}/g,
-      "\n\n"
+      /\n[ ]+/g,
+      "\n"
+    )
+    .replace(
+      /[ ]+\n/g,
+      "\n"
+    )
+    .replace(
+      /\n{2,}/g,
+      "\n"
     )
     .trim();
 }
 
+function preprocessOfferText(
+  input:
+    string
+) {
+  let text =
+    decodeHtmlEntities(
+      input
+    );
+
+  /*
+   * Najpierw usuwamy składnię
+   * Markdown charakterystyczną
+   * dla postów kopiowanych
+   * z Facebooka.
+   */
+  text =
+    stripMarkdownLinks(
+      text
+    );
+
+  text =
+    text
+      .replace(
+        /<[^>]+>/g,
+        " "
+      )
+      .replace(
+        /\*\*([^*]+)\*\*/g,
+        "$1"
+      )
+      .replace(
+        /__([^_]+)__/g,
+        "$1"
+      )
+      .replace(
+        /`([^`]+)`/g,
+        "$1"
+      );
+
+  /*
+   * Jeśli post został skopiowany
+   * z prawdziwymi emoji zamiast
+   * Markdowna, również traktujemy
+   * je jako separatory.
+   */
+  text =
+    text.replace(
+      /[🔥💰🛒🎁]/gu,
+      "\n"
+    );
+
+  /*
+   * Rozdzielamy blok kuponu.
+   */
+  text =
+    text.replace(
+      /\b(Kupon|Coupon|Kod rabatowy)\b/gi,
+      "\n$1"
+    );
+
+  /*
+   * Najważniejsza poprawka dla:
+   *
+   * Cena[40,70zł] -45%
+   * Cena: 40,70 zł
+   * Cena 40,70zł
+   *
+   * Cały blok ceny trafia do
+   * osobnego wiersza i nie może
+   * zostać nazwą produktu.
+   */
+  text =
+    text.replace(
+      /((?:Cena|Price)\s*[\[(:=\-–—]?\s*\d{1,5}(?:[.,]\d{1,2})?\s*(?:zł|zl|pln)\s*\]?\s*(?:-\s*\d{1,3}\s*%|\d{1,3}\s*%\s*OFF)?)/gi,
+      "\n$1\n"
+    );
+
+  /*
+   * Każdy surowy URL otrzymuje
+   * własny wiersz.
+   */
+  text =
+    text.replace(
+      /(https?:\/\/[^\s<>"'\])}*]+)/gi,
+      "\n$1\n"
+    );
+
+  return normalizeWhitespace(
+    text
+  );
+}
+
 function normalizeForMatch(
-  value: string
+  value:
+    string
 ) {
   return value
     .toLocaleLowerCase(
@@ -936,7 +637,8 @@ function normalizeForMatch(
 }
 
 function cleanLine(
-  value: string
+  value:
+    string
 ) {
   return value
     .replace(
@@ -950,19 +652,21 @@ function cleanLine(
     .trim();
 }
 
-function isUrl(
-  value: string
+function isUrlLine(
+  value:
+    string
 ) {
-  return /https?:\/\//i.test(
-    value
+  return /^https?:\/\/\S+$/i.test(
+    value.trim()
   );
 }
 
 function hasCurrency(
-  value: string
+  value:
+    string
 ) {
   return (
-    /\d[\d\s]*(?:[.,]\d{1,2})?\s*(?:zł|zl|pln)\b/i.test(
+    /\d[\d\s]*(?:[.,]\d{1,2})?\s*(?:zł|zl|pln)(?=$|[\s\]\),;.!?%\-])/i.test(
       value
     ) ||
     /\bpln\s*\d/i.test(
@@ -972,7 +676,8 @@ function hasCurrency(
 }
 
 function isUiLine(
-  value: string
+  value:
+    string
 ) {
   const normalized =
     normalizeForMatch(
@@ -989,8 +694,72 @@ function isUiLine(
   );
 }
 
+function isMarketingNoise(
+  value:
+    string
+) {
+  const normalized =
+    normalizeForMatch(
+      value
+    );
+
+  if (
+    !normalized
+  ) {
+    return true;
+  }
+
+  const patterns = [
+    /\bnie przegap\b/i,
+    /\bgorac[a-z]* ofert/i,
+    /\bmega znizk/i,
+    /\bsuper znizk/i,
+    /\bduz[a-z]* znizk/i,
+
+    /\bkupon\b/i,
+    /\bcoupon\b/i,
+    /\bkod rabatow/i,
+
+    /\bnowego uzytkownika\b/i,
+    /\bnowy uzytkownik\b/i,
+    /\bnew user\b/i,
+
+    /\b\d{1,3}\s*%\s*off\b/i,
+
+    /\bsprawdz teraz\b/i,
+    /\bkliknij\b.*\blink\b/i,
+  ];
+
+  return patterns.some(
+    (
+      pattern
+    ) =>
+      pattern.test(
+        normalized
+      )
+  );
+}
+
+function isNoiseUrlLine(
+  value:
+    string
+) {
+  if (
+    !isUrlLine(
+      value
+    )
+  ) {
+    return false;
+  }
+
+  return isFacebookAssetUrl(
+    value
+  );
+}
+
 function escapeRegExp(
-  value: string
+  value:
+    string
 ) {
   return value.replace(
     /[.*+?^${}()|[\]\\]/g,
@@ -999,8 +768,10 @@ function escapeRegExp(
 }
 
 function truncateAtWord(
-  value: string,
-  maxLength: number
+  value:
+    string,
+  maxLength:
+    number
 ) {
   const clean =
     value.trim();
@@ -1027,7 +798,7 @@ function truncateAtWord(
   if (
     space <
     maxLength *
-      0.6
+      0.55
   ) {
     return clean
       .slice(
@@ -1046,7 +817,8 @@ function truncateAtWord(
 }
 
 function cleanProductName(
-  value: string
+  value:
+    string
 ) {
   let result =
     cleanLine(
@@ -1054,11 +826,21 @@ function cleanProductName(
     );
 
   result =
-    result.replace(
-      /^SHEIN\s+/i,
-      ""
-    );
+    result
+      .replace(
+        /^(?:produkt|nazwa produktu)\s*[:\-–—]\s*/i,
+        ""
+      )
+      .replace(
+        /^SHEIN\s+/i,
+        ""
+      );
 
+  /*
+   * Usuwamy kolekcje SHEIN
+   * z początku nazwy, ale tylko
+   * gdy rzeczywiście są prefiksem.
+   */
   let changed =
     true;
 
@@ -1101,7 +883,7 @@ function cleanProductName(
     }
   }
 
-  return truncateAtWord(
+  result =
     result
       .replace(
         /\bSKU\s*[:#]?\s*[A-Z0-9_-]+\b/gi,
@@ -1123,74 +905,37 @@ function cleanProductName(
         /[,;:\-–—|\s]+$/,
         ""
       )
-      .trim(),
+      .trim();
+
+  return truncateAtWord(
+    result,
     190
   );
 }
 
-function recognizeProduct(
-  value: string
-):
-  | {
-      type:
-        string;
-
-      category:
-        string;
-    }
-  | null {
-  const normalized =
-    normalizeForMatch(
-      value
-    );
-
-  if (
-    !normalized
-  ) {
-    return null;
-  }
-
-  for (
-    const rule
-    of PRODUCT_RULES
-  ) {
-    if (
-      rule.patterns.some(
-        (
-          pattern
-        ) =>
-          pattern.test(
-            normalized
-          )
-      )
-    ) {
-      return {
-        type:
-          rule.type,
-
-        category:
-          rule.category,
-      };
-    }
-  }
-
-  return null;
-}
-
-function containsProductSignal(
-  value: string
+function hasProductSignal(
+  value:
+    string
 ) {
-  return (
-    recognizeProduct(
-      value
-    ) !==
-    null
+  const recognition =
+    recognizeProductType({
+      name:
+        value,
+
+      content:
+        "",
+    });
+
+  return Boolean(
+    recognition.type
   );
 }
 
 function scoreTitle(
-  line: string,
-  lineIndex: number
+  line:
+    string,
+  lineIndex:
+    number
 ) {
   const clean =
     cleanLine(
@@ -1199,7 +944,7 @@ function scoreTitle(
 
   if (
     !clean ||
-    isUrl(
+    isUrlLine(
       clean
     ) ||
     hasCurrency(
@@ -1207,6 +952,22 @@ function scoreTitle(
     ) ||
     isUiLine(
       clean
+    ) ||
+    isMarketingNoise(
+      clean
+    )
+  ) {
+    return -1000;
+  }
+
+  const normalized =
+    normalizeForMatch(
+      clean
+    );
+
+  if (
+    /^[-+]?\d{1,3}\s*%/.test(
+      normalized
     )
   ) {
     return -1000;
@@ -1214,22 +975,17 @@ function scoreTitle(
 
   if (
     clean.length <
-    7
+    5
   ) {
-    return -100;
+    return -200;
   }
 
   if (
     clean.length >
     260
   ) {
-    return -70;
+    return -100;
   }
-
-  const normalized =
-    normalizeForMatch(
-      clean
-    );
 
   const words =
     clean
@@ -1243,57 +999,64 @@ function scoreTitle(
   let score =
     0;
 
+  /*
+   * Rozpoznany typ produktu jest
+   * zdecydowanie najsilniejszym
+   * sygnałem.
+   */
   if (
-    containsProductSignal(
+    hasProductSignal(
       clean
     )
   ) {
     score +=
-      42;
+      70;
   }
 
   if (
     words.length >=
-      3 &&
+      2 &&
     words.length <=
-      24
+      28
   ) {
     score +=
-      15;
-  } else if (
-    words.length ===
-    2
-  ) {
-    score +=
-      5;
+      18;
   }
 
   if (
     clean.length >=
-      18 &&
+      10 &&
     clean.length <=
-      150
+      180
   ) {
     score +=
-      12;
+      15;
   }
 
+  /*
+   * Słowa typowe dla realnego
+   * opisu produktu.
+   */
   if (
-    /damsk|mesk|kobiet|oversize|dekolt|rekaw|dzianin|dopasowan|eleganck|casual|wide leg|slim|regular/i.test(
+    /damsk|mesk|dziewczyn|chlop|kobiet|oversize|dekolt|rekaw|dzianin|dopasowan|eleganck|casual|uniwersal|wide leg|slim|regular|jesien|zim|wiosn|letn/i.test(
       normalized
     )
   ) {
     score +=
-      8;
+      10;
   }
 
+  /*
+   * Reklama i CTA znacząco
+   * obniżają wynik.
+   */
   if (
-    /promocj|rabat|kupon|gratis|dostaw|zwrot|punkty|aplikacj|wyprzedaz/i.test(
+    /promocj|rabat|kupon|gratis|dostaw|zwrot|punkty|aplikacj|wyprzedaz|znizk|ofert/i.test(
       normalized
     )
   ) {
     score -=
-      40;
+      65;
   }
 
   if (
@@ -1302,28 +1065,23 @@ function scoreTitle(
     )
   ) {
     score -=
-      18;
+      20;
   }
 
   if (
     lineIndex <=
-    5
+    8
   ) {
     score +=
-      8;
-  } else if (
-    lineIndex <=
-    12
-  ) {
-    score +=
-      3;
+      5;
   }
 
   return score;
 }
 
 function extractName(
-  lines: string[]
+  lines:
+    string[]
 ) {
   const candidates:
     TitleCandidate[] =
@@ -1344,16 +1102,28 @@ function extractName(
         score >
         -100
       ) {
-        candidates.push({
-          value:
-            cleanProductName(
-              line
-            ),
+        const value =
+          cleanProductName(
+            line
+          );
 
-          score,
-        });
+        if (
+          value.length >=
+          5
+        ) {
+          candidates.push({
+            value,
+            score,
+          });
+        }
       }
 
+      /*
+       * Jeżeli sklep złamał nazwę
+       * produktu na dwa wiersze,
+       * sprawdzamy również ich
+       * połączenie.
+       */
       const next =
         lines[
           index +
@@ -1361,16 +1131,11 @@ function extractName(
         ];
 
       if (
-        !next
-      ) {
-        return;
-      }
-
-      if (
-        isUrl(
+        !next ||
+        isUrlLine(
           line
         ) ||
-        isUrl(
+        isUrlLine(
           next
         ) ||
         hasCurrency(
@@ -1379,10 +1144,10 @@ function extractName(
         hasCurrency(
           next
         ) ||
-        isUiLine(
+        isMarketingNoise(
           line
         ) ||
-        isUiLine(
+        isMarketingNoise(
           next
         )
       ) {
@@ -1400,26 +1165,34 @@ function extractName(
       }
 
       if (
-        !containsProductSignal(
+        !hasProductSignal(
           combined
         )
       ) {
         return;
       }
 
-      candidates.push({
-        value:
-          cleanProductName(
-            combined
-          ),
+      const combinedScore =
+        scoreTitle(
+          combined,
+          index
+        );
 
-        score:
-          scoreTitle(
-            combined,
-            index
-          ) +
-          3,
-      });
+      if (
+        combinedScore >
+        -100
+      ) {
+        candidates.push({
+          value:
+            cleanProductName(
+              combined
+            ),
+
+          score:
+            combinedScore +
+            4,
+        });
+      }
     }
   );
 
@@ -1433,13 +1206,7 @@ function extractName(
   );
 
   const winner =
-    candidates.find(
-      (
-        candidate
-      ) =>
-        candidate.value.length >=
-        7
-    );
+    candidates[0];
 
   if (
     !winner
@@ -1459,10 +1226,10 @@ function extractName(
   const confidence:
     DetectionConfidence =
     winner.score >=
-    55
+    80
       ? "high"
       : winner.score >=
-          28
+          45
         ? "medium"
         : "low";
 
@@ -1477,8 +1244,27 @@ function extractName(
   };
 }
 
+function removeShortNameSeasonTail(
+  value:
+    string
+) {
+  return value
+    .replace(
+      /\s+na\s+(?:jesień|jesien|zimę|zime|zimę\/jesień|zime\/jesien|jesień\/zimę|jesien\/zime|wiosnę|wiosne|lato)\s*$/i,
+      ""
+    )
+    .replace(
+      /\s+na\s+(?:jesień|jesien|zimę|zime|wiosnę|wiosne|lato)\s*\/\s*(?:jesień|jesien|zimę|zime|wiosnę|wiosne|lato)\s*$/i,
+      ""
+    )
+    .trim();
+}
+
 function createShortName(
-  name: string
+  name:
+    string,
+  productType:
+    string
 ) {
   const clean =
     cleanProductName(
@@ -1491,6 +1277,20 @@ function createShortName(
     return "";
   }
 
+  /*
+   * Najczęściej pierwszy segment
+   * przed przecinkiem jest najlepszą
+   * nazwą na kafelek.
+   *
+   * Przykład:
+   *
+   * Sweter dla nastoletniej dziewczyny
+   * na jesień/zimę, casualowy...
+   *
+   * ->
+   *
+   * Sweter dla nastoletniej dziewczyny
+   */
   const parts =
     clean
       .split(
@@ -1510,31 +1310,68 @@ function createShortName(
     parts[0] ??
     clean;
 
+  result =
+    removeShortNameSeasonTail(
+      result
+    );
+
+  /*
+   * Jeśli pierwszy segment jest
+   * bardzo ogólny, np. tylko
+   * "Sweter", dokładamy drugi
+   * sensowny fragment.
+   */
   if (
     result.length <
-      16 &&
+      14 &&
     parts[1]
   ) {
+    const second =
+      removeShortNameSeasonTail(
+        parts[1]
+      );
+
     const combined =
-      `${result} ${parts[1]}`;
+      `${result} ${second}`
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
 
     if (
       combined.length <=
-      68
+      58
     ) {
       result =
         combined;
     }
   }
 
+  /*
+   * Awaryjnie nie pozwalamy,
+   * aby krótka nazwa była samym
+   * słowem marketingowym.
+   */
+  if (
+    isMarketingNoise(
+      result
+    ) &&
+    productType
+  ) {
+    result =
+      productType;
+  }
+
   return truncateAtWord(
     result,
-    68
+    58
   );
 }
 
 function normalizePrice(
-  value: string
+  value:
+    string
 ) {
   return value
     .replace(
@@ -1548,7 +1385,8 @@ function normalizePrice(
 }
 
 function numericPrice(
-  value: string
+  value:
+    string
 ) {
   const number =
     Number(
@@ -1571,7 +1409,8 @@ function numericPrice(
 }
 
 function extractPricesFromLine(
-  line: string
+  line:
+    string
 ) {
   const values:
     string[] =
@@ -1580,7 +1419,7 @@ function extractPricesFromLine(
   for (
     const match
     of line.matchAll(
-      /(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|pln)\b/gi
+      /(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|pln)(?=$|[\s\]\),;.!?%\-])/gi
     )
   ) {
     if (
@@ -1637,8 +1476,10 @@ function extractPricesFromLine(
 }
 
 function containsMarker(
-  value: string,
-  markers: string[]
+  value:
+    string,
+  markers:
+    string[]
 ) {
   const normalized =
     normalizeForMatch(
@@ -1657,22 +1498,169 @@ function containsMarker(
   );
 }
 
-function extractPrices(
-  lines: string[]
-): PriceResult {
-  const current:
-    PriceCandidate[] =
-    [];
+function extractExplicitCurrentPrice(
+  lines:
+    string[]
+) {
+  for (
+    const line
+    of lines
+  ) {
+    /*
+     * Wiersze zawierające jawny
+     * marker starej ceny nigdy
+     * nie są ceną aktualną.
+     */
+    if (
+      containsMarker(
+        line,
+        OLD_PRICE_MARKERS
+      )
+    ) {
+      continue;
+    }
 
-  const old:
+    const match =
+      line.match(
+        /\b(?:cena(?:\s+(?:aktualna|promocyjna|teraz))?|price|sale price|current price)\s*[\[(:=\-–—]?\s*(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:zł|zl|pln)\s*\]?/i
+      );
+
+    if (
+      match?.[1]
+    ) {
+      const normalized =
+        normalizePrice(
+          match[1]
+        );
+
+      const numeric =
+        numericPrice(
+          normalized
+        );
+
+      if (
+        numeric !==
+          null &&
+        numeric >=
+          1 &&
+        numeric <=
+          50000
+      ) {
+        return normalized;
+      }
+    }
+  }
+
+  return "";
+}
+
+function extractExplicitOldPrice(
+  lines:
+    string[]
+) {
+  for (
+    const line
+    of lines
+  ) {
+    if (
+      !containsMarker(
+        line,
+        OLD_PRICE_MARKERS
+      )
+    ) {
+      continue;
+    }
+
+    const prices =
+      extractPricesFromLine(
+        line
+      );
+
+    if (
+      prices[0]
+    ) {
+      return prices[0];
+    }
+  }
+
+  return "";
+}
+
+function extractPrices(
+  lines:
+    string[]
+): PriceResult {
+  /*
+   * Najpierw obsługujemy najczęstszy
+   * format Twoich postów:
+   *
+   * Cena[40,70zł] -45%
+   */
+  const explicitCurrent =
+    extractExplicitCurrentPrice(
+      lines
+    );
+
+  const explicitOld =
+    extractExplicitOldPrice(
+      lines
+    );
+
+  if (
+    explicitCurrent
+  ) {
+    const currentNumeric =
+      numericPrice(
+        explicitCurrent
+      );
+
+    const oldNumeric =
+      explicitOld
+        ? numericPrice(
+            explicitOld
+          )
+        : null;
+
+    return {
+      price:
+        explicitCurrent,
+
+      oldPrice:
+        currentNumeric !==
+          null &&
+        oldNumeric !==
+          null &&
+        oldNumeric >
+          currentNumeric
+          ? explicitOld
+          : "",
+
+      confidence:
+        "high",
+
+      oldPriceInferred:
+        false,
+    };
+  }
+
+  const candidates:
     PriceCandidate[] =
     [];
 
   lines.forEach(
     (
       line,
-      lineIndex
+      index
     ) => {
+      if (
+        containsMarker(
+          line,
+          OLD_PRICE_MARKERS
+        )
+      ) {
+        return;
+      }
+
       const prices =
         extractPricesFromLine(
           line
@@ -1697,39 +1685,6 @@ function extractPrices(
           CURRENT_PRICE_MARKERS
         );
 
-      const oldMarker =
-        containsMarker(
-          line,
-          OLD_PRICE_MARKERS
-        );
-
-      const numbers =
-        prices
-          .map(
-            numericPrice
-          )
-          .filter(
-            (
-              value
-            ): value is number =>
-              value !==
-              null
-          );
-
-      const minimum =
-        numbers.length
-          ? Math.min(
-              ...numbers
-            )
-          : null;
-
-      const maximum =
-        numbers.length
-          ? Math.max(
-              ...numbers
-            )
-          : null;
-
       prices.forEach(
         (
           raw,
@@ -1747,108 +1702,46 @@ function extractPrices(
             return;
           }
 
-          let currentScore =
+          let score =
             20;
-
-          let oldScore =
-            5;
-
-          if (
-            badContext
-          ) {
-            currentScore -=
-              80;
-
-            oldScore -=
-              80;
-          }
 
           if (
             currentMarker
           ) {
-            currentScore +=
-              50;
+            score +=
+              65;
           }
 
           if (
-            oldMarker
+            badContext
           ) {
-            oldScore +=
-              70;
-
-            currentScore -=
-              30;
+            score -=
+              90;
           }
 
           if (
-            lineIndex <=
-            12
+            index <=
+            8
           ) {
-            currentScore +=
+            score +=
               5;
           }
 
-          if (
-            minimum !==
-              null &&
-            numbers.length >
-              1 &&
-            numeric ===
-              minimum
-          ) {
-            currentScore +=
-              18;
-          }
-
-          if (
-            minimum !==
-              null &&
-            maximum !==
-              null &&
-            maximum >
-              minimum *
-                1.02 &&
-            numeric ===
-              maximum
-          ) {
-            oldScore +=
-              28;
-          }
-
-          currentScore -=
+          score -=
             valueIndex *
             2;
 
-          current.push({
+          candidates.push({
             raw,
             numeric,
-            lineIndex,
-            score:
-              currentScore,
-          });
-
-          old.push({
-            raw,
-            numeric,
-            lineIndex,
-            score:
-              oldScore,
+            score,
           });
         }
       );
     }
   );
 
-  current.sort(
-    (
-      first,
-      second
-    ) =>
-      second.score -
-      first.score
-  );
-
-  old.sort(
+  candidates.sort(
     (
       first,
       second
@@ -1858,7 +1751,7 @@ function extractPrices(
   );
 
   const selected =
-    current.find(
+    candidates.find(
       (
         candidate
       ) =>
@@ -1884,139 +1777,154 @@ function extractPrices(
     };
   }
 
-  let oldPrice =
-    "";
-
-  let oldPriceInferred =
-    false;
-
-  const explicitOld =
-    old.find(
-      (
-        candidate
-      ) =>
-        candidate.score >=
-          55 &&
-        candidate.numeric >
-          selected.numeric *
-            1.02
-    );
-
-  if (
+  const oldNumeric =
     explicitOld
-  ) {
-    oldPrice =
-      explicitOld.raw;
-  } else {
-    const sameLineHigher =
-      current.find(
-        (
-          candidate
-        ) =>
-          candidate.lineIndex ===
-            selected.lineIndex &&
-          candidate.numeric >
-            selected.numeric *
-              1.02
-      );
-
-    if (
-      sameLineHigher
-    ) {
-      oldPrice =
-        sameLineHigher.raw;
-
-      oldPriceInferred =
-        true;
-    }
-  }
-
-  const confidence:
-    DetectionConfidence =
-    selected.score >=
-    65
-      ? "high"
-      : selected.score >=
-          35
-        ? "medium"
-        : "low";
+      ? numericPrice(
+          explicitOld
+        )
+      : null;
 
   return {
     price:
       selected.raw,
 
-    oldPrice,
+    oldPrice:
+      oldNumeric !==
+        null &&
+      oldNumeric >
+        selected.numeric
+        ? explicitOld
+        : "",
 
-    confidence,
+    confidence:
+      selected.score >=
+      60
+        ? "high"
+        : selected.score >=
+            25
+          ? "medium"
+          : "low",
 
-    oldPriceInferred,
+    oldPriceInferred:
+      false,
   };
 }
 
-function extractUrls(
-  text: string
+function cleanExtractedUrl(
+  value:
+    string
 ) {
-  const matches =
-    text.match(
-      /https?:\/\/[^\s<>"']+/gi
-    ) ??
-    [];
-
-  return [
-    ...new Set(
-      matches
-        .map(
-          (
-            url
-          ) =>
-            url.replace(
-              /[)\],.;!?]+$/,
-              ""
-            )
-        )
-        .filter(
-          (
-            url
-          ) => {
-            try {
-              const parsed =
-                new URL(
-                  url
-                );
-
-              return (
-                parsed.protocol ===
-                  "https:" ||
-                parsed.protocol ===
-                  "http:"
-              );
-            } catch {
-              return false;
-            }
-          }
-        )
-    ),
-  ];
+  return decodeHtmlEntities(
+    value
+  )
+    .replace(
+      /^\*+|\*+$/g,
+      ""
+    )
+    .replace(
+      /[.,;!?]+$/,
+      ""
+    )
+    .trim();
 }
 
-function getHostname(
-  value: string
+function extractUrls(
+  input:
+    string
 ) {
-  try {
-    return new URL(
+  const urls =
+    new Set<string>();
+
+  /*
+   * Najpierw bierzemy adresy
+   * z celu linku Markdown:
+   *
+   * [tekst](URL)
+   */
+  for (
+    const match
+    of input.matchAll(
+      /\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/gi
+    )
+  ) {
+    const value =
+      cleanExtractedUrl(
+        match[1]
+      );
+
+    if (
       value
-    ).hostname.toLowerCase();
-  } catch {
-    return "";
+    ) {
+      urls.add(
+        value
+      );
+    }
   }
+
+  /*
+   * Potem zwykłe adresy URL.
+   *
+   * Celowo zatrzymujemy się przed:
+   * ] ) } *
+   *
+   * dzięki czemu:
+   *
+   * [**https://...**](...)
+   *
+   * nie tworzy uszkodzonego URL.
+   */
+  for (
+    const match
+    of input.matchAll(
+      /https?:\/\/[^\s<>"'\])}*]+/gi
+    )
+  ) {
+    const value =
+      cleanExtractedUrl(
+        match[0]
+      );
+
+    if (
+      value
+    ) {
+      urls.add(
+        value
+      );
+    }
+  }
+
+  return [
+    ...urls,
+  ].filter(
+    (
+      value
+    ) => {
+      try {
+        const parsed =
+          new URL(
+            value
+          );
+
+        return (
+          parsed.protocol ===
+            "https:" ||
+          parsed.protocol ===
+            "http:"
+        );
+      } catch {
+        return false;
+      }
+    }
+  );
 }
 
 function extractAffiliateUrl(
-  text: string
+  input:
+    string
 ): AffiliateResult {
   const urls =
     extractUrls(
-      text
+      input
     );
 
   if (
@@ -2032,6 +1940,10 @@ function extractAffiliateUrl(
     };
   }
 
+  /*
+   * Najwyższy priorytet:
+   * SHEIN OneLink.
+   */
   const oneLink =
     urls.find(
       (
@@ -2055,24 +1967,19 @@ function extractAffiliateUrl(
     };
   }
 
+  /*
+   * Następnie zwykły link SHEIN.
+   */
   const shein =
     urls.find(
       (
         url
-      ) => {
-        const host =
+      ) =>
+        isSheinHostname(
           getHostname(
             url
-          );
-
-        return (
-          host ===
-            "shein.com" ||
-          host.endsWith(
-            ".shein.com"
           )
-        );
-      }
+        )
     );
 
   if (
@@ -2087,68 +1994,45 @@ function extractAffiliateUrl(
     };
   }
 
+  /*
+   * Linków do obrazków Facebooka
+   * nigdy nie traktujemy jako
+   * link afiliacyjny.
+   */
+  const other =
+    urls.find(
+      (
+        url
+      ) =>
+        !isFacebookAssetUrl(
+          url
+        )
+    );
+
+  if (
+    !other
+  ) {
+    return {
+      url:
+        "",
+
+      kind:
+        "none",
+    };
+  }
+
   return {
     url:
-      urls[0],
+      other,
 
     kind:
       "other",
   };
 }
 
-function recognizeCategory({
-  name,
-  text,
-}: {
-  name: string;
-  text: string;
-}): ProductRecognition {
-  const nameRecognition =
-    recognizeProduct(
-      name
-    );
-
-  if (
-    nameRecognition
-  ) {
-    return {
-      ...nameRecognition,
-
-      confidence:
-        "high",
-    };
-  }
-
-  const textRecognition =
-    recognizeProduct(
-      text
-    );
-
-  if (
-    textRecognition
-  ) {
-    return {
-      ...textRecognition,
-
-      confidence:
-        "medium",
-    };
-  }
-
-  return {
-    type:
-      "",
-
-    category:
-      "",
-
-    confidence:
-      "none",
-  };
-}
-
 function extractSoldText(
-  text: string
+  text:
+    string
 ) {
   const normalized =
     normalizeForMatch(
@@ -2278,7 +2162,8 @@ function calculateOverallConfidence({
 }
 
 function detectSourceKind(
-  text: string,
+  input:
+    string,
   affiliateKind:
     AffiliateKind
 ):
@@ -2291,7 +2176,7 @@ function detectSourceKind(
     affiliateKind ===
       "shein" ||
     normalizeForMatch(
-      text
+      input
     ).includes(
       "shein"
     )
@@ -2301,7 +2186,7 @@ function detectSourceKind(
 
   if (
     /https?:\/\//i.test(
-      text
+      input
     )
   ) {
     return "mixed";
@@ -2311,15 +2196,22 @@ function detectSourceKind(
 }
 
 export function parseOfferText(
-  input: string
+  input:
+    string
 ): ParsedOffer {
-  const text =
-    normalizeText(
+  /*
+   * sourceText:
+   * tekst oczyszczony z Markdown,
+   * linków emoji Facebooka,
+   * encji HTML itd.
+   */
+  const sourceText =
+    preprocessOfferText(
       input
     );
 
   const rawLines =
-    text
+    sourceText
       .split(
         "\n"
       )
@@ -2330,12 +2222,28 @@ export function parseOfferText(
         Boolean
       );
 
+  /*
+   * Linie używane do rozpoznawania
+   * nazwy i typu produktu.
+   *
+   * Usuwamy reklamę, kupony,
+   * elementy UI i same adresy URL.
+   */
   const usefulLines =
     rawLines.filter(
       (
         line
       ) =>
         !isUiLine(
+          line
+        ) &&
+        !isMarketingNoise(
+          line
+        ) &&
+        !isUrlLine(
+          line
+        ) &&
+        !isNoiseUrlLine(
           line
         )
     );
@@ -2349,9 +2257,78 @@ export function parseOfferText(
       usefulLines
     );
 
+  /*
+   * Rozpoznawanie typu korzysta
+   * z obecnego systemu kategorii.
+   */
+  let product =
+    recognizeProductType({
+      name:
+        nameResult.name,
+
+      content:
+        usefulLines.join(
+          "\n"
+        ),
+    });
+
+  /*
+   * Ochrona przed popularnym
+   * false-positive:
+   *
+   * "body lotion"
+   * nie jest kategorią Body.
+   *
+   * Dokładniejszy enhancer kategorii
+   * w formularzu może później
+   * zakwalifikować taki produkt
+   * jako Uroda.
+   */
+  if (
+    product.type ===
+      "Body" &&
+    /\bbody\s+(?:lotion|cream|mist|spray|oil|wash|scrub)\b/i.test(
+      normalizeForMatch(
+        `${nameResult.name} ${sourceText}`
+      )
+    )
+  ) {
+    product = {
+      type:
+        "",
+
+      category:
+        "",
+
+      suggestedCategory:
+        "",
+
+      confidence:
+        "none",
+
+      source:
+        "none",
+    };
+  }
+
+  const category =
+    product.suggestedCategory ||
+    product.category;
+
+  const categoryConfidence:
+    DetectionConfidence =
+    product.confidence ===
+    "high"
+      ? "high"
+      : product.confidence ===
+          "medium"
+        ? "medium"
+        : "none";
+
   const shortName =
     createShortName(
-      nameResult.name
+      nameResult.name,
+      product.type
     );
 
   const priceResult =
@@ -2359,25 +2336,19 @@ export function parseOfferText(
       rawLines
     );
 
-  const product =
-    recognizeCategory({
-      name:
-        nameResult.name,
-
-      text:
-        usefulLines.join(
-          "\n"
-        ),
-    });
-
+  /*
+   * Link analizujemy na oryginalnym
+   * tekście, aby nie stracić
+   * miejsca docelowego linku Markdown.
+   */
   const affiliate =
     extractAffiliateUrl(
-      text
+      input
     );
 
   const soldText =
     extractSoldText(
-      text
+      sourceText
     );
 
   const signals:
@@ -2393,10 +2364,18 @@ export function parseOfferText(
   }
 
   if (
+    shortName
+  ) {
+    signals.push(
+      "krótka nazwa"
+    );
+  }
+
+  if (
     product.type
   ) {
     signals.push(
-      product.type
+      `typ: ${product.type}`
     );
   }
 
@@ -2409,10 +2388,10 @@ export function parseOfferText(
   }
 
   if (
-    product.category
+    category
   ) {
     signals.push(
-      product.category
+      `kategoria: ${category}`
     );
   }
 
@@ -2429,6 +2408,15 @@ export function parseOfferText(
   ) {
     signals.push(
       "link SHEIN"
+    );
+  }
+
+  if (
+    ignoredNoiseLines >
+    0
+  ) {
+    signals.push(
+      "oczyszczono treść promocyjną"
     );
   }
 
@@ -2460,6 +2448,15 @@ export function parseOfferText(
   }
 
   if (
+    !shortName &&
+    nameResult.name
+  ) {
+    warnings.push(
+      "Nie udało się przygotować krótkiej nazwy produktu."
+    );
+  }
+
+  if (
     !priceResult.price
   ) {
     warnings.push(
@@ -2478,20 +2475,18 @@ export function parseOfferText(
     priceResult.oldPrice
   ) {
     warnings.push(
-      priceResult.oldPriceInferred
-        ? "Stara cena została wywnioskowana z dwóch kwot obok siebie. Sprawdź ją przed publikacją."
-        : "Rozpoznano starą cenę. Sprawdź, czy faktycznie jest wcześniejszą ceną produktu."
+      "Rozpoznano starą cenę. Sprawdź, czy faktycznie jest wcześniejszą ceną produktu."
     );
   }
 
   if (
-    !product.category
+    !category
   ) {
     warnings.push(
       "Nie udało się automatycznie dobrać kategorii."
     );
   } else if (
-    product.confidence ===
+    categoryConfidence ===
     "medium"
   ) {
     warnings.push(
@@ -2537,8 +2532,7 @@ export function parseOfferText(
       priceConfidence:
         priceResult.confidence,
 
-      categoryConfidence:
-        product.confidence,
+      categoryConfidence,
 
       affiliateKind:
         affiliate.kind,
@@ -2559,8 +2553,7 @@ export function parseOfferText(
     affiliateUrl:
       affiliate.url,
 
-    category:
-      product.category,
+    category,
 
     soldText,
 
@@ -2575,7 +2568,7 @@ export function parseOfferText(
     diagnostics: {
       sourceKind:
         detectSourceKind(
-          text,
+          input,
           affiliate.kind
         ),
 
@@ -2593,18 +2586,16 @@ export function parseOfferText(
       priceConfidence:
         priceResult.confidence,
 
-      categoryConfidence:
-        product.confidence,
+      categoryConfidence,
 
       affiliateKind:
         affiliate.kind,
 
-      signals:
-        [
-          ...new Set(
-            signals
-          ),
-        ],
+      signals: [
+        ...new Set(
+          signals
+        ),
+      ],
     },
   };
 }
