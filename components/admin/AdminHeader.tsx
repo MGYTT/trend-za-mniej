@@ -21,44 +21,83 @@ type NavigationItem = {
     | "dashboard"
     | "add"
     | "social"
+    | "tiktok"
     | "stats"
     | "team";
 };
 
-const navigation: NavigationItem[] = [
+const navigation:
+  NavigationItem[] = [
   {
-    label: "Panel",
-    href: "/admin",
-    type: "dashboard",
+    label:
+      "Panel",
+
+    href:
+      "/admin",
+
+    type:
+      "dashboard",
   },
 
   {
-    label: "Dodaj ofertę",
-    href: "/admin/nowa-oferta",
-    type: "add",
+    label:
+      "Dodaj ofertę",
+
+    href:
+      "/admin/nowa-oferta",
+
+    type:
+      "add",
   },
 
   {
-    label: "Social",
-    href: "/admin/social",
-    type: "social",
+    label:
+      "Social",
+
+    href:
+      "/admin/social",
+
+    type:
+      "social",
   },
 
   {
-    label: "Statystyki",
-    href: "/admin/statystyki",
-    type: "stats",
+    label:
+      "TikTok",
+
+    href:
+      "/admin/tiktok",
+
+    type:
+      "tiktok",
   },
 
   {
-    label: "Zespół",
-    href: "/admin/zespol",
-    type: "team",
+    label:
+      "Statystyki",
+
+    href:
+      "/admin/statystyki",
+
+    type:
+      "stats",
+  },
+
+  {
+    label:
+      "Zespół",
+
+    href:
+      "/admin/zespol",
+
+    type:
+      "team",
   },
 ];
 
 function getMobileTitle(
-  pathname: string
+  pathname:
+    string
 ) {
   if (
     pathname ===
@@ -100,6 +139,14 @@ function getMobileTitle(
 
   if (
     pathname.startsWith(
+      "/admin/tiktok"
+    )
+  ) {
+    return "TikTok";
+  }
+
+  if (
+    pathname.startsWith(
       "/admin/statystyki"
     )
   ) {
@@ -118,7 +165,8 @@ function getMobileTitle(
 }
 
 function getBackHref(
-  pathname: string
+  pathname:
+    string
 ) {
   if (
     /^\/admin\/social\/[^/]+$/.test(
@@ -139,7 +187,9 @@ export default function AdminHeader() {
     menuOpen,
     setMenuOpen,
   ] =
-    useState(false);
+    useState(
+      false
+    );
 
   const mobileTitle =
     getMobileTitle(
@@ -152,7 +202,9 @@ export default function AdminHeader() {
 
   useEffect(
     () => {
-      setMenuOpen(false);
+      setMenuOpen(
+        false
+      );
     },
     [
       pathname,
@@ -175,13 +227,16 @@ export default function AdminHeader() {
         "hidden";
 
       function handleKeyDown(
-        event: KeyboardEvent
+        event:
+          KeyboardEvent
       ) {
         if (
           event.key ===
           "Escape"
         ) {
-          setMenuOpen(false);
+          setMenuOpen(
+            false
+          );
         }
       }
 
@@ -206,22 +261,27 @@ export default function AdminHeader() {
   );
 
   function isActive(
-    item: NavigationItem
+    item:
+      NavigationItem
   ) {
     if (
       item.type ===
       "dashboard"
     ) {
-      return pathname ===
-        "/admin";
+      return (
+        pathname ===
+        "/admin"
+      );
     }
 
     if (
       item.type ===
       "add"
     ) {
-      return pathname ===
-        "/admin/nowa-oferta";
+      return (
+        pathname ===
+        "/admin/nowa-oferta"
+      );
     }
 
     if (
@@ -230,6 +290,15 @@ export default function AdminHeader() {
     ) {
       return pathname.startsWith(
         "/admin/social"
+      );
+    }
+
+    if (
+      item.type ===
+      "tiktok"
+    ) {
+      return pathname.startsWith(
+        "/admin/tiktok"
       );
     }
 
@@ -289,7 +358,9 @@ export default function AdminHeader() {
 
           <div className="min-w-0 flex-1 text-center">
             <p className="truncate text-[15px] font-black tracking-[-0.025em] text-stone-950">
-              {mobileTitle}
+              {
+                mobileTitle
+              }
             </p>
 
             <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.11em] text-stone-400">
@@ -302,7 +373,9 @@ export default function AdminHeader() {
               type="button"
               onClick={() =>
                 setMenuOpen(
-                  (current) =>
+                  (
+                    current
+                  ) =>
                     !current
                 )
               }
@@ -334,7 +407,9 @@ export default function AdminHeader() {
             className="flex items-center gap-1"
           >
             {navigation.map(
-              (item) => {
+              (
+                item
+              ) => {
                 const active =
                   isActive(
                     item
@@ -355,13 +430,18 @@ export default function AdminHeader() {
                         : undefined
                     }
                     className={[
-                      "relative flex min-h-10 items-center rounded-xl px-3.5 text-sm font-bold transition",
+                      "relative flex min-h-10 items-center rounded-xl px-3 text-sm font-bold transition xl:px-3.5",
+
                       active
                         ? "bg-stone-100 text-stone-950"
                         : "text-stone-500 hover:bg-stone-50 hover:text-stone-950",
-                    ].join(" ")}
+                    ].join(
+                      " "
+                    )}
                   >
-                    {item.label}
+                    {
+                      item.label
+                    }
 
                     {active && (
                       <span className="absolute inset-x-4 -bottom-[12px] h-0.5 rounded-full bg-rose-600" />
@@ -386,7 +466,9 @@ export default function AdminHeader() {
               type="button"
               onClick={() =>
                 setMenuOpen(
-                  (current) =>
+                  (
+                    current
+                  ) =>
                     !current
                 )
               }
@@ -405,7 +487,9 @@ export default function AdminHeader() {
       {menuOpen && (
         <AccountMenu
           onClose={() =>
-            setMenuOpen(false)
+            setMenuOpen(
+              false
+            )
           }
         />
       )}
@@ -416,7 +500,8 @@ export default function AdminHeader() {
 function AccountMenu({
   onClose,
 }: {
-  onClose: () => void;
+  onClose:
+    () => void;
 }) {
   return (
     <>
@@ -450,6 +535,21 @@ function AccountMenu({
 
         <div className="border-t border-stone-100 p-2">
           <Link
+            href="/admin/tiktok"
+            prefetch
+            onClick={
+              onClose
+            }
+            className="admin-account-row"
+          >
+            Produkty z TikToka
+
+            <span>
+              ›
+            </span>
+          </Link>
+
+          <Link
             href="/admin/zespol"
             prefetch
             onClick={
@@ -461,6 +561,22 @@ function AccountMenu({
 
             <span>
               ›
+            </span>
+          </Link>
+
+          <Link
+            href="/tiktok"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={
+              onClose
+            }
+            className="admin-account-row"
+          >
+            Publiczna /tiktok
+
+            <span>
+              ↗
             </span>
           </Link>
 
@@ -549,6 +665,7 @@ function LogoutIcon() {
       strokeLinejoin="round"
     >
       <path d="M10 17l5-5-5-5" />
+
       <path d="M15 12H3" />
     </svg>
   );

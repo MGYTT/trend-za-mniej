@@ -14,6 +14,10 @@ export type Product = {
   featured: boolean;
   sold: string | null;
   active: boolean;
+
+  tiktokFeatured: boolean;
+  tiktokFeaturedAt: string | null;
+
   createdAt: string;
 };
 
@@ -31,6 +35,10 @@ type ProductRow = {
   featured: boolean;
   sold_text: string | null;
   active: boolean;
+
+  tiktok_featured: boolean | null;
+  tiktok_featured_at: string | null;
+
   created_at: string;
 };
 
@@ -46,6 +54,11 @@ export type ProductFilters = {
   sort?: ProductSort;
 };
 
+export type TikTokProductFilters = {
+  query?: string;
+  category?: string;
+};
+
 function mapProduct(
   row: ProductRow
 ): Product {
@@ -55,51 +68,96 @@ function mapProduct(
     name: row.name,
     shortName: row.short_name,
     description: row.description,
-    price: Number(row.price),
+
+    price: Number(
+      row.price
+    ),
+
     oldPrice:
       row.old_price === null
         ? null
-        : Number(row.old_price),
-    category: row.category,
-    image: row.image_url,
-    affiliateUrl: row.affiliate_url,
-    featured: row.featured,
-    sold: row.sold_text,
-    active: row.active,
-    createdAt: row.created_at,
+        : Number(
+            row.old_price
+          ),
+
+    category:
+      row.category,
+
+    image:
+      row.image_url,
+
+    affiliateUrl:
+      row.affiliate_url,
+
+    featured:
+      row.featured,
+
+    sold:
+      row.sold_text,
+
+    active:
+      row.active,
+
+    tiktokFeatured:
+      Boolean(
+        row.tiktok_featured
+      ),
+
+    tiktokFeaturedAt:
+      row.tiktok_featured_at ??
+      null,
+
+    createdAt:
+      row.created_at,
   };
+}
+
+function sanitizeSearchQuery(
+  query: string
+) {
+  return query.replace(
+    /[,()%]/g,
+    " "
+  );
 }
 
 export async function getProducts(
   filters: ProductFilters = {}
 ): Promise<Product[]> {
-  let request = supabase
-    .from("products")
-    .select("*")
-    .eq("active", true);
+  let request =
+    supabase
+      .from("products")
+      .select("*")
+      .eq(
+        "active",
+        true
+      );
 
   const query =
     filters.query?.trim();
 
   if (query) {
-    const safeQuery = query.replace(
-      /[,()%]/g,
-      " "
-    );
+    const safeQuery =
+      sanitizeSearchQuery(
+        query
+      );
 
-    request = request.or(
-      `name.ilike.%${safeQuery}%,short_name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
-    );
+    request =
+      request.or(
+        `name.ilike.%${safeQuery}%,short_name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
+      );
   }
 
   if (
     filters.category &&
-    filters.category !== "all"
+    filters.category !==
+      "all"
   ) {
-    request = request.eq(
-      "category",
-      filters.category
-    );
+    request =
+      request.eq(
+        "category",
+        filters.category
+      );
   }
 
   if (
@@ -109,42 +167,54 @@ export async function getProducts(
       filters.maxPrice
     )
   ) {
-    request = request.lte(
-      "price",
-      filters.maxPrice
-    );
+    request =
+      request.lte(
+        "price",
+        filters.maxPrice
+      );
   }
 
-  switch (filters.sort) {
+  switch (
+    filters.sort
+  ) {
     case "price-asc":
-      request = request.order(
-        "price",
-        {
-          ascending: true,
-        }
-      );
+      request =
+        request.order(
+          "price",
+          {
+            ascending:
+              true,
+          }
+        );
       break;
 
     case "price-desc":
-      request = request.order(
-        "price",
-        {
-          ascending: false,
-        }
-      );
+      request =
+        request.order(
+          "price",
+          {
+            ascending:
+              false,
+          }
+        );
       break;
 
     default:
-      request = request.order(
-        "created_at",
-        {
-          ascending: false,
-        }
-      );
+      request =
+        request.order(
+          "created_at",
+          {
+            ascending:
+              false,
+          }
+        );
       break;
   }
 
-  const { data, error } =
+  const {
+    data,
+    error,
+  } =
     await request;
 
   if (error) {
@@ -158,21 +228,121 @@ export async function getProducts(
 
   return (
     data as ProductRow[]
-  ).map(mapProduct);
+  ).map(
+    mapProduct
+  );
+}
+
+export async function getTikTokProducts(
+  filters:
+    TikTokProductFilters = {}
+): Promise<Product[]> {
+  let request =
+    supabase
+      .from("products")
+      .select("*")
+      .eq(
+        "active",
+        true
+      )
+      .eq(
+        "tiktok_featured",
+        true
+      );
+
+  const query =
+    filters.query?.trim();
+
+  if (query) {
+    const safeQuery =
+      sanitizeSearchQuery(
+        query
+      );
+
+    request =
+      request.or(
+        `name.ilike.%${safeQuery}%,short_name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
+      );
+  }
+
+  if (
+    filters.category &&
+    filters.category !==
+      "all"
+  ) {
+    request =
+      request.eq(
+        "category",
+        filters.category
+      );
+  }
+
+  const {
+    data,
+    error,
+  } =
+    await request
+      .order(
+        "tiktok_featured_at",
+        {
+          ascending:
+            false,
+
+          nullsFirst:
+            false,
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      );
+
+  if (error) {
+    console.error(
+      "Błąd pobierania produktów z TikToka:",
+      error
+    );
+
+    return [];
+  }
+
+  return (
+    data as ProductRow[]
+  ).map(
+    mapProduct
+  );
 }
 
 export async function getFeaturedProducts(): Promise<
   Product[]
 > {
-  const { data, error } =
+  const {
+    data,
+    error,
+  } =
     await supabase
-      .from("products")
+      .from(
+        "products"
+      )
       .select("*")
-      .eq("active", true)
-      .eq("featured", true)
-      .order("created_at", {
-        ascending: false,
-      });
+      .eq(
+        "active",
+        true
+      )
+      .eq(
+        "featured",
+        true
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      );
 
   if (error) {
     console.error(
@@ -185,20 +355,36 @@ export async function getFeaturedProducts(): Promise<
 
   return (
     data as ProductRow[]
-  ).map(mapProduct);
+  ).map(
+    mapProduct
+  );
 }
 
 export async function getCategories(): Promise<
   string[]
 > {
-  const { data, error } =
+  const {
+    data,
+    error,
+  } =
     await supabase
-      .from("products")
-      .select("category")
-      .eq("active", true)
-      .order("category", {
-        ascending: true,
-      });
+      .from(
+        "products"
+      )
+      .select(
+        "category"
+      )
+      .eq(
+        "active",
+        true
+      )
+      .order(
+        "category",
+        {
+          ascending:
+            true,
+        }
+      );
 
   if (error) {
     console.error(
@@ -209,24 +395,41 @@ export async function getCategories(): Promise<
     return [];
   }
 
-  const categories = data.map(
-    (item) => item.category
-  );
+  const categories =
+    data.map(
+      (
+        item
+      ) =>
+        item.category
+    );
 
   return [
-    ...new Set(categories),
+    ...new Set(
+      categories
+    ),
   ];
 }
 
 export async function getProductBySlug(
   slug: string
 ): Promise<Product | null> {
-  const { data, error } =
+  const {
+    data,
+    error,
+  } =
     await supabase
-      .from("products")
+      .from(
+        "products"
+      )
       .select("*")
-      .eq("slug", slug)
-      .eq("active", true)
+      .eq(
+        "slug",
+        slug
+      )
+      .eq(
+        "active",
+        true
+      )
       .maybeSingle();
 
   if (error) {
@@ -250,12 +453,23 @@ export async function getProductBySlug(
 export async function getProductById(
   id: string
 ): Promise<Product | null> {
-  const { data, error } =
+  const {
+    data,
+    error,
+  } =
     await supabase
-      .from("products")
+      .from(
+        "products"
+      )
       .select("*")
-      .eq("id", id)
-      .eq("active", true)
+      .eq(
+        "id",
+        id
+      )
+      .eq(
+        "active",
+        true
+      )
       .maybeSingle();
 
   if (error) {
@@ -282,8 +496,13 @@ export function formatPrice(
   return new Intl.NumberFormat(
     "pl-PL",
     {
-      style: "currency",
-      currency: "PLN",
+      style:
+        "currency",
+
+      currency:
+        "PLN",
     }
-  ).format(price);
+  ).format(
+    price
+  );
 }
