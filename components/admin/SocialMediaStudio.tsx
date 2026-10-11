@@ -3325,7 +3325,7 @@ function OutroSlide({
               " "
             )}
           >
-            trendzamniej.pl
+            trendzamniej.pl/tiktok
           </p>
         </div>
       </div>
@@ -3396,7 +3396,7 @@ function SlideHeader({
           " "
         )}
       >
-        trendzamniej.pl
+        trendzamniej.pl/tiktok
       </span>
     </div>
   );
@@ -3482,7 +3482,7 @@ function SlideFooter({
             " "
           )}
         >
-          trendzamniej.pl
+          trendzamniej.pl/tiktok
         </p>
       </div>
 
