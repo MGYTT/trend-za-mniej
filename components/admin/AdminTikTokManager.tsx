@@ -228,15 +228,16 @@ export default function AdminTikTokManager({
       ]
     );
 
-  const manageableCount =
+  const availableCount =
     useMemo(
       () =>
         localProducts.filter(
           (
             product
           ) =>
+            product.active &&
             product.canManage &&
-            product.active
+            !product.tiktok_featured
         ).length,
       [
         localProducts,
@@ -526,101 +527,96 @@ export default function AdminTikTokManager({
 
   return (
     <>
-      <section className="rounded-[26px] border border-black/[0.06] bg-white p-5 shadow-sm sm:p-7">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-rose-600 sm:text-xs">
-                Promocja z social media
+      <div className="lg:hidden">
+        <section className="px-1 pb-1 pt-1">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-stone-400">
+                Social commerce
               </p>
 
-              {isRefreshing && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-2.5 py-1 text-[8px] font-black text-stone-400">
-                  <span className="h-2 w-2 animate-spin rounded-full border border-stone-400 border-r-transparent" />
+              <div className="mt-1 flex items-center gap-2">
+                <h1 className="text-[30px] font-black leading-none tracking-[-0.055em] text-stone-950">
+                  TikTok
+                </h1>
 
-                  synchronizacja
-                </span>
-              )}
+                {isRefreshing && (
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-stone-300 border-r-rose-500" />
+                )}
+              </div>
+
+              <p className="mt-2 max-w-[290px] text-[11px] leading-5 text-stone-400">
+                Włączaj produkty widoczne
+                na publicznej stronie
+                /tiktok.
+              </p>
             </div>
 
-            <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-stone-950 sm:text-4xl">
-              Produkty z TikToka
-            </h1>
+            <Link
+              href="/tiktok"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-white text-rose-600 shadow-sm ring-1 ring-stone-200/80 active:scale-[0.96]"
+              aria-label="Otwórz publiczną stronę TikTok"
+            >
+              <ExternalIcon />
+            </Link>
+          </div>
+        </section>
 
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-500">
-              Włącz produkty, które
-              aktualnie pokazujecie
-              w materiałach. Aktywne
-              oferty pojawią się
-              automatycznie na publicznej
-              stronie /tiktok.
+        <section className="mt-4 grid grid-cols-3 overflow-hidden rounded-[18px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] ring-1 ring-stone-200/80">
+          <MobileStat
+            label="Na TikToku"
+            value={
+              tiktokCount
+            }
+          />
+
+          <MobileStat
+            label="Do dodania"
+            value={
+              availableCount
+            }
+          />
+
+          <MobileStat
+            label="Wszystkie"
+            value={
+              localProducts.length
+            }
+          />
+        </section>
+
+        {hiddenTikTokCount >
+          0 && (
+          <div className="mt-3 rounded-[16px] border border-amber-200 bg-amber-50 px-3.5 py-3">
+            <p className="text-[11px] font-black text-amber-800">
+              {
+                hiddenTikTokCount
+              }{" "}
+              ukrytych produktów
+              z flagą TikTok
+            </p>
+
+            <p className="mt-1 text-[10px] leading-4 text-amber-700/80">
+              Nie są widoczne
+              publicznie, dopóki
+              oferta pozostaje ukryta.
             </p>
           </div>
+        )}
 
-          <Link
-            href="/tiktok"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-12 items-center justify-center rounded-[15px] bg-stone-950 px-5 text-sm font-black text-white transition hover:bg-black"
-          >
-            Otwórz /tiktok ↗
-          </Link>
-        </div>
-      </section>
+        <section className="mt-5">
+          <MobileSectionHeader
+            title="Znajdź produkt"
+            helper={`${filteredProducts.length} wyników`}
+          />
 
-      <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
-          label="Na /tiktok"
-          value={
-            tiktokCount
-          }
-          helper="widoczne publicznie"
-          accent="rose"
-        />
-
-        <StatCard
-          label="Do wyboru"
-          value={
-            manageableCount
-          }
-          helper="aktywne i edytowalne"
-          accent="green"
-        />
-
-        <StatCard
-          label="Wszystkie"
-          value={
-            localProducts.length
-          }
-          helper="produkty w bazie"
-          accent="stone"
-        />
-
-        <StatCard
-          label="Ukryte z flagą"
-          value={
-            hiddenTikTokCount
-          }
-          helper="nie są publiczne"
-          accent="amber"
-        />
-      </section>
-
-      <section className="mt-4 rounded-[22px] border border-black/[0.06] bg-white p-3 shadow-sm sm:p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-          <div className="min-w-0 flex-1">
-            <label
-              htmlFor="admin-tiktok-search"
-              className="mb-1.5 block px-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400"
-            >
-              Szukaj produktu
-            </label>
-
+          <div className="admin-ios-group mt-2 p-3">
             <div className="relative">
               <SearchIcon />
 
               <input
-                id="admin-tiktok-search"
                 type="search"
                 value={
                   query
@@ -633,22 +629,12 @@ export default function AdminTikTokManager({
                       .value
                   )
                 }
-                placeholder="Nazwa albo kategoria..."
-                className="min-h-12 w-full rounded-[15px] border border-black/[0.07] bg-[#f7f7f8] py-2 pl-11 pr-3 text-sm font-semibold outline-none transition focus:border-rose-200 focus:bg-white focus:ring-4 focus:ring-rose-50"
+                placeholder="Nazwa produktu lub kategoria"
+                className="min-h-[48px] w-full rounded-[13px] border-0 bg-[#f2f2f7] py-2 pl-11 pr-3 text-[16px] font-semibold text-stone-900 outline-none placeholder:font-medium placeholder:text-[#8e8e93] focus:ring-2 focus:ring-rose-200"
               />
             </div>
-          </div>
-
-          <div className="lg:w-[240px]">
-            <label
-              htmlFor="admin-tiktok-category"
-              className="mb-1.5 block px-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400"
-            >
-              Kategoria
-            </label>
 
             <select
-              id="admin-tiktok-category"
               value={
                 category
               }
@@ -660,7 +646,8 @@ export default function AdminTikTokManager({
                     .value
                 )
               }
-              className="min-h-12 w-full rounded-[15px] border border-black/[0.07] bg-[#f7f7f8] px-3 text-sm font-bold text-stone-800 outline-none focus:border-rose-200 focus:bg-white focus:ring-4 focus:ring-rose-50"
+              aria-label="Kategoria"
+              className="mt-2 min-h-[46px] w-full rounded-[13px] border-0 bg-[#f2f2f7] px-3 text-[14px] font-bold text-stone-700 outline-none focus:ring-2 focus:ring-rose-200"
             >
               <option value="all">
                 Wszystkie kategorie
@@ -686,291 +673,819 @@ export default function AdminTikTokManager({
               )}
             </select>
           </div>
-        </div>
 
-        <div className="horizontal-scroll -mx-3 mt-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
-          <FilterChip
-            active={
-              view ===
-              "all"
-            }
-            onClick={() =>
-              setView(
+          <div className="horizontal-scroll -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+            <FilterChip
+              active={
+                view ===
                 "all"
-              )
+              }
+              onClick={() =>
+                setView(
+                  "all"
+                )
+              }
+            >
+              Wszystkie
+            </FilterChip>
+
+            <FilterChip
+              active={
+                view ===
+                "tiktok"
+              }
+              onClick={() =>
+                setView(
+                  "tiktok"
+                )
+              }
+            >
+              Na /tiktok{" "}
+              {
+                tiktokCount +
+                hiddenTikTokCount
+              }
+            </FilterChip>
+
+            <FilterChip
+              active={
+                view ===
+                "available"
+              }
+              onClick={() =>
+                setView(
+                  "available"
+                )
+              }
+            >
+              Do dodania{" "}
+              {
+                availableCount
+              }
+            </FilterChip>
+
+            <FilterChip
+              active={
+                view ===
+                "hidden"
+              }
+              onClick={() =>
+                setView(
+                  "hidden"
+                )
+              }
+            >
+              Ukryte
+            </FilterChip>
+          </div>
+        </section>
+
+        <section className="mt-5">
+          <MobileSectionHeader
+            title="Produkty"
+            helper={`${filteredProducts.length} z ${localProducts.length}`}
+          />
+
+          {filteredProducts.length >
+          0 ? (
+            <div className="admin-ios-group mt-2 overflow-hidden">
+              {filteredProducts.map(
+                (
+                  product,
+                  index
+                ) => (
+                  <div
+                    key={
+                      product.id
+                    }
+                  >
+                    {index >
+                      0 && (
+                      <div className="ml-[92px] border-t border-stone-100" />
+                    )}
+
+                    <MobileProductRow
+                      product={
+                        product
+                      }
+                      saving={
+                        savingId ===
+                        product.id
+                      }
+                      onToggle={() =>
+                        void toggleTikTok(
+                          product
+                        )
+                      }
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          ) : (
+            <div className="admin-ios-group mt-2 px-5 py-10 text-center">
+              <div className="text-3xl">
+                🔎
+              </div>
+
+              <p className="mt-3 text-sm font-black text-stone-800">
+                Brak pasujących produktów
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-stone-400">
+                Zmień wyszukiwanie,
+                kategorię albo filtr.
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="hidden lg:block">
+        <section className="rounded-[26px] border border-black/[0.06] bg-white p-7 shadow-sm">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
+                  Promocja z social media
+                </p>
+
+                {isRefreshing && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-2.5 py-1 text-[8px] font-black text-stone-400">
+                    <span className="h-2 w-2 animate-spin rounded-full border border-stone-400 border-r-transparent" />
+
+                    synchronizacja
+                  </span>
+                )}
+              </div>
+
+              <h1 className="mt-2 text-4xl font-black tracking-[-0.045em] text-stone-950">
+                Produkty z TikToka
+              </h1>
+
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-500">
+                Włącz produkty, które
+                aktualnie pokazujecie
+                w materiałach. Aktywne
+                oferty pojawią się
+                automatycznie na publicznej
+                stronie /tiktok.
+              </p>
+            </div>
+
+            <Link
+              href="/tiktok"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-12 items-center justify-center rounded-[15px] bg-stone-950 px-5 text-sm font-black text-white transition hover:bg-black"
+            >
+              Otwórz /tiktok ↗
+            </Link>
+          </div>
+        </section>
+
+        <section className="mt-4 grid grid-cols-4 gap-3">
+          <StatCard
+            label="Na /tiktok"
+            value={
+              tiktokCount
             }
-          >
-            Wszystkie{" "}
-            {
+            helper="widoczne publicznie"
+            accent="rose"
+          />
+
+          <StatCard
+            label="Do dodania"
+            value={
+              availableCount
+            }
+            helper="aktywne i edytowalne"
+            accent="green"
+          />
+
+          <StatCard
+            label="Wszystkie"
+            value={
               localProducts.length
             }
-          </FilterChip>
+            helper="produkty w bazie"
+            accent="stone"
+          />
 
-          <FilterChip
-            active={
-              view ===
-              "tiktok"
-            }
-            onClick={() =>
-              setView(
-                "tiktok"
-              )
-            }
-          >
-            Na TikToku{" "}
-            {
-              tiktokCount +
+          <StatCard
+            label="Ukryte z flagą"
+            value={
               hiddenTikTokCount
             }
-          </FilterChip>
+            helper="nie są publiczne"
+            accent="amber"
+          />
+        </section>
 
-          <FilterChip
-            active={
-              view ===
-              "available"
-            }
-            onClick={() =>
-              setView(
+        <section className="mt-4 rounded-[22px] border border-black/[0.06] bg-white p-4 shadow-sm">
+          <div className="flex items-end gap-3">
+            <div className="min-w-0 flex-1">
+              <label
+                htmlFor="admin-tiktok-search"
+                className="mb-1.5 block px-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400"
+              >
+                Szukaj produktu
+              </label>
+
+              <div className="relative">
+                <SearchIcon />
+
+                <input
+                  id="admin-tiktok-search"
+                  type="search"
+                  value={
+                    query
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setQuery(
+                      event.target
+                        .value
+                    )
+                  }
+                  placeholder="Nazwa albo kategoria..."
+                  className="min-h-12 w-full rounded-[15px] border border-black/[0.07] bg-[#f7f7f8] py-2 pl-11 pr-3 text-sm font-semibold outline-none transition focus:border-rose-200 focus:bg-white focus:ring-4 focus:ring-rose-50"
+                />
+              </div>
+            </div>
+
+            <div className="w-[240px]">
+              <label
+                htmlFor="admin-tiktok-category"
+                className="mb-1.5 block px-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400"
+              >
+                Kategoria
+              </label>
+
+              <select
+                id="admin-tiktok-category"
+                value={
+                  category
+                }
+                onChange={(
+                  event
+                ) =>
+                  setCategory(
+                    event.target
+                      .value
+                  )
+                }
+                className="min-h-12 w-full rounded-[15px] border border-black/[0.07] bg-[#f7f7f8] px-3 text-sm font-bold text-stone-800 outline-none focus:border-rose-200 focus:bg-white focus:ring-4 focus:ring-rose-50"
+              >
+                <option value="all">
+                  Wszystkie kategorie
+                </option>
+
+                {categories.map(
+                  (
+                    item
+                  ) => (
+                    <option
+                      key={
+                        item
+                      }
+                      value={
+                        item
+                      }
+                    >
+                      {
+                        item
+                      }
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-3 flex gap-2 border-t border-stone-100 pt-3">
+            <FilterChip
+              active={
+                view ===
+                "all"
+              }
+              onClick={() =>
+                setView(
+                  "all"
+                )
+              }
+            >
+              Wszystkie{" "}
+              {
+                localProducts.length
+              }
+            </FilterChip>
+
+            <FilterChip
+              active={
+                view ===
+                "tiktok"
+              }
+              onClick={() =>
+                setView(
+                  "tiktok"
+                )
+              }
+            >
+              Na TikToku{" "}
+              {
+                tiktokCount +
+                hiddenTikTokCount
+              }
+            </FilterChip>
+
+            <FilterChip
+              active={
+                view ===
                 "available"
-              )
-            }
-          >
-            Do dodania
-          </FilterChip>
+              }
+              onClick={() =>
+                setView(
+                  "available"
+                )
+              }
+            >
+              Do dodania{" "}
+              {
+                availableCount
+              }
+            </FilterChip>
 
-          <FilterChip
-            active={
-              view ===
-              "hidden"
-            }
-            onClick={() =>
-              setView(
+            <FilterChip
+              active={
+                view ===
                 "hidden"
-              )
-            }
-          >
-            Ukryte
-          </FilterChip>
-        </div>
+              }
+              onClick={() =>
+                setView(
+                  "hidden"
+                )
+              }
+            >
+              Ukryte
+            </FilterChip>
+          </div>
 
-        <div className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-500">
-          <strong className="font-black text-stone-900">
-            {
-              filteredProducts.length
-            }
-          </strong>{" "}
-          pasujących produktów
-        </div>
-      </section>
+          <div className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-500">
+            <strong className="font-black text-stone-900">
+              {
+                filteredProducts.length
+              }
+            </strong>{" "}
+            pasujących produktów
+          </div>
+        </section>
 
-      {filteredProducts.length >
-      0 ? (
-        <section className="mt-4 grid gap-3">
-          {filteredProducts.map(
-            (
-              product
-            ) => {
-              const saving =
-                savingId ===
-                product.id;
-
-              const publiclyVisible =
-                product.active &&
-                product.tiktok_featured;
-
-              return (
-                <article
+        {filteredProducts.length >
+        0 ? (
+          <section className="mt-4 grid gap-3">
+            {filteredProducts.map(
+              (
+                product
+              ) => (
+                <DesktopProductRow
                   key={
                     product.id
                   }
-                  className="overflow-hidden rounded-[22px] border border-black/[0.06] bg-white shadow-sm"
-                >
-                  <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[112px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_220px]">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[15px] bg-stone-100">
-                      <img
-                        src={
-                          product.image_url
-                        }
-                        alt={
-                          product.name
-                        }
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                      />
+                  product={
+                    product
+                  }
+                  saving={
+                    savingId ===
+                    product.id
+                  }
+                  onToggle={() =>
+                    void toggleTikTok(
+                      product
+                    )
+                  }
+                />
+              )
+            )}
+          </section>
+        ) : (
+          <div className="mt-4 rounded-[22px] border border-dashed border-stone-200 bg-white px-5 py-12 text-center">
+            <div className="text-3xl">
+              🔎
+            </div>
 
-                      {product.tiktok_featured && (
-                        <span className="absolute left-2 top-2 rounded-full bg-stone-950 px-2.5 py-1 text-[8px] font-black text-white shadow-sm">
-                          TikTok
-                        </span>
-                      )}
-                    </div>
+            <h2 className="mt-3 text-lg font-black text-stone-950">
+              Brak pasujących produktów
+            </h2>
 
-                    <div className="min-w-0 py-0.5">
-                      <div className="flex flex-wrap gap-1.5">
-                        <StatusBadge
-                          active={
-                            product.active
-                          }
-                        />
-
-                        {publiclyVisible && (
-                          <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[9px] font-black text-rose-700">
-                            ● Na /tiktok
-                          </span>
-                        )}
-
-                        {!product.active &&
-                          product.tiktok_featured && (
-                          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[9px] font-black text-amber-700">
-                            Flaga zachowana
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="mt-2 truncate text-[9px] font-black uppercase tracking-[0.09em] text-rose-600 sm:text-[10px]">
-                        {
-                          product.category
-                        }
-                      </p>
-
-                      <h2 className="mt-1 line-clamp-2 text-sm font-black leading-5 text-stone-950 sm:text-lg sm:leading-6">
-                        {
-                          product.short_name
-                        }
-                      </h2>
-
-                      <div className="mt-2 flex flex-wrap items-baseline gap-2">
-                        <span className="text-base font-black text-stone-950 sm:text-xl">
-                          {formatPrice(
-                            product.price
-                          )}
-                        </span>
-
-                        {product.old_price !==
-                          null && (
-                          <span className="text-[10px] font-semibold text-stone-400 line-through sm:text-xs">
-                            {formatPrice(
-                              product.old_price
-                            )}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] font-semibold text-stone-400">
-                        {product.active && (
-                          <Link
-                            href={`/produkt/${product.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-black text-rose-600"
-                          >
-                            Produkt ↗
-                          </Link>
-                        )}
-
-                        {product.tiktok_featured_at && (
-                          <span>
-                            Dodano:{" "}
-                            {formatDate(
-                              product.tiktok_featured_at
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="col-span-2 border-t border-stone-100 pt-3 lg:col-span-1 lg:flex lg:items-center lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-                      <div className="w-full">
-                        {product.canManage ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void toggleTikTok(
-                                product
-                              )
-                            }
-                            disabled={
-                              saving ||
-                              (
-                                !product.active &&
-                                !product.tiktok_featured
-                              )
-                            }
-                            className={[
-                              "flex min-h-12 w-full items-center justify-center gap-2 rounded-[15px] px-4 text-sm font-black transition active:scale-[0.99] disabled:cursor-not-allowed",
-
-                              product.tiktok_featured
-                                ? "border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100"
-                                : product.active
-                                  ? "bg-stone-950 text-white hover:bg-black"
-                                  : "border border-stone-200 bg-stone-100 text-stone-400",
-                            ].join(
-                              " "
-                            )}
-                          >
-                            {saving ? (
-                              <>
-                                <Spinner />
-
-                                Zapisuję
-                              </>
-                            ) : product.tiktok_featured ? (
-                              "Usuń z /tiktok"
-                            ) : product.active ? (
-                              "+ Dodaj do /tiktok"
-                            ) : (
-                              "Najpierw opublikuj"
-                            )}
-                          </button>
-                        ) : (
-                          <div className="rounded-[15px] border border-stone-200 bg-stone-50 px-4 py-3 text-center">
-                            <p className="text-[10px] font-black text-stone-500">
-                              🔒 Brak uprawnień
-                            </p>
-
-                            <p className="mt-1 text-[9px] leading-4 text-stone-400">
-                              Ta oferta należy
-                              do innego
-                              administratora.
-                            </p>
-                          </div>
-                        )}
-
-                        {!product.active &&
-                          product.tiktok_featured &&
-                          product.canManage && (
-                          <p className="mt-2 text-center text-[9px] leading-4 text-amber-700">
-                            Produkt jest ukryty,
-                            więc nie wyświetla się
-                            publicznie na /tiktok.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            }
-          )}
-        </section>
-      ) : (
-        <div className="mt-4 rounded-[22px] border border-dashed border-stone-200 bg-white px-5 py-12 text-center">
-          <div className="text-3xl">
-            🔎
+            <p className="mt-1 text-sm text-stone-500">
+              Zmień wyszukiwanie,
+              kategorię albo filtr.
+            </p>
           </div>
+        )}
+      </div>
+    </>
+  );
+}
 
-          <h2 className="mt-3 text-lg font-black text-stone-950">
-            Brak pasujących produktów
-          </h2>
+function MobileProductRow({
+  product,
+  saving,
+  onToggle,
+}: {
+  product:
+    TikTokAdminProduct;
 
-          <p className="mt-1 text-sm text-stone-500">
-            Zmień wyszukiwanie,
-            kategorię albo filtr.
+  saving:
+    boolean;
+
+  onToggle:
+    () => void;
+}) {
+  const publiclyVisible =
+    product.active &&
+    product.tiktok_featured;
+
+  const disabled =
+    saving ||
+    !product.canManage ||
+    (
+      !product.active &&
+      !product.tiktok_featured
+    );
+
+  return (
+    <article className="flex min-h-[112px] items-center gap-3 px-3 py-3">
+      <div className="relative h-[88px] w-[72px] shrink-0 overflow-hidden rounded-[15px] bg-stone-100">
+        <img
+          src={
+            product.image_url
+          }
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+
+        {publiclyVisible && (
+          <span className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow-sm">
+            <VideoIcon />
+          </span>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1 py-0.5">
+        <div className="flex items-center gap-1.5">
+          <span
+            className={[
+              "h-2 w-2 shrink-0 rounded-full",
+              product.active
+                ? "bg-emerald-500"
+                : "bg-stone-300",
+            ].join(" ")}
+          />
+
+          <p className="truncate text-[9px] font-black uppercase tracking-[0.07em] text-stone-400">
+            {
+              product.category
+            }
           </p>
         </div>
-      )}
-    </>
+
+        <h2 className="mt-1.5 line-clamp-2 text-[13px] font-black leading-[18px] text-stone-900">
+          {
+            product.short_name
+          }
+        </h2>
+
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-[12px] font-black text-stone-700">
+            {formatPrice(
+              product.price
+            )}
+          </span>
+
+          {publiclyVisible && (
+            <span className="text-[9px] font-black text-rose-600">
+              Na /tiktok
+            </span>
+          )}
+
+          {!product.active &&
+            product.tiktok_featured && (
+            <span className="text-[9px] font-black text-amber-700">
+              Ukryty
+            </span>
+          )}
+        </div>
+
+        {product.tiktok_featured_at && (
+          <p className="mt-1 text-[9px] text-stone-400">
+            Dodano{" "}
+            {formatDate(
+              product.tiktok_featured_at
+            )}
+          </p>
+        )}
+
+        {!product.canManage && (
+          <p className="mt-1 text-[9px] font-semibold text-stone-400">
+            Oferta innego administratora
+          </p>
+        )}
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={
+            product.tiktok_featured
+          }
+          aria-label={
+            product.tiktok_featured
+              ? `Usuń ${product.short_name} z /tiktok`
+              : `Dodaj ${product.short_name} do /tiktok`
+          }
+          onClick={
+            onToggle
+          }
+          disabled={
+            disabled
+          }
+          className={[
+            "relative h-[31px] w-[51px] rounded-full p-[2px] transition-colors duration-150 active:scale-[0.96] disabled:cursor-not-allowed",
+            product.tiktok_featured
+              ? "bg-[#34c759]"
+              : "bg-[#d1d1d6]",
+            disabled
+              ? "opacity-45"
+              : "",
+          ].join(" ")}
+        >
+          <span
+            className={[
+              "block h-[27px] w-[27px] rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.25)] transition-transform duration-150",
+              product.tiktok_featured
+                ? "translate-x-5"
+                : "translate-x-0",
+              saving
+                ? "animate-pulse"
+                : "",
+            ].join(" ")}
+          />
+        </button>
+
+        {product.active && (
+          <Link
+            href={`/produkt/${product.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] font-black text-rose-600"
+          >
+            Podgląd ↗
+          </Link>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function DesktopProductRow({
+  product,
+  saving,
+  onToggle,
+}: {
+  product:
+    TikTokAdminProduct;
+
+  saving:
+    boolean;
+
+  onToggle:
+    () => void;
+}) {
+  const publiclyVisible =
+    product.active &&
+    product.tiktok_featured;
+
+  return (
+    <article className="overflow-hidden rounded-[22px] border border-black/[0.06] bg-white shadow-sm">
+      <div className="grid grid-cols-[120px_minmax(0,1fr)_220px] gap-4 p-4">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-[15px] bg-stone-100">
+          <img
+            src={
+              product.image_url
+            }
+            alt={
+              product.name
+            }
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+
+          {product.tiktok_featured && (
+            <span className="absolute left-2 top-2 rounded-full bg-stone-950 px-2.5 py-1 text-[8px] font-black text-white shadow-sm">
+              TikTok
+            </span>
+          )}
+        </div>
+
+        <div className="min-w-0 py-0.5">
+          <div className="flex flex-wrap gap-1.5">
+            <StatusBadge
+              active={
+                product.active
+              }
+            />
+
+            {publiclyVisible && (
+              <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[9px] font-black text-rose-700">
+                ● Na /tiktok
+              </span>
+            )}
+
+            {!product.active &&
+              product.tiktok_featured && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[9px] font-black text-amber-700">
+                Flaga zachowana
+              </span>
+            )}
+          </div>
+
+          <p className="mt-2 truncate text-[9px] font-black uppercase tracking-[0.09em] text-rose-600 sm:text-[10px]">
+            {
+              product.category
+            }
+          </p>
+
+          <h2 className="mt-1 line-clamp-2 text-lg font-black leading-6 text-stone-950">
+            {
+              product.short_name
+            }
+          </h2>
+
+          <div className="mt-2 flex flex-wrap items-baseline gap-2">
+            <span className="text-xl font-black text-stone-950">
+              {formatPrice(
+                product.price
+              )}
+            </span>
+
+            {product.old_price !==
+              null && (
+              <span className="text-xs font-semibold text-stone-400 line-through">
+                {formatPrice(
+                  product.old_price
+                )}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-stone-400">
+            {product.active && (
+              <Link
+                href={`/produkt/${product.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-black text-rose-600"
+              >
+                Produkt ↗
+              </Link>
+            )}
+
+            {product.tiktok_featured_at && (
+              <span>
+                Dodano:{" "}
+                {formatDate(
+                  product.tiktok_featured_at
+                )}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center border-l border-stone-100 pl-4">
+          <div className="w-full">
+            {product.canManage ? (
+              <button
+                type="button"
+                onClick={
+                  onToggle
+                }
+                disabled={
+                  saving ||
+                  (
+                    !product.active &&
+                    !product.tiktok_featured
+                  )
+                }
+                className={[
+                  "flex min-h-12 w-full items-center justify-center gap-2 rounded-[15px] px-4 text-sm font-black transition active:scale-[0.99] disabled:cursor-not-allowed",
+                  product.tiktok_featured
+                    ? "border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                    : product.active
+                      ? "bg-stone-950 text-white hover:bg-black"
+                      : "border border-stone-200 bg-stone-100 text-stone-400",
+                ].join(" ")}
+              >
+                {saving ? (
+                  <>
+                    <Spinner />
+
+                    Zapisuję
+                  </>
+                ) : product.tiktok_featured ? (
+                  "Usuń z /tiktok"
+                ) : product.active ? (
+                  "+ Dodaj do /tiktok"
+                ) : (
+                  "Najpierw opublikuj"
+                )}
+              </button>
+            ) : (
+              <div className="rounded-[15px] border border-stone-200 bg-stone-50 px-4 py-3 text-center">
+                <p className="text-[10px] font-black text-stone-500">
+                  🔒 Brak uprawnień
+                </p>
+
+                <p className="mt-1 text-[9px] leading-4 text-stone-400">
+                  Ta oferta należy
+                  do innego administratora.
+                </p>
+              </div>
+            )}
+
+            {!product.active &&
+              product.tiktok_featured &&
+              product.canManage && (
+              <p className="mt-2 text-center text-[9px] leading-4 text-amber-700">
+                Produkt jest ukryty,
+                więc nie wyświetla się
+                publicznie na /tiktok.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MobileSectionHeader({
+  title,
+  helper,
+}: {
+  title:
+    string;
+
+  helper:
+    string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-1">
+      <h2 className="text-[13px] font-black uppercase tracking-[0.04em] text-stone-500">
+        {
+          title
+        }
+      </h2>
+
+      <span className="text-[10px] font-bold text-stone-400">
+        {
+          helper
+        }
+      </span>
+    </div>
+  );
+}
+
+function MobileStat({
+  label,
+  value,
+}: {
+  label:
+    string;
+
+  value:
+    number;
+}) {
+  return (
+    <div className="border-r border-stone-100 px-2 py-3 text-center last:border-r-0">
+      <p className="text-[18px] font-black tracking-[-0.04em] text-stone-900">
+        {
+          value
+        }
+      </p>
+
+      <p className="mt-0.5 text-[8px] font-black uppercase tracking-[0.05em] text-stone-400">
+        {
+          label
+        }
+      </p>
+    </div>
   );
 }
 
@@ -980,9 +1495,14 @@ function StatCard({
   helper,
   accent,
 }: {
-  label: string;
-  value: number;
-  helper: string;
+  label:
+    string;
+
+  value:
+    number;
+
+  helper:
+    string;
 
   accent:
     | "rose"
@@ -1008,9 +1528,7 @@ function StatCard({
         className={[
           "inline-flex rounded-full px-2.5 py-1 text-[9px] font-black",
           accentClass,
-        ].join(
-          " "
-        )}
+        ].join(" ")}
       >
         {
           label
@@ -1023,7 +1541,7 @@ function StatCard({
         }
       </p>
 
-      <p className="mt-1 text-[9px] font-semibold text-stone-400 sm:text-[10px]">
+      <p className="mt-1 text-[10px] font-semibold text-stone-400">
         {
           helper
         }
@@ -1053,14 +1571,11 @@ function FilterChip({
         onClick
       }
       className={[
-        "shrink-0 rounded-full border px-3.5 py-2 text-[10px] font-black transition",
-
+        "shrink-0 rounded-full border px-3.5 py-2 text-[10px] font-black transition active:scale-[0.97]",
         active
           ? "border-stone-950 bg-stone-950 text-white"
           : "border-stone-200 bg-white text-stone-500 hover:bg-stone-50",
-      ].join(
-        " "
-      )}
+      ].join(" ")}
     >
       {
         children
@@ -1114,6 +1629,42 @@ function Spinner() {
       aria-hidden="true"
       className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
     />
+  );
+}
+
+function VideoIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-3.5 w-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m9 8 7 4-7 4Z" />
+    </svg>
+  );
+}
+
+function ExternalIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14 5h5v5" />
+      <path d="m10 14 9-9" />
+      <path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" />
+    </svg>
   );
 }
 

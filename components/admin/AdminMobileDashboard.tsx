@@ -197,6 +197,15 @@ export default function AdminMobileDashboard({
           <div className="admin-ios-divider" />
 
           <QuickRow
+            href="/admin/tiktok"
+            icon="tiktok"
+            title="TikTok"
+            description="Dodawaj produkty do /tiktok"
+          />
+
+          <div className="admin-ios-divider" />
+
+          <QuickRow
             href="/admin/statystyki"
             icon="stats"
             title="Statystyki"
@@ -512,6 +521,7 @@ function QuickRow({
 
   icon:
     | "social"
+    | "tiktok"
     | "stats"
     | "offers";
 
@@ -533,14 +543,20 @@ function QuickRow({
           "social"
             ? "bg-violet-100 text-violet-700"
             : icon ===
-                "stats"
-              ? "bg-blue-100 text-blue-700"
-              : "bg-rose-100 text-rose-700",
+                "tiktok"
+              ? "bg-stone-950 text-white"
+              : icon ===
+                  "stats"
+                ? "bg-blue-100 text-blue-700"
+                : "bg-rose-100 text-rose-700",
         ].join(" ")}
       >
         {icon ===
         "social" ? (
           <PhoneIcon />
+        ) : icon ===
+          "tiktok" ? (
+          <TikTokIcon />
         ) : icon ===
           "stats" ? (
           <StatsIcon />
@@ -723,6 +739,29 @@ function PhoneIcon() {
       />
 
       <path d="M10 6h4" />
+    </svg>
+  );
+}
+
+function TikTokIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 7v10" />
+      <path d="M9 9h5a4 4 0 0 0 4-4" />
+
+      <circle
+        cx="7"
+        cy="17"
+        r="3"
+      />
     </svg>
   );
 }

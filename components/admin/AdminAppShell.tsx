@@ -415,6 +415,14 @@ function MobileBottomNavigation({
 
   onMore: () => void;
 }) {
+  const moreActive =
+    pathname.startsWith(
+      "/admin/tiktok"
+    ) ||
+    pathname.startsWith(
+      "/admin/zespol"
+    );
+
   return (
     <div className="admin-tabbar-wrap lg:hidden">
       <nav
@@ -473,11 +481,14 @@ function MobileBottomNavigation({
           onClick={
             onMore
           }
+          aria-current={
+            moreActive
+              ? "page"
+              : undefined
+          }
           className={[
             "admin-tabbar-item",
-            pathname.startsWith(
-              "/admin/zespol"
-            )
+            moreActive
               ? "is-active"
               : "",
           ].join(" ")}
@@ -648,12 +659,12 @@ function MoreSheet({
 
                         <InstructionStep
                           number="3"
-                          text="Wybierz „Dodaj do ekranu początkowego”." 
+                          text="Wybierz „Dodaj do ekranu początkowego”."
                         />
 
                         <InstructionStep
                           number="4"
-                          text="Naciśnij „Dodaj”." 
+                          text="Naciśnij „Dodaj”."
                         />
                       </div>
                     </>
@@ -682,6 +693,18 @@ function MoreSheet({
           )}
 
           <section className="admin-ios-group">
+            <AppMenuLink
+              href="/admin/tiktok"
+              icon="tiktok"
+              title="TikTok"
+              description="Dodawaj i usuwaj produkty z /tiktok"
+              onClick={
+                onClose
+              }
+            />
+
+            <div className="admin-ios-divider" />
+
             <AppMenuLink
               href="/admin#admin-offers"
               icon="offers"
@@ -763,6 +786,7 @@ function AppMenuLink({
   href: string;
 
   icon:
+    | "tiktok"
     | "offers"
     | "team"
     | "website";
@@ -797,9 +821,20 @@ function AppMenuLink({
       }
       className="admin-ios-row"
     >
-      <span className="admin-ios-row-icon">
+      <span
+        className={[
+          "admin-ios-row-icon",
+          icon ===
+          "tiktok"
+            ? "bg-stone-950 text-white"
+            : "",
+        ].join(" ")}
+      >
         {icon ===
-        "team" ? (
+        "tiktok" ? (
+          <TikTokIcon />
+        ) : icon ===
+          "team" ? (
           <TeamIcon />
         ) : icon ===
           "website" ? (
@@ -995,6 +1030,29 @@ function AppIcon() {
 
       <path d="M9 6h6" />
       <path d="M12 17h.01" />
+    </svg>
+  );
+}
+
+function TikTokIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 7v10" />
+      <path d="M9 9h5a4 4 0 0 0 4-4" />
+
+      <circle
+        cx="7"
+        cy="17"
+        r="3"
+      />
     </svg>
   );
 }

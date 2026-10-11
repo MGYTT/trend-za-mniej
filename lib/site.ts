@@ -21,25 +21,5 @@ export function getSiteUrl() {
     );
   }
 
-  const vercelUrl =
-    process.env
-      .VERCEL_PROJECT_PRODUCTION_URL ??
-    process.env.VERCEL_URL;
-
-  if (vercelUrl) {
-    const cleanUrl =
-      vercelUrl
-        .replace(
-          /^https?:\/\//,
-          ""
-        )
-        .replace(
-          /\/$/,
-          ""
-        );
-
-    return `https://${cleanUrl}`;
-  }
-
-  return "http://localhost:3000";
+  return "https://trendzamniej.pl";
 }
