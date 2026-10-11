@@ -3,9 +3,9 @@ import {
   type SheinProductIdentity,
 } from "@/lib/product-duplicate";
 
-const MAX_REDIRECTS = 8;
-const MAX_HTML_BYTES = 600_000;
-const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_REDIRECTS = 10;
+const MAX_HTML_BYTES = 800_000;
+const REQUEST_TIMEOUT_MS = 12_000;
 
 export type SheinResolveResult = {
   identity: SheinProductIdentity | null;
@@ -21,8 +21,7 @@ function isAllowedSheinUrl(
   value: URL
 ) {
   if (
-    value.protocol !==
-    "https:"
+    value.protocol !== "https:"
   ) {
     return false;
   }
@@ -82,7 +81,19 @@ function parseAllowedSheinUrl(
 function normalizeResolverText(
   value: string
 ) {
-  return value
+  let result =
+    value;
+
+  try {
+    result =
+      decodeURIComponent(
+        result
+      );
+  } catch {
+    // Niektóre odpowiedzi mają mieszane kodowanie.
+  }
+
+  return result
     .replace(
       /\\u002f/gi,
       "/"
@@ -90,6 +101,14 @@ function normalizeResolverText(
     .replace(
       /\\u003a/gi,
       ":"
+    )
+    .replace(
+      /\\u0026/gi,
+      "&"
+    )
+    .replace(
+      /\\u003d/gi,
+      "="
     )
     .replace(
       /\\\//g,
@@ -111,6 +130,51 @@ function normalizeResolverText(
       /&#39;/gi,
       "'"
     );
+}
+
+function isCanonicalIdentity(
+  identity:
+    | SheinProductIdentity
+    | null
+) {
+  return Boolean(
+    identity &&
+      identity.source !==
+        "sku"
+  );
+}
+
+function safelyExtractEmbeddedUrl(
+  value: string
+) {
+  const match =
+    value.match(
+      /https?:\/\/[^\s"'<>]+/i
+    );
+
+  return match?.[0] ??
+    null;
+}
+
+function extractIdentityFromAnyText(
+  value: string
+) {
+  const normalized =
+    normalizeResolverText(
+      value
+    );
+
+  return (
+    extractSheinProductIdentity(
+      normalized
+    ) ??
+    extractSheinProductIdentity(
+      safelyExtractEmbeddedUrl(
+        normalized
+      ) ??
+        ""
+    )
+  );
 }
 
 function createTimeoutSignal(
@@ -139,7 +203,10 @@ function createTimeoutSignal(
 }
 
 async function fetchSheinUrl(
-  url: URL
+  url: URL,
+  method:
+    | "HEAD"
+    | "GET"
 ) {
   const timeout =
     createTimeoutSignal(
@@ -150,8 +217,7 @@ async function fetchSheinUrl(
     return await fetch(
       url,
       {
-        method:
-          "GET",
+        method,
 
         redirect:
           "manual",
@@ -164,13 +230,13 @@ async function fetchSheinUrl(
 
         headers: {
           "User-Agent":
-            "Mozilla/5.0 (compatible; TrendZaMniej/1.0)",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36",
 
           Accept:
-            "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
+            "text/html,application/xhtml+xml,application/json;q=0.9,text/plain;q=0.8,*/*;q=0.7",
 
           "Accept-Language":
-            "pl-PL,pl;q=0.9,en;q=0.7",
+            "pl-PL,pl;q=0.9,en-US;q=0.7,en;q=0.6",
         },
       }
     );
@@ -193,8 +259,11 @@ async function readLimitedText(
   const decoder =
     new TextDecoder();
 
-  let total = 0;
-  let result = "";
+  let total =
+    0;
+
+  let result =
+    "";
 
   try {
     while (true) {
@@ -216,7 +285,8 @@ async function readLimitedText(
         total;
 
       if (
-        remaining <= 0
+        remaining <=
+        0
       ) {
         break;
       }
@@ -237,7 +307,8 @@ async function readLimitedText(
         decoder.decode(
           chunk,
           {
-            stream: true,
+            stream:
+              true,
           }
         );
 
@@ -252,7 +323,7 @@ async function readLimitedText(
     try {
       await reader.cancel();
     } catch {
-      // Nic nie robimy.
+      // Brak akcji.
     }
   }
 
@@ -260,17 +331,6 @@ async function readLimitedText(
     decoder.decode();
 
   return result;
-}
-
-function isCanonicalIdentity(
-  identity:
-    SheinProductIdentity | null
-) {
-  return Boolean(
-    identity &&
-      identity.source !==
-        "sku"
-  );
 }
 
 function extractUrlFromHtmlAttribute(
@@ -282,7 +342,9 @@ function extractUrlFromHtmlAttribute(
       pattern
     );
 
-  if (!match?.[1]) {
+  if (
+    !match?.[1]
+  ) {
     return null;
   }
 
@@ -323,6 +385,92 @@ function extractOpenGraphUrl(
   );
 }
 
+function extractMetaRefreshTarget(
+  html: string
+) {
+  const patterns = [
+    /<meta[^>]+http-equiv=["']?refresh["']?[^>]+content=["'][^"']*url\s*=\s*([^"'>;\s]+)[^"']*["']/i,
+
+    /<meta[^>]+content=["'][^"']*url\s*=\s*([^"'>;\s]+)[^"']*["'][^>]+http-equiv=["']?refresh["']?/i,
+  ];
+
+  for (
+    const pattern
+    of patterns
+  ) {
+    const match =
+      html.match(
+        pattern
+      );
+
+    if (
+      match?.[1]
+    ) {
+      return normalizeResolverText(
+        match[1]
+      );
+    }
+  }
+
+  return null;
+}
+
+function extractScriptRedirectTargets(
+  html: string
+) {
+  const normalized =
+    normalizeResolverText(
+      html
+    );
+
+  const patterns = [
+    /(?:window\.)?location(?:\.href)?\s*=\s*["']([^"']+)["']/gi,
+
+    /location\.replace\(\s*["']([^"']+)["']\s*\)/gi,
+
+    /["'](?:redirectUrl|redirect_url|deeplink|deepLink|targetUrl|target_url|landingUrl|landing_url)["']\s*:\s*["']([^"']+)["']/gi,
+  ];
+
+  const values:
+    string[] = [];
+
+  for (
+    const pattern
+    of patterns
+  ) {
+    let match:
+      RegExpExecArray |
+      null;
+
+    while (
+      (
+        match =
+          pattern.exec(
+            normalized
+          )
+      ) !==
+      null
+    ) {
+      if (
+        match[1]
+      ) {
+        values.push(
+          match[1]
+        );
+      }
+
+      if (
+        values.length >=
+        20
+      ) {
+        return values;
+      }
+    }
+  }
+
+  return values;
+}
+
 function extractProductUrlFromHtml(
   html: string
 ) {
@@ -334,7 +482,8 @@ function extractProductUrlFromHtml(
   const matches =
     normalized.match(
       /https:\/\/[^\s"'<>\\]+-p-\d{5,20}(?:\.html)?[^\s"'<>\\]*/gi
-    ) ?? [];
+    ) ??
+    [];
 
   for (
     const raw
@@ -359,6 +508,296 @@ function extractProductUrlFromHtml(
   return null;
 }
 
+function extractProductIdentityFromJson(
+  value: unknown
+): SheinProductIdentity | null {
+  if (
+    value ===
+      null ||
+    value ===
+      undefined
+  ) {
+    return null;
+  }
+
+  if (
+    typeof value ===
+      "string" ||
+    typeof value ===
+      "number"
+  ) {
+    return extractIdentityFromAnyText(
+      String(
+        value
+      )
+    );
+  }
+
+  if (
+    Array.isArray(
+      value
+    )
+  ) {
+    for (
+      const item
+      of value
+    ) {
+      const identity =
+        extractProductIdentityFromJson(
+          item
+        );
+
+      if (
+        identity
+      ) {
+        return identity;
+      }
+    }
+
+    return null;
+  }
+
+  if (
+    typeof value !==
+    "object"
+  ) {
+    return null;
+  }
+
+  const record =
+    value as Record<
+      string,
+      unknown
+    >;
+
+  const type =
+    record["@type"];
+
+  const isProduct =
+    type ===
+      "Product" ||
+    (
+      Array.isArray(
+        type
+      ) &&
+      type.includes(
+        "Product"
+      )
+    );
+
+  if (
+    isProduct
+  ) {
+    for (
+      const key
+      of [
+        "url",
+        "productID",
+        "productId",
+        "goods_id",
+        "goodsId",
+        "sku",
+      ]
+    ) {
+      const raw =
+        record[
+          key
+        ];
+
+      if (
+        raw ===
+          null ||
+        raw ===
+          undefined
+      ) {
+        continue;
+      }
+
+      const rawText =
+        String(
+          raw
+        ).trim();
+
+      if (
+        (
+          key ===
+            "productID" ||
+          key ===
+            "productId" ||
+          key ===
+            "goods_id" ||
+          key ===
+            "goodsId"
+        ) &&
+        /^\d{5,20}$/.test(
+          rawText
+        )
+      ) {
+        return {
+          key:
+            `goods:${rawText}`,
+
+          value:
+            rawText,
+
+          source:
+            "goods-id",
+
+          confidence:
+            "high",
+        };
+      }
+
+      const label =
+        key ===
+        "sku"
+          ? "SKU"
+          : key ===
+                "productID" ||
+              key ===
+                "productId"
+            ? "product id"
+            : key;
+
+      const identity =
+        extractIdentityFromAnyText(
+          `${label}: ${rawText}`
+        );
+
+      if (
+        identity
+      ) {
+        return identity;
+      }
+    }
+  }
+
+  for (
+    const nested
+    of Object.values(
+      record
+    )
+  ) {
+    const identity =
+      extractProductIdentityFromJson(
+        nested
+      );
+
+    if (
+      identity
+    ) {
+      return identity;
+    }
+  }
+
+  return null;
+}
+
+function extractJsonLdIdentity(
+  html: string
+) {
+  const pattern =
+    /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+
+  let match:
+    RegExpExecArray |
+    null;
+
+  while (
+    (
+      match =
+        pattern.exec(
+          html
+        )
+    ) !==
+    null
+  ) {
+    const raw =
+      match[1]
+        ?.trim();
+
+    if (!raw) {
+      continue;
+    }
+
+    try {
+      const parsed =
+        JSON.parse(
+          raw
+        );
+
+      const identity =
+        extractProductIdentityFromJson(
+          parsed
+        );
+
+      if (
+        identity
+      ) {
+        return identity;
+      }
+    } catch {
+      const identity =
+        extractIdentityFromAnyText(
+          raw
+        );
+
+      if (
+        identity
+      ) {
+        return identity;
+      }
+    }
+  }
+
+  return null;
+}
+
+function extractTargetedGoodsIdentity(
+  html: string
+) {
+  const normalized =
+    normalizeResolverText(
+      html
+    );
+
+  const contextualPatterns = [
+    /(?:productIntroData|goodsInfo|productInfo)[\s\S]{0,6000}?(?:goods[_-]?id|goodsId)["']?\s*[:=]\s*["']?(\d{5,20})/i,
+
+    /(?:goods[_-]?id|goodsId)["']?\s*[:=]\s*["']?(\d{5,20})[\s\S]{0,6000}?(?:productIntroData|goodsInfo|productInfo)/i,
+  ];
+
+  for (
+    const pattern
+    of contextualPatterns
+  ) {
+    const match =
+      normalized.match(
+        pattern
+      );
+
+    if (
+      match?.[1]
+    ) {
+      return {
+        key:
+          `goods:${match[1]}`,
+
+        value:
+          match[1],
+
+        source:
+          "goods-id" as const,
+
+        confidence:
+          "high" as const,
+      };
+    }
+  }
+
+  return null;
+}
+
 function extractIdentityFromHtml(
   html: string
 ) {
@@ -367,7 +806,9 @@ function extractIdentityFromHtml(
       html
     );
 
-  if (canonical) {
+  if (
+    canonical
+  ) {
     const identity =
       extractSheinProductIdentity(
         canonical.toString()
@@ -387,7 +828,9 @@ function extractIdentityFromHtml(
       html
     );
 
-  if (openGraph) {
+  if (
+    openGraph
+  ) {
     const identity =
       extractSheinProductIdentity(
         openGraph.toString()
@@ -402,12 +845,52 @@ function extractIdentityFromHtml(
     }
   }
 
+  const metaRefresh =
+    extractMetaRefreshTarget(
+      html
+    );
+
+  if (
+    metaRefresh
+  ) {
+    const identity =
+      extractIdentityFromAnyText(
+        metaRefresh
+      );
+
+    if (
+      identity
+    ) {
+      return identity;
+    }
+  }
+
+  for (
+    const target
+    of extractScriptRedirectTargets(
+      html
+    )
+  ) {
+    const identity =
+      extractIdentityFromAnyText(
+        target
+      );
+
+    if (
+      identity
+    ) {
+      return identity;
+    }
+  }
+
   const productUrl =
     extractProductUrlFromHtml(
       html
     );
 
-  if (productUrl) {
+  if (
+    productUrl
+  ) {
     const identity =
       extractSheinProductIdentity(
         productUrl.toString()
@@ -422,7 +905,41 @@ function extractIdentityFromHtml(
     }
   }
 
-  return null;
+  const jsonLdIdentity =
+    extractJsonLdIdentity(
+      html
+    );
+
+  if (
+    jsonLdIdentity
+  ) {
+    return jsonLdIdentity;
+  }
+
+  return extractTargetedGoodsIdentity(
+    html
+  );
+}
+
+function getRedirectIdentity(
+  location: string
+) {
+  return extractIdentityFromAnyText(
+    location
+  );
+}
+
+async function requestRedirectOnly(
+  currentUrl: URL
+) {
+  try {
+    return await fetchSheinUrl(
+      currentUrl,
+      "HEAD"
+    );
+  } catch {
+    return null;
+  }
 }
 
 export async function resolveSheinProductIdentity({
@@ -432,38 +949,31 @@ export async function resolveSheinProductIdentity({
   sourceText: string;
   affiliateUrl: string;
 }): Promise<SheinResolveResult> {
-  const affiliateIdentity =
-    extractSheinProductIdentity(
-      affiliateUrl
-    );
-
-  if (
-    isCanonicalIdentity(
-      affiliateIdentity
-    )
-  ) {
-    return {
-      identity:
-        affiliateIdentity,
-
-      method:
-        "input",
-    };
-  }
-
   const sourceIdentity =
     extractSheinProductIdentity(
       sourceText
     );
 
+  const affiliateIdentity =
+    extractSheinProductIdentity(
+      affiliateUrl
+    );
+
+  const immediateCanonical =
+    [
+      sourceIdentity,
+      affiliateIdentity,
+    ].find(
+      isCanonicalIdentity
+    ) ??
+    null;
+
   if (
-    isCanonicalIdentity(
-      sourceIdentity
-    )
+    immediateCanonical
   ) {
     return {
       identity:
-        sourceIdentity,
+        immediateCanonical,
 
       method:
         "input",
@@ -475,7 +985,9 @@ export async function resolveSheinProductIdentity({
       affiliateUrl.trim()
     );
 
-  if (!startingUrl) {
+  if (
+    !startingUrl
+  ) {
     return {
       identity:
         sourceIdentity ??
@@ -494,10 +1006,12 @@ export async function resolveSheinProductIdentity({
     startingUrl;
 
   for (
-    let index = 0;
+    let index =
+      0;
     index <
-    MAX_REDIRECTS;
-    index += 1
+      MAX_REDIRECTS;
+    index +=
+      1
   ) {
     const currentIdentity =
       extractSheinProductIdentity(
@@ -514,10 +1028,65 @@ export async function resolveSheinProductIdentity({
           currentIdentity,
 
         method:
-          index === 0
+          index ===
+          0
             ? "input"
             : "redirect",
       };
+    }
+
+    const headResponse =
+      await requestRedirectOnly(
+        currentUrl
+      );
+
+    if (
+      headResponse &&
+      headResponse.status >=
+        300 &&
+      headResponse.status <
+        400
+    ) {
+      const location =
+        headResponse.headers.get(
+          "location"
+        );
+
+      if (
+        location
+      ) {
+        const redirectIdentity =
+          getRedirectIdentity(
+            location
+          );
+
+        if (
+          redirectIdentity
+        ) {
+          return {
+            identity:
+              redirectIdentity,
+
+            method:
+              "redirect",
+          };
+        }
+
+        const nextUrl =
+          parseAllowedSheinUrl(
+            location,
+            currentUrl
+          );
+
+        if (
+          nextUrl
+        ) {
+          currentUrl =
+            nextUrl;
+
+          continue;
+        }
+      }
     }
 
     let response:
@@ -526,7 +1095,8 @@ export async function resolveSheinProductIdentity({
     try {
       response =
         await fetchSheinUrl(
-          currentUrl
+          currentUrl,
+          "GET"
         );
     } catch (
       error
@@ -550,8 +1120,27 @@ export async function resolveSheinProductIdentity({
           "location"
         );
 
-      if (!location) {
+      if (
+        !location
+      ) {
         break;
+      }
+
+      const redirectIdentity =
+        getRedirectIdentity(
+          location
+        );
+
+      if (
+        redirectIdentity
+      ) {
+        return {
+          identity:
+            redirectIdentity,
+
+          method:
+            "redirect",
+        };
       }
 
       const nextUrl =
@@ -560,25 +1149,10 @@ export async function resolveSheinProductIdentity({
           currentUrl
         );
 
-      if (!nextUrl) {
-        break;
-      }
-
-      const identity =
-        extractSheinProductIdentity(
-          nextUrl.toString()
-        );
-
       if (
-        isCanonicalIdentity(
-          identity
-        )
+        !nextUrl
       ) {
-        return {
-          identity,
-          method:
-            "redirect",
-        };
+        break;
       }
 
       currentUrl =
@@ -613,6 +1187,7 @@ export async function resolveSheinProductIdentity({
       ) {
         return {
           identity,
+
           method:
             "redirect",
         };
@@ -636,6 +1211,9 @@ export async function resolveSheinProductIdentity({
       ) &&
       !contentType.includes(
         "text/plain"
+      ) &&
+      !contentType.includes(
+        "application/json"
       )
     ) {
       break;
@@ -653,9 +1231,12 @@ export async function resolveSheinProductIdentity({
           html
         );
 
-      if (identity) {
+      if (
+        identity
+      ) {
         return {
           identity,
+
           method:
             "html",
         };

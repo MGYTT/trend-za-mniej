@@ -8,6 +8,7 @@ export type SheinProductIdentity = {
   key: string;
   value: string;
   source: SheinIdentitySource;
+
   confidence:
     | "high"
     | "medium";
@@ -21,12 +22,15 @@ export type ComparableProduct = {
   category: string;
   imageUrl: string;
   affiliateUrl: string;
+
   sheinProductKey:
     | string
     | null;
+
   price:
     | number
     | string;
+
   active: boolean;
 };
 
@@ -39,6 +43,8 @@ export type ProductDuplicateCandidate = {
   price: number;
   active: boolean;
   similarity: number;
+
+  signals?: string[];
 };
 
 export type DuplicateBlockReason =
@@ -54,7 +60,8 @@ export type ProductDuplicateStatus =
   | "error";
 
 export type ProductDuplicateCheck = {
-  status: ProductDuplicateStatus;
+  status:
+    ProductDuplicateStatus;
 
   identity:
     | SheinProductIdentity
@@ -101,14 +108,50 @@ const NAME_STOP_WORDS =
     "kobiety",
   ]);
 
+const AFFILIATE_TRACKING_PARAMS =
+  new Set([
+    "ismg_ol",
+    "aff_id",
+    "affid",
+    "affiliate_id",
+    "affiliateid",
+    "aff_trace_key",
+    "affiliate",
+    "affiliate_code",
+    "source",
+    "sourceid",
+    "src_identifier",
+    "src_module",
+    "src_tab_page_id",
+    "ref",
+    "referrer",
+    "referral",
+    "mallcode",
+    "mall_code",
+    "url_from",
+    "campaign",
+    "campaign_id",
+    "share_from",
+    "share_type",
+  ]);
+
 export function createEmptyProductDuplicateCheck():
   ProductDuplicateCheck {
   return {
-    status: "idle",
-    identity: null,
-    exactMatch: null,
-    similarMatches: [],
-    blockingReason: null,
+    status:
+      "idle",
+
+    identity:
+      null,
+
+    exactMatch:
+      null,
+
+    similarMatches:
+      [],
+
+    blockingReason:
+      null,
   };
 }
 
@@ -141,7 +184,9 @@ export function extractSheinProductIdentity(
 ):
   | SheinProductIdentity
   | null {
-  if (!value.trim()) {
+  if (
+    !value.trim()
+  ) {
     return null;
   }
 
@@ -150,35 +195,37 @@ export function extractSheinProductIdentity(
       value
     );
 
-  const goodsPatterns: Array<{
-    pattern: RegExp;
-    source:
-      SheinIdentitySource;
-  }> = [
-    {
-      pattern:
-        /(?:goods[_-]?id|goodsid)\s*["']?\s*[:=]\s*["']?(\d{5,20})/i,
+  const goodsPatterns:
+    Array<{
+      pattern: RegExp;
 
       source:
-        "goods-id",
-    },
+        SheinIdentitySource;
+    }> = [
+      {
+        pattern:
+          /(?:goods[_-]?id|goodsid)\s*["']?\s*[:=]\s*["']?(\d{5,20})/i,
 
-    {
-      pattern:
-        /-p-(\d{5,20})(?:\.html)?(?=$|[/?#&\s])/i,
+        source:
+          "goods-id",
+      },
 
-      source:
-        "product-url",
-    },
+      {
+        pattern:
+          /-p-(\d{5,20})(?:\.html)?(?=$|[/?#&\s])/i,
 
-    {
-      pattern:
-        /(?:id\s+produktu|product\s+id|item\s+id)\s*[:#=\-–—]?\s*(\d{5,20})/i,
+        source:
+          "product-url",
+      },
 
-      source:
-        "product-id",
-    },
-  ];
+      {
+        pattern:
+          /(?:id\s+produktu|product\s+id|item\s+id)\s*[:#=\-–—]?\s*(\d{5,20})/i,
+
+        source:
+          "product-id",
+      },
+    ];
 
   for (
     const {
@@ -241,7 +288,8 @@ export function extractSheinProductIdentity(
       );
 
     if (
-      sku.length < 5 ||
+      sku.length <
+        5 ||
       !/\d/.test(
         sku
       )
@@ -281,6 +329,170 @@ export function getSheinIdentityLabel(
   return `ID SHEIN: ${identity.value}`;
 }
 
+function isTrackingParameter(
+  key: string
+) {
+  const normalized =
+    key
+      .trim()
+      .toLowerCase();
+
+  return (
+    AFFILIATE_TRACKING_PARAMS.has(
+      normalized
+    ) ||
+    normalized.startsWith(
+      "utm_"
+    )
+  );
+}
+
+function normalizeAffiliateUrl(
+  value: string
+) {
+  const clean =
+    value.trim();
+
+  if (
+    !clean
+  ) {
+    return null;
+  }
+
+  try {
+    const url =
+      new URL(
+        clean
+      );
+
+    if (
+      url.protocol !==
+        "https:" &&
+      url.protocol !==
+        "http:"
+    ) {
+      return null;
+    }
+
+    url.protocol =
+      "https:";
+
+    url.hostname =
+      url.hostname
+        .toLowerCase()
+        .replace(
+          /^www\./,
+          ""
+        );
+
+    url.hash =
+      "";
+
+    const keys =
+      Array.from(
+        url.searchParams.keys()
+      );
+
+    for (
+      const key
+      of keys
+    ) {
+      if (
+        isTrackingParameter(
+          key
+        )
+      ) {
+        url.searchParams.delete(
+          key
+        );
+      }
+    }
+
+    const remainingParams =
+      Array.from(
+        url.searchParams.entries()
+      ).sort(
+        (
+          [firstKey, firstValue],
+          [secondKey, secondValue]
+        ) => {
+          const keyComparison =
+            firstKey.localeCompare(
+              secondKey
+            );
+
+          if (
+            keyComparison !==
+            0
+          ) {
+            return keyComparison;
+          }
+
+          return firstValue.localeCompare(
+            secondValue
+          );
+        }
+      );
+
+    url.search =
+      "";
+
+    for (
+      const [
+        key,
+        parameterValue,
+      ] of remainingParams
+    ) {
+      url.searchParams.append(
+        key,
+        parameterValue
+      );
+    }
+
+    if (
+      url.pathname.length >
+        1
+    ) {
+      url.pathname =
+        url.pathname.replace(
+          /\/+$/,
+          ""
+        );
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+export function areAffiliateUrlsEquivalent(
+  first: string,
+  second: string
+) {
+  const firstNormalized =
+    normalizeAffiliateUrl(
+      first
+    );
+
+  const secondNormalized =
+    normalizeAffiliateUrl(
+      second
+    );
+
+  if (
+    !firstNormalized ||
+    !secondNormalized
+  ) {
+    return false;
+  }
+
+  return (
+    firstNormalized ===
+    secondNormalized
+  );
+}
+
 function normalizeComparableName(
   value: string
 ) {
@@ -288,7 +500,9 @@ function normalizeComparableName(
     .toLocaleLowerCase(
       "pl"
     )
-    .normalize("NFD")
+    .normalize(
+      "NFD"
+    )
     .replace(
       /[\u0300-\u036f]/g,
       ""
@@ -314,14 +528,21 @@ function getMeaningfulTokens(
   return normalizeComparableName(
     value
   )
-    .split(" ")
+    .split(
+      " "
+    )
     .map(
-      (token) =>
+      (
+        token
+      ) =>
         token.trim()
     )
     .filter(
-      (token) =>
-        token.length >= 3 &&
+      (
+        token
+      ) =>
+        token.length >=
+          3 &&
         !NAME_STOP_WORDS.has(
           token
         )
@@ -347,13 +568,16 @@ function tokenDiceSimilarity(
     );
 
   if (
-    firstTokens.size === 0 ||
-    secondTokens.size === 0
+    firstTokens.size ===
+      0 ||
+    secondTokens.size ===
+      0
   ) {
     return 0;
   }
 
-  let intersection = 0;
+  let intersection =
+    0;
 
   for (
     const token
@@ -364,7 +588,8 @@ function tokenDiceSimilarity(
         token
       )
     ) {
-      intersection += 1;
+      intersection +=
+        1;
     }
   }
 
@@ -397,7 +622,9 @@ function createTrigrams(
   ) {
     return new Set(
       normalized
-        ? [normalized]
+        ? [
+            normalized,
+          ]
         : []
     );
   }
@@ -406,16 +633,19 @@ function createTrigrams(
     new Set<string>();
 
   for (
-    let index = 0;
+    let index =
+      0;
     index <=
-    normalized.length -
-      3;
-    index += 1
+      normalized.length -
+        3;
+    index +=
+      1
   ) {
     trigrams.add(
       normalized.slice(
         index,
-        index + 3
+        index +
+          3
       )
     );
   }
@@ -438,13 +668,16 @@ function trigramDiceSimilarity(
     );
 
   if (
-    firstSet.size === 0 ||
-    secondSet.size === 0
+    firstSet.size ===
+      0 ||
+    secondSet.size ===
+      0
   ) {
     return 0;
   }
 
-  let intersection = 0;
+  let intersection =
+    0;
 
   for (
     const gram
@@ -455,7 +688,8 @@ function trigramDiceSimilarity(
         gram
       )
     ) {
-      intersection += 1;
+      intersection +=
+        1;
     }
   }
 
@@ -527,18 +761,241 @@ function normalizeCategory(
   );
 }
 
+function parseComparablePrice(
+  value:
+    | number
+    | string
+    | null
+    | undefined
+) {
+  if (
+    value ===
+      null ||
+    value ===
+      undefined
+  ) {
+    return null;
+  }
+
+  if (
+    typeof value ===
+    "number"
+  ) {
+    return Number.isFinite(
+      value
+    ) &&
+      value >
+        0
+      ? value
+      : null;
+  }
+
+  const normalized =
+    value
+      .trim()
+      .replace(
+        /\s/g,
+        ""
+      )
+      .replace(
+        ",",
+        "."
+      )
+      .replace(
+        /[^0-9.-]/g,
+        ""
+      );
+
+  if (
+    !normalized
+  ) {
+    return null;
+  }
+
+  const parsed =
+    Number(
+      normalized
+    );
+
+  if (
+    !Number.isFinite(
+      parsed
+    ) ||
+    parsed <=
+      0
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function calculatePriceDifferenceRatio(
+  first:
+    | number
+    | string
+    | null
+    | undefined,
+
+  second:
+    | number
+    | string
+    | null
+    | undefined
+) {
+  const firstPrice =
+    parseComparablePrice(
+      first
+    );
+
+  const secondPrice =
+    parseComparablePrice(
+      second
+    );
+
+  if (
+    firstPrice ===
+      null ||
+    secondPrice ===
+      null
+  ) {
+    return null;
+  }
+
+  const denominator =
+    Math.max(
+      firstPrice,
+      secondPrice
+    );
+
+  if (
+    denominator <=
+    0
+  ) {
+    return null;
+  }
+
+  return (
+    Math.abs(
+      firstPrice -
+        secondPrice
+    ) /
+    denominator
+  );
+}
+
+function buildSimilaritySignals({
+  nameSimilarity,
+  categoryMatch,
+  categoryMismatch,
+  priceDifference,
+}: {
+  nameSimilarity:
+    number;
+
+  categoryMatch:
+    boolean;
+
+  categoryMismatch:
+    boolean;
+
+  priceDifference:
+    number |
+    null;
+}) {
+  const signals:
+    string[] = [];
+
+  if (
+    nameSimilarity >=
+    0.95
+  ) {
+    signals.push(
+      "niemal identyczna nazwa"
+    );
+  } else if (
+    nameSimilarity >=
+    0.86
+  ) {
+    signals.push(
+      "bardzo podobna nazwa"
+    );
+  } else if (
+    nameSimilarity >=
+    0.76
+  ) {
+    signals.push(
+      "podobna nazwa"
+    );
+  }
+
+  if (
+    categoryMatch
+  ) {
+    signals.push(
+      "ta sama kategoria"
+    );
+  }
+
+  if (
+    categoryMismatch
+  ) {
+    signals.push(
+      "inna kategoria"
+    );
+  }
+
+  if (
+    priceDifference !==
+    null
+  ) {
+    if (
+      priceDifference <=
+      0.03
+    ) {
+      signals.push(
+        "niemal identyczna cena"
+      );
+    } else if (
+      priceDifference <=
+      0.08
+    ) {
+      signals.push(
+        "bardzo zbliżona cena"
+      );
+    } else if (
+      priceDifference <=
+      0.15
+    ) {
+      signals.push(
+        "zbliżona cena"
+      );
+    }
+  }
+
+  return signals;
+}
+
 export function findSimilarProducts({
   name,
   shortName,
   category,
+  price,
   products,
   limit = 3,
 }: {
   name: string;
   shortName: string;
   category: string;
+
+  price?:
+    | number
+    | string
+    | null;
+
   products:
     ComparableProduct[];
+
   limit?: number;
 }) {
   const normalizedCategory =
@@ -550,7 +1007,9 @@ export function findSimilarProducts({
     .map(
       (
         product
-      ): ProductDuplicateCandidate | null => {
+      ):
+        | ProductDuplicateCandidate
+        | null => {
         const scores = [
           calculateProductNameSimilarity(
             name,
@@ -573,7 +1032,7 @@ export function findSimilarProducts({
           ),
         ];
 
-        let similarity =
+        const nameSimilarity =
           Math.max(
             ...scores
           );
@@ -583,22 +1042,114 @@ export function findSimilarProducts({
             product.category
           );
 
+        const categoryMatch =
+          Boolean(
+            normalizedCategory &&
+            candidateCategory &&
+            normalizedCategory ===
+              candidateCategory
+          );
+
+        const categoryMismatch =
+          Boolean(
+            normalizedCategory &&
+            candidateCategory &&
+            normalizedCategory !==
+              candidateCategory
+          );
+
+        const priceDifference =
+          calculatePriceDifferenceRatio(
+            price,
+            product.price
+          );
+
+        let similarity =
+          nameSimilarity;
+
+        /*
+         * Kategoria jest sygnałem pomocniczym.
+         *
+         * Ta sama kategoria lekko wzmacnia wynik,
+         * a inna kategoria go obniża.
+         */
         if (
-          normalizedCategory &&
-          candidateCategory &&
-          normalizedCategory !==
-            candidateCategory
+          categoryMatch
+        ) {
+          similarity =
+            Math.min(
+              1,
+              similarity +
+                0.03
+            );
+        } else if (
+          categoryMismatch
         ) {
           similarity *=
             0.82;
         }
 
+        /*
+         * Cena nigdy nie jest dowodem duplikatu.
+         *
+         * Może tylko nieznacznie podnieść wynik,
+         * jeśli nazwa już jest podobna.
+         */
         if (
+          priceDifference !==
+            null &&
+          nameSimilarity >=
+            0.68
+        ) {
+          if (
+            priceDifference <=
+            0.03
+          ) {
+            similarity =
+              Math.min(
+                1,
+                similarity +
+                  0.02
+              );
+          } else if (
+            priceDifference <=
+            0.08
+          ) {
+            similarity =
+              Math.min(
+                1,
+                similarity +
+                  0.01
+              );
+          }
+        }
+
+        /*
+         * Sam produkt o podobnej cenie i kategorii
+         * nie może trafić do wyników bez
+         * wystarczającego podobieństwa nazwy.
+         */
+        if (
+          nameSimilarity <
+            0.70 ||
           similarity <
-          0.76
+            0.76
         ) {
           return null;
         }
+
+        const signals =
+          buildSimilaritySignals({
+            nameSimilarity,
+            categoryMatch,
+            categoryMismatch,
+            priceDifference,
+          });
+
+        const numericPrice =
+          parseComparablePrice(
+            product.price
+          );
 
         return {
           id:
@@ -617,9 +1168,8 @@ export function findSimilarProducts({
             product.imageUrl,
 
           price:
-            Number(
-              product.price
-            ),
+            numericPrice ??
+            0,
 
           active:
             product.active,
@@ -629,6 +1179,8 @@ export function findSimilarProducts({
               similarity *
                 100
             ),
+
+          signals,
         };
       }
     )
@@ -637,12 +1189,16 @@ export function findSimilarProducts({
         product
       ): product is
         ProductDuplicateCandidate =>
-        product !== null
+        product !==
+        null
     )
     .sort(
-      (a, b) =>
-        b.similarity -
-        a.similarity
+      (
+        first,
+        second
+      ) =>
+        second.similarity -
+        first.similarity
     )
     .slice(
       0,
@@ -653,8 +1209,18 @@ export function findSimilarProducts({
 export function createDuplicateCandidate(
   product:
     ComparableProduct,
-  similarity = 100
+
+  similarity =
+    100,
+
+  signals:
+    string[] = []
 ): ProductDuplicateCandidate {
+  const price =
+    parseComparablePrice(
+      product.price
+    );
+
   return {
     id:
       product.id,
@@ -672,13 +1238,14 @@ export function createDuplicateCandidate(
       product.imageUrl,
 
     price:
-      Number(
-        product.price
-      ),
+      price ??
+      0,
 
     active:
       product.active,
 
     similarity,
+
+    signals,
   };
 }
