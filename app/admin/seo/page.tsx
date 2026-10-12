@@ -16,6 +16,10 @@ import {
   type AdminRole,
 } from "@/lib/admin-permissions";
 
+import type {
+  ProductSlugReservation,
+} from "@/lib/product-slug";
+
 import {
   auditSeoCatalog,
   type SeoQualityProductInput,
@@ -56,6 +60,11 @@ type ProductRow = {
   created_by:
     | string
     | null;
+};
+
+type SlugRedirectRow = {
+  old_slug: string;
+  product_id: string;
 };
 
 export default async function AdminSeoPage() {
@@ -125,42 +134,64 @@ export default async function AdminSeoPage() {
       ownerModeResult.data
     );
 
-  const {
-    data:
-      productsData,
+  const [
+    productsResult,
+    redirectsResult,
+  ] =
+    await Promise.all([
+      supabase
+        .from(
+          "products"
+        )
+        .select(
+          "id, slug, name, short_name, description, category, image_url, active, created_by"
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false,
+          }
+        ),
 
-    error:
-      productsError,
-  } =
-    await supabase
-      .from(
-        "products"
-      )
-      .select(
-        "id, slug, name, short_name, description, category, image_url, active, created_by"
-      )
-      .order(
-        "created_at",
-        {
-          ascending:
-            false,
-        }
-      );
+      supabase
+        .from(
+          "product_slug_redirects"
+        )
+        .select(
+          "old_slug, product_id"
+        ),
+    ]);
 
   if (
-    productsError
+    productsResult.error
   ) {
     console.error(
       "Nie udało się pobrać produktów do audytu SEO:",
-      productsError
+      productsResult.error
+    );
+  }
+
+  if (
+    redirectsResult.error
+  ) {
+    console.error(
+      "Nie udało się pobrać historii adresów produktów:",
+      redirectsResult.error
     );
   }
 
   const rows =
     (
-      productsData ??
+      productsResult.data ??
       []
     ) as ProductRow[];
+
+  const redirectRows =
+    (
+      redirectsResult.data ??
+      []
+    ) as SlugRedirectRow[];
 
   const auditInput:
     SeoQualityProductInput[] =
@@ -250,6 +281,39 @@ export default async function AdminSeoPage() {
       }
     );
 
+  const slugReservations:
+    ProductSlugReservation[] = [
+      ...rows.map(
+        (
+          product
+        ) => ({
+          slug:
+            product.slug,
+
+          productId:
+            product.id,
+
+          kind:
+            "current" as const,
+        })
+      ),
+
+      ...redirectRows.map(
+        (
+          redirectRow
+        ) => ({
+          slug:
+            redirectRow.old_slug,
+
+          productId:
+            redirectRow.product_id,
+
+          kind:
+            "redirect" as const,
+        })
+      ),
+    ];
+
   return (
     <main className="min-h-screen bg-[#f7f7f8] text-stone-950">
       <AdminHeader />
@@ -258,6 +322,9 @@ export default async function AdminSeoPage() {
         <AdminSeoQualityManager
           products={
             products
+          }
+          slugReservations={
+            slugReservations
           }
         />
       </div>
