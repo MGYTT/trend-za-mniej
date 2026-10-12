@@ -13,15 +13,18 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        userAgent: "*",
+        userAgent:
+          "*",
 
-        allow: "/",
+        allow:
+          "/",
 
         disallow: [
           "/admin",
           "/login",
           "/auth",
           "/go",
+          "/api",
         ],
       },
     ],

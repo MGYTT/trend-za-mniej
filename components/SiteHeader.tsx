@@ -23,6 +23,7 @@ type NavigationItem = {
 
   type:
     | "offers"
+    | "tiktok"
     | "promotions"
     | "categories"
     | "about";
@@ -42,6 +43,20 @@ const navigation:
 
     type:
       "offers",
+  },
+
+  {
+    label:
+      "TikTok",
+
+    description:
+      "Produkty z naszych TikToków",
+
+    href:
+      "/tiktok",
+
+    type:
+      "tiktok",
   },
 
   {
@@ -99,59 +114,65 @@ export default function SiteHeader() {
       false
     );
 
-  useEffect(() => {
-    setMenuOpen(
-      false
-    );
-  }, [
-    pathname,
-  ]);
+  useEffect(
+    () => {
+      setMenuOpen(
+        false
+      );
+    },
+    [
+      pathname,
+    ]
+  );
 
-  useEffect(() => {
-    if (
-      !menuOpen
-    ) {
-      return;
-    }
-
-    const previousOverflow =
-      document.body.style
-        .overflow;
-
-    document.body.style.overflow =
-      "hidden";
-
-    function handleKeyDown(
-      event:
-        KeyboardEvent
-    ) {
+  useEffect(
+    () => {
       if (
-        event.key ===
-        "Escape"
+        !menuOpen
       ) {
-        setMenuOpen(
-          false
-        );
+        return;
       }
-    }
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+      const previousOverflow =
+        document.body.style
+          .overflow;
 
-    return () => {
       document.body.style.overflow =
-        previousOverflow;
+        "hidden";
 
-      window.removeEventListener(
+      function handleKeyDown(
+        event:
+          KeyboardEvent
+      ) {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          setMenuOpen(
+            false
+          );
+        }
+      }
+
+      window.addEventListener(
         "keydown",
         handleKeyDown
       );
-    };
-  }, [
-    menuOpen,
-  ]);
+
+      return () => {
+        document.body.style.overflow =
+          previousOverflow;
+
+        window.removeEventListener(
+          "keydown",
+          handleKeyDown
+        );
+      };
+    },
+    [
+      menuOpen,
+    ]
+  );
 
   function isActive(
     item:
@@ -167,6 +188,16 @@ export default function SiteHeader() {
         pathname.startsWith(
           "/produkt/"
         )
+      );
+    }
+
+    if (
+      item.type ===
+      "tiktok"
+    ) {
+      return (
+        pathname ===
+        "/tiktok"
       );
     }
 
@@ -247,7 +278,7 @@ export default function SiteHeader() {
                         : undefined
                     }
                     className={[
-                      "relative flex min-h-10 items-center rounded-xl px-3.5 text-sm font-bold transition",
+                      "relative flex min-h-10 items-center rounded-xl px-3 text-sm font-bold transition",
                       active
                         ? "bg-stone-100 text-stone-900"
                         : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
@@ -494,11 +525,22 @@ export default function SiteHeader() {
                 </div>
 
                 <Link
+                  href="/tiktok"
+                  onClick={
+                    closeMenu
+                  }
+                  className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-stone-950 px-5 text-sm font-black text-white shadow-sm transition hover:bg-stone-800"
+                >
+                  Produkty z TikToka
+                  →
+                </Link>
+
+                <Link
                   href="/promocje-shein"
                   onClick={
                     closeMenu
                   }
-                  className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700"
+                  className="mt-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700"
                 >
                   <span
                     aria-hidden="true"

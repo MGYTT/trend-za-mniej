@@ -31,13 +31,104 @@ type DiscountInfo = {
 
 export const revalidate = 60;
 
-function buildMetaDescription(shortName: string) {
-  const description =
-    `Zobacz ${shortName} w Trend za Mniej. Strona afiliacyjna z opisem, ceną zapisaną przy publikacji i linkiem do aktualnej oferty w SHEIN. Zakup odbywa się w SHEIN.`;
+const META_DESCRIPTION_MAX_LENGTH =
+  160;
 
-  return description.length > 160
-    ? `${description.slice(0, 157)}...`
-    : description;
+function normalizeSeoText(
+  value: string
+) {
+  return value
+    .replace(
+      /\s+/g,
+      " "
+    )
+    .trim();
+}
+
+function truncateSeoText(
+  value: string,
+  maxLength: number
+) {
+  const normalized =
+    normalizeSeoText(
+      value
+    );
+
+  if (
+    normalized.length <=
+    maxLength
+  ) {
+    return normalized;
+  }
+
+  const slice =
+    normalized.slice(
+      0,
+      Math.max(
+        0,
+        maxLength -
+          1
+      )
+    );
+
+  const lastSpace =
+    slice.lastIndexOf(
+      " "
+    );
+
+  const safeSlice =
+    lastSpace >
+    maxLength *
+      0.65
+      ? slice.slice(
+          0,
+          lastSpace
+        )
+      : slice;
+
+  return `${safeSlice
+    .trim()
+    .replace(
+      /[.,;:!?—–-]+$/,
+      ""
+    )}…`;
+}
+
+function buildMetaDescription({
+  shortName,
+  description,
+  category,
+  price,
+}: {
+  shortName: string;
+  description: string;
+  category: string;
+  price: number;
+}) {
+  const productDescription =
+    normalizeSeoText(
+      description
+    );
+
+  const metaDescription =
+    [
+      `${shortName} – ${category}.`,
+      productDescription,
+      `Cena zapisana: ${formatPrice(
+        price
+      )}. Sprawdź aktualną ofertę w SHEIN.`,
+    ]
+      .filter(
+        Boolean
+      )
+      .join(
+        " "
+      );
+
+  return truncateSeoText(
+    metaDescription,
+    META_DESCRIPTION_MAX_LENGTH
+  );
 }
 
 function getDiscountInfo(
@@ -94,21 +185,37 @@ export async function generateMetadata({
     };
   }
 
+  const siteUrl =
+    getSiteUrl();
+
   const productUrl =
-    `/produkt/${product.slug}`;
+    `${siteUrl}/produkt/${product.slug}`;
 
   const title =
-    `${product.shortName} – cena zapisana i link do SHEIN`;
+    `${product.shortName} – cena i oferta SHEIN`;
 
   const description =
-    buildMetaDescription(
-      product.shortName
-    );
+    buildMetaDescription({
+      shortName:
+        product.shortName,
+
+      description:
+        product.description,
+
+      category:
+        product.category,
+
+      price:
+        product.price,
+    });
 
   return {
     title,
 
     description,
+
+    category:
+      product.category,
 
     alternates: {
       canonical:
@@ -154,7 +261,7 @@ export async function generateMetadata({
         SITE_NAME,
 
       title:
-        `${product.name} | ${SITE_NAME}`,
+        `${product.shortName} | ${SITE_NAME}`,
 
       description,
 
@@ -174,7 +281,7 @@ export async function generateMetadata({
         "summary_large_image",
 
       title:
-        `${product.name} | ${SITE_NAME}`,
+        `${product.shortName} | ${SITE_NAME}`,
 
       description,
 
@@ -240,6 +347,26 @@ export default async function ProductPage({
       product.oldPrice
     );
 
+  const pageDescription =
+    buildMetaDescription({
+      shortName:
+        product.shortName,
+
+      description:
+        product.description,
+
+      category:
+        product.category,
+
+      price:
+        product.price,
+    });
+
+  const productDescription =
+    normalizeSeoText(
+      product.description
+    );
+
   const structuredData = {
     "@context":
       "https://schema.org",
@@ -259,12 +386,13 @@ export default async function ProductPage({
           product.name,
 
         description:
-          buildMetaDescription(
-            product.shortName
-          ),
+          pageDescription,
 
         inLanguage:
           SITE_LANGUAGE,
+
+        datePublished:
+          product.createdAt,
 
         isPartOf: {
           "@id":
@@ -286,9 +414,14 @@ export default async function ProductPage({
             `${productUrl}#primaryimage`,
         },
 
+        mainEntity: {
+          "@id":
+            `${productUrl}#product`,
+        },
+
         about: {
           "@id":
-            `${productUrl}#topic`,
+            `${productUrl}#product`,
         },
       },
 
@@ -314,24 +447,67 @@ export default async function ProductPage({
 
       {
         "@type":
-          "Thing",
+          "Product",
 
         "@id":
-          `${productUrl}#topic`,
+          `${productUrl}#product`,
+
+        url:
+          productUrl,
 
         name:
           product.name,
 
-        description:
-          product.description,
+        alternateName:
+          product.shortName,
 
-        image: {
+        description:
+          productDescription,
+
+        category:
+          product.category,
+
+        image: [
+          product.image,
+        ],
+
+        mainEntityOfPage: {
           "@id":
-            `${productUrl}#primaryimage`,
+            `${productUrl}#webpage`,
         },
 
-        url:
-          productUrl,
+        additionalProperty: [
+          {
+            "@type":
+              "PropertyValue",
+
+            name:
+              "Cena zapisana przy publikacji",
+
+            value:
+              formatPrice(
+                product.price
+              ),
+          },
+
+          ...(product.oldPrice !==
+          null
+            ? [
+                {
+                  "@type":
+                    "PropertyValue",
+
+                  name:
+                    "Poprzednia cena zapisana przy publikacji",
+
+                  value:
+                    formatPrice(
+                      product.oldPrice
+                    ),
+                },
+              ]
+            : []),
+        ],
       },
 
       {

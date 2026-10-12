@@ -18,15 +18,106 @@ import {
   getSiteUrl,
 } from "@/lib/site";
 
+export const revalidate =
+  300;
+
 type SitemapProductRow = {
   slug: string;
 
   category: string;
 
+  created_at:
+    | string
+    | null;
+
   updated_at:
     | string
     | null;
+
+  tiktok_featured:
+    | boolean
+    | null;
+
+  tiktok_featured_at:
+    | string
+    | null;
 };
+
+function toValidDate(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  if (
+    !value
+  ) {
+    return undefined;
+  }
+
+  const date =
+    new Date(
+      value
+    );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return undefined;
+  }
+
+  return date;
+}
+
+function getProductDate(
+  product:
+    SitemapProductRow
+) {
+  return (
+    toValidDate(
+      product.updated_at
+    ) ??
+    toValidDate(
+      product.created_at
+    )
+  );
+}
+
+function getLatestDate(
+  dates:
+    Array<
+      Date |
+      undefined
+    >
+) {
+  let latest:
+    Date |
+    undefined;
+
+  for (
+    const date
+    of dates
+  ) {
+    if (
+      !date
+    ) {
+      continue;
+    }
+
+    if (
+      !latest ||
+      date >
+        latest
+    ) {
+      latest =
+        date;
+    }
+  }
+
+  return latest;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl =
@@ -41,14 +132,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         "products"
       )
       .select(
-        "slug, category, updated_at"
+        "slug, category, created_at, updated_at, tiktok_featured, tiktok_featured_at"
       )
       .eq(
         "active",
         true
       )
       .order(
-        "updated_at",
+        "created_at",
         {
           ascending:
             false,
@@ -70,39 +161,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       []
     ) as SitemapProductRow[];
 
+  const promotionsUpdatedAt =
+    toValidDate(
+      SHEIN_PROMOTIONS_UPDATED_AT
+    );
+
   const staticPages:
     MetadataRoute.Sitemap = [
       {
         url:
           siteUrl,
-
-        changeFrequency:
-          "daily",
-
-        priority:
-          1,
       },
 
       {
         url:
           `${siteUrl}/okazje`,
-
-        changeFrequency:
-          "daily",
-
-        priority:
-          0.9,
       },
 
       {
         url:
           `${siteUrl}/kategorie`,
+      },
 
-        changeFrequency:
-          "daily",
-
-        priority:
-          0.9,
+      {
+        url:
+          `${siteUrl}/tiktok`,
       },
 
       {
@@ -110,59 +193,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           `${siteUrl}/promocje-shein`,
 
         lastModified:
-          new Date(
-            SHEIN_PROMOTIONS_UPDATED_AT
-          ),
-
-        changeFrequency:
-          "weekly",
-
-        priority:
-          0.9,
+          promotionsUpdatedAt,
       },
 
       {
         url:
           `${siteUrl}/o-nas`,
-
-        changeFrequency:
-          "monthly",
-
-        priority:
-          0.6,
       },
 
       {
         url:
           `${siteUrl}/afiliacja`,
-
-        changeFrequency:
-          "yearly",
-
-        priority:
-          0.3,
       },
 
       {
         url:
           `${siteUrl}/kontakt`,
-
-        changeFrequency:
-          "monthly",
-
-        priority:
-          0.4,
       },
 
       {
         url:
           `${siteUrl}/polityka-prywatnosci`,
-
-        changeFrequency:
-          "yearly",
-
-        priority:
-          0.2,
       },
     ];
 
@@ -176,24 +227,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           `${siteUrl}/produkt/${product.slug}`,
 
         lastModified:
-          product.updated_at
-            ? new Date(
-                product.updated_at
-              )
-            : undefined,
-
-        changeFrequency:
-          "weekly",
-
-        priority:
-          0.8,
+          getProductDate(
+            product
+          ),
       })
     );
 
   const categoryDates =
     new Map<
       string,
-      Date | undefined
+      Date |
+      undefined
     >();
 
   for (
@@ -210,24 +254,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       continue;
     }
 
-    const currentDate =
+    const productDate =
+      getProductDate(
+        product
+      );
+
+    const existingDate =
       categoryDates.get(
         category
       );
 
-    const productDate =
-      product.updated_at
-        ? new Date(
-            product.updated_at
-          )
-        : undefined;
-
     if (
-      !currentDate ||
+      !existingDate ||
       (
         productDate &&
         productDate >
-          currentDate
+          existingDate
       )
     ) {
       categoryDates.set(
@@ -252,14 +294,52 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           )}`,
 
         lastModified,
-
-        changeFrequency:
-          "daily",
-
-        priority:
-          0.85,
       })
     );
+
+  const tiktokProducts =
+    products.filter(
+      (
+        product
+      ) =>
+        Boolean(
+          product.tiktok_featured
+        )
+    );
+
+  const latestTikTokDate =
+    getLatestDate(
+      tiktokProducts.flatMap(
+        (
+          product
+        ) => [
+          getProductDate(
+            product
+          ),
+
+          toValidDate(
+            product.tiktok_featured_at
+          ),
+        ]
+      )
+    );
+
+  const tiktokPage =
+    staticPages.find(
+      (
+        page
+      ) =>
+        page.url ===
+        `${siteUrl}/tiktok`
+    );
+
+  if (
+    tiktokPage &&
+    latestTikTokDate
+  ) {
+    tiktokPage.lastModified =
+      latestTikTokDate;
+  }
 
   return [
     ...staticPages,

@@ -22,6 +22,7 @@ type NavigationItem = {
     | "add"
     | "social"
     | "tiktok"
+    | "seo"
     | "stats"
     | "team";
 };
@@ -70,6 +71,17 @@ const navigation:
 
     type:
       "tiktok",
+  },
+
+  {
+    label:
+      "SEO",
+
+    href:
+      "/admin/seo",
+
+    type:
+      "seo",
   },
 
   {
@@ -143,6 +155,14 @@ function getMobileTitle(
     )
   ) {
     return "TikTok";
+  }
+
+  if (
+    pathname.startsWith(
+      "/admin/seo"
+    )
+  ) {
+    return "SEO Quality";
   }
 
   if (
@@ -270,7 +290,7 @@ export default function AdminHeader() {
     ) {
       return (
         pathname ===
-        "/admin"
+          "/admin"
       );
     }
 
@@ -299,6 +319,15 @@ export default function AdminHeader() {
     ) {
       return pathname.startsWith(
         "/admin/tiktok"
+      );
+    }
+
+    if (
+      item.type ===
+      "seo"
+    ) {
+      return pathname.startsWith(
+        "/admin/seo"
       );
     }
 
@@ -543,6 +572,21 @@ function AccountMenu({
             className="admin-account-row"
           >
             Produkty z TikToka
+
+            <span>
+              ›
+            </span>
+          </Link>
+
+          <Link
+            href="/admin/seo"
+            prefetch
+            onClick={
+              onClose
+            }
+            className="admin-account-row"
+          >
+            SEO Quality
 
             <span>
               ›

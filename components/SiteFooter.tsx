@@ -17,6 +17,14 @@ const discoveryLinks = [
 
   {
     label:
+      "Produkty z TikToka",
+
+    href:
+      "/tiktok",
+  },
+
+  {
+    label:
       "Promocje SHEIN i kody",
 
     href:

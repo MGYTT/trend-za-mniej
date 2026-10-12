@@ -137,9 +137,17 @@ export default function AdminAppShell({
       }
 
       function handleInstalled() {
-        setStandalone(true);
-        setInstallPrompt(null);
-        setInstallHelpOpen(false);
+        setStandalone(
+          true
+        );
+
+        setInstallPrompt(
+          null
+        );
+
+        setInstallHelpOpen(
+          false
+        );
       }
 
       window.addEventListener(
@@ -279,8 +287,13 @@ export default function AdminAppShell({
 
   useEffect(
     () => {
-      setMoreOpen(false);
-      setInstallHelpOpen(false);
+      setMoreOpen(
+        false
+      );
+
+      setInstallHelpOpen(
+        false
+      );
     },
     [
       pathname,
@@ -303,13 +316,16 @@ export default function AdminAppShell({
         "hidden";
 
       function handleKeyDown(
-        event: KeyboardEvent
+        event:
+          KeyboardEvent
       ) {
         if (
           event.key ===
           "Escape"
         ) {
-          setMoreOpen(false);
+          setMoreOpen(
+            false
+          );
         }
       }
 
@@ -346,19 +362,24 @@ export default function AdminAppShell({
       await installPrompt.prompt();
 
       const choice =
-        await installPrompt.userChoice;
+        await installPrompt
+          .userChoice;
 
       if (
         choice.outcome ===
         "accepted"
       ) {
-        setInstallPrompt(null);
+        setInstallPrompt(
+          null
+        );
       }
 
       return;
     }
 
-    setInstallHelpOpen(true);
+    setInstallHelpOpen(
+      true
+    );
   }
 
   return (
@@ -368,7 +389,9 @@ export default function AdminAppShell({
         immersiveRoute
           ? ""
           : "pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0",
-      ].join(" ")}
+      ].join(
+        " "
+      )}
     >
       {children}
 
@@ -378,7 +401,9 @@ export default function AdminAppShell({
             pathname
           }
           onMore={() =>
-            setMoreOpen(true)
+            setMoreOpen(
+              true
+            )
           }
         />
       )}
@@ -399,7 +424,9 @@ export default function AdminAppShell({
             void installApp()
           }
           onClose={() =>
-            setMoreOpen(false)
+            setMoreOpen(
+              false
+            )
           }
         />
       )}
@@ -413,11 +440,15 @@ function MobileBottomNavigation({
 }: {
   pathname: string;
 
-  onMore: () => void;
+  onMore:
+    () => void;
 }) {
   const moreActive =
     pathname.startsWith(
       "/admin/tiktok"
+    ) ||
+    pathname.startsWith(
+      "/admin/seo"
     ) ||
     pathname.startsWith(
       "/admin/zespol"
@@ -491,7 +522,9 @@ function MobileBottomNavigation({
             moreActive
               ? "is-active"
               : "",
-          ].join(" ")}
+          ].join(
+            " "
+          )}
         >
           <BottomIcon
             type="more"
@@ -538,7 +571,9 @@ function BottomNavLink({
         active
           ? "is-active"
           : "",
-      ].join(" ")}
+      ].join(
+        " "
+      )}
     >
       <BottomIcon
         type={
@@ -706,6 +741,18 @@ function MoreSheet({
             <div className="admin-ios-divider" />
 
             <AppMenuLink
+              href="/admin/seo"
+              icon="seo"
+              title="SEO Quality"
+              description="Sprawdź jakość SEO produktów"
+              onClick={
+                onClose
+              }
+            />
+
+            <div className="admin-ios-divider" />
+
+            <AppMenuLink
               href="/admin#admin-offers"
               icon="offers"
               title="Wszystkie oferty"
@@ -787,6 +834,7 @@ function AppMenuLink({
 
   icon:
     | "tiktok"
+    | "seo"
     | "offers"
     | "team"
     | "website";
@@ -828,11 +876,16 @@ function AppMenuLink({
           "tiktok"
             ? "bg-stone-950 text-white"
             : "",
-        ].join(" ")}
+        ].join(
+          " "
+        )}
       >
         {icon ===
         "tiktok" ? (
           <TikTokIcon />
+        ) : icon ===
+          "seo" ? (
+          <SeoIcon />
         ) : icon ===
           "team" ? (
           <TeamIcon />
@@ -907,7 +960,9 @@ function BottomIcon({
         strokeLinejoin="round"
       >
         <path d="m3 11 9-8 9 8" />
+
         <path d="M5 10v10h14V10" />
+
         <path d="M9 20v-6h6v6" />
       </svg>
     );
@@ -960,7 +1015,9 @@ function BottomIcon({
         strokeLinecap="round"
       >
         <path d="M5 20V10" />
+
         <path d="M12 20V4" />
+
         <path d="M19 20v-7" />
       </svg>
     );
@@ -1004,6 +1061,7 @@ function PlusIcon() {
       strokeLinecap="round"
     >
       <path d="M12 5v14" />
+
       <path d="M5 12h14" />
     </svg>
   );
@@ -1029,6 +1087,7 @@ function AppIcon() {
       />
 
       <path d="M9 6h6" />
+
       <path d="M12 17h.01" />
     </svg>
   );
@@ -1046,6 +1105,7 @@ function TikTokIcon() {
       strokeLinejoin="round"
     >
       <path d="M9 7v10" />
+
       <path d="M9 9h5a4 4 0 0 0 4-4" />
 
       <circle
@@ -1053,6 +1113,30 @@ function TikTokIcon() {
         cy="17"
         r="3"
       />
+    </svg>
+  );
+}
+
+function SeoIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="6"
+      />
+
+      <path d="m16 16 4 4" />
+
+      <path d="M8.5 11.5 10.5 13l3.5-4" />
     </svg>
   );
 }
@@ -1077,7 +1161,9 @@ function OffersIcon() {
       />
 
       <path d="M8 9h8" />
+
       <path d="M8 13h8" />
+
       <path d="M8 17h5" />
     </svg>
   );
@@ -1131,7 +1217,9 @@ function WebsiteIcon() {
       />
 
       <path d="M3 12h18" />
+
       <path d="M12 3a15 15 0 0 1 0 18" />
+
       <path d="M12 3a15 15 0 0 0 0 18" />
     </svg>
   );
@@ -1149,6 +1237,7 @@ function LogoutIcon() {
       strokeLinejoin="round"
     >
       <path d="M10 17l5-5-5-5" />
+
       <path d="M15 12H3" />
 
       <path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5" />
