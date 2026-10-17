@@ -19,7 +19,7 @@ import {
 
 export const revalidate = 60;
 
-const PER_PAGE = 24;
+const PER_PAGE = 16;
 const BUDGETS = ["50", "100", "150", "200"] as const;
 
 type SearchParams = {
@@ -698,16 +698,15 @@ export default async function OffersPage({
 
           {total > 0 ? (
             <>
-              <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-                {visibleProducts.map(
-                  (product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                    />
-                  )
-                )}
-              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+  {visibleProducts.map((product) => (
+    <ProductCard
+      key={product.id}
+      product={product}
+      compactOnMobile
+    />
+  ))}
+</div>
 
               {totalPages > 1 && (
                 <Pagination

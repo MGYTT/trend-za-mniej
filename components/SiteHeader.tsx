@@ -1,570 +1,446 @@
+
 "use client";
 
 import Link from "next/link";
-
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  usePathname,
-} from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import BrandLogo from "@/components/BrandLogo";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
-type NavigationItem = {
+type MenuItem = {
   label: string;
-
   description: string;
-
   href: string;
-
-  type:
-    | "offers"
-    | "tiktok"
-    | "promotions"
-    | "categories"
-    | "about";
 };
 
-const navigation:
-  NavigationItem[] = [
+const MENU: MenuItem[] = [
   {
-    label:
-      "Produkty",
-
-    description:
-      "Przeglądaj wszystkie okazje",
-
-    href:
-      "/okazje",
-
-    type:
-      "offers",
+    label: "Strona główna",
+    description: "Wróć na początek",
+    href: "/",
   },
-
   {
-    label:
-      "TikTok",
-
-    description:
-      "Produkty z naszych TikToków",
-
-    href:
-      "/tiktok",
-
-    type:
-      "tiktok",
+    label: "Produkty",
+    description: "Wszystkie znaleziska",
+    href: "/okazje",
   },
-
   {
-    label:
-      "Promocje SHEIN",
-
-    description:
-      "Kupony, kody i kampanie",
-
-    href:
-      "/promocje-shein",
-
-    type:
-      "promotions",
+    label: "Kategorie",
+    description: "Wybierz interesujący dział",
+    href: "/kategorie",
   },
-
   {
-    label:
-      "Kategorie",
-
-    description:
-      "Przeglądaj wszystkie kategorie",
-
-    href:
-      "/kategorie",
-
-    type:
-      "categories",
+    label: "Promocje SHEIN",
+    description: "Kampanie i kody",
+    href: "/promocje-shein",
   },
-
   {
-    label:
-      "O nas",
-
-    description:
-      "Jak działa Trend za Mniej",
-
-    href:
-      "/o-nas",
-
-    type:
-      "about",
+    label: "TikTok",
+    description: "Produkty z naszych filmów",
+    href: "/tiktok",
+  },
+  {
+    label: "O nas",
+    description: "Poznaj Trend za Mniej",
+    href: "/o-nas",
   },
 ];
 
-export default function SiteHeader() {
-  const pathname =
-    usePathname();
-
-  const [
-    menuOpen,
-    setMenuOpen,
-  ] =
-    useState(
-      false
-    );
-
-  useEffect(
-    () => {
-      setMenuOpen(
-        false
-      );
-    },
-    [
-      pathname,
-    ]
-  );
-
-  useEffect(
-    () => {
-      if (
-        !menuOpen
-      ) {
-        return;
-      }
-
-      const previousOverflow =
-        document.body.style
-          .overflow;
-
-      document.body.style.overflow =
-        "hidden";
-
-      function handleKeyDown(
-        event:
-          KeyboardEvent
-      ) {
-        if (
-          event.key ===
-          "Escape"
-        ) {
-          setMenuOpen(
-            false
-          );
-        }
-      }
-
-      window.addEventListener(
-        "keydown",
-        handleKeyDown
-      );
-
-      return () => {
-        document.body.style.overflow =
-          previousOverflow;
-
-        window.removeEventListener(
-          "keydown",
-          handleKeyDown
-        );
-      };
-    },
-    [
-      menuOpen,
-    ]
-  );
-
-  function isActive(
-    item:
-      NavigationItem
-  ) {
-    if (
-      item.type ===
-      "offers"
-    ) {
-      return (
-        pathname ===
-          "/okazje" ||
-        pathname.startsWith(
-          "/produkt/"
-        )
-      );
-    }
-
-    if (
-      item.type ===
-      "tiktok"
-    ) {
-      return (
-        pathname ===
-        "/tiktok"
-      );
-    }
-
-    if (
-      item.type ===
-      "promotions"
-    ) {
-      return (
-        pathname ===
-        "/promocje-shein"
-      );
-    }
-
-    if (
-      item.type ===
-      "categories"
-    ) {
-      return (
-        pathname ===
-          "/kategorie" ||
-        pathname.startsWith(
-          "/kategoria/"
-        )
-      );
-    }
-
-    if (
-      item.type ===
-      "about"
-    ) {
-      return (
-        pathname ===
-        "/o-nas"
-      );
-    }
-
-    return false;
+function activeLink(
+  pathname: string,
+  href: string
+) {
+  if (href === "/") {
+    return pathname === "/";
   }
 
-  function closeMenu() {
-    setMenuOpen(
-      false
+  if (href === "/okazje") {
+    return (
+      pathname === "/okazje" ||
+      pathname.startsWith("/produkt/")
     );
+  }
+
+  if (href === "/kategorie") {
+    return (
+      pathname === "/kategorie" ||
+      pathname.startsWith("/kategoria/")
+    );
+  }
+
+  return pathname === href;
+}
+
+export default function SiteHeader() {
+  const pathname = usePathname();
+
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
+  const menuButtonRef =
+    useRef<HTMLButtonElement>(null);
+
+  const firstMenuLinkRef =
+    useRef<HTMLAnchorElement>(null);
+
+  // Zamknij menu po zmianie podstrony.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Blokada przewijania i obsługa klawiatury.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    firstMenuLinkRef.current?.focus();
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    const desktop = window.matchMedia(
+      "(min-width: 1024px)"
+    );
+
+    function onDesktopChange() {
+      if (desktop.matches) {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      onKeyDown
+    );
+
+    desktop.addEventListener(
+      "change",
+      onDesktopChange
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        onKeyDown
+      );
+
+      desktop.removeEventListener(
+        "change",
+        onDesktopChange
+      );
+    };
+  }, [menuOpen]);
+
+  function closeMenu(restoreFocus = false) {
+    setMenuOpen(false);
+
+    if (restoreFocus) {
+      menuButtonRef.current?.focus();
+    }
   }
 
   return (
     <>
+      {/* GÓRNY NAGŁÓWEK */}
+
       <header className="sticky top-0 z-50 border-b border-stone-200 bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-[64px] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-          <BrandLogo
-            compact
-          />
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
+          <div className="min-w-0 shrink-0">
+            <BrandLogo compact />
+          </div>
+
+          {/* MENU KOMPUTEROWE */}
 
           <nav
-            aria-label="Główna nawigacja"
-            className="hidden items-center gap-1 lg:flex"
+            aria-label="Nawigacja główna"
+            className="hidden items-center gap-0.5 lg:flex"
           >
-            {navigation.map(
-              (
-                item
-              ) => {
-                const active =
-                  isActive(
-                    item
-                  );
+            {MENU.filter(
+              (item) => item.href !== "/"
+            ).map((item) => {
+              const active = activeLink(
+                pathname,
+                item.href
+              );
 
-                return (
-                  <Link
-                    key={
-                      item.type
-                    }
-                    href={
-                      item.href
-                    }
-                    aria-current={
-                      active
-                        ? "page"
-                        : undefined
-                    }
-                    className={[
-                      "relative flex min-h-10 items-center rounded-xl px-3 text-sm font-bold transition",
-                      active
-                        ? "bg-stone-100 text-stone-900"
-                        : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
-                    ].join(
-                      " "
-                    )}
-                  >
-                    {
-                      item.label
-                    }
-
-                    {active && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-rose-600"
-                      />
-                    )}
-                  </Link>
-                );
-              }
-            )}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={
+                    active
+                      ? "page"
+                      : undefined
+                  }
+                  className={`inline-flex min-h-10 items-center rounded-xl px-3 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 ${
+                    active
+                      ? "bg-rose-50 text-rose-700"
+                      : "text-stone-600 hover:bg-stone-100 hover:text-stone-950"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
+
+          {/* PRZYCISKI PO PRAWEJ */}
 
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/okazje"
-              className="hidden min-h-10 items-center justify-center rounded-xl bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 sm:inline-flex"
+              aria-label="Szukaj produktów"
+              className="hidden h-11 w-11 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-rose-50 hover:text-rose-700 min-[360px]:inline-flex lg:hidden"
+            >
+              <SearchIcon />
+            </Link>
+
+            <Link
+              href="/okazje"
+              className="hidden min-h-10 items-center justify-center rounded-xl bg-rose-600 px-4 text-[13px] font-extrabold text-white transition hover:bg-rose-700 lg:inline-flex"
             >
               Znajdź produkt
             </Link>
 
             <button
+              ref={menuButtonRef}
               type="button"
               onClick={() =>
                 setMenuOpen(
-                  (
-                    current
-                  ) =>
-                    !current
+                  (open) => !open
                 )
               }
-              aria-expanded={
-                menuOpen
-              }
-              aria-controls="mobile-navigation"
+              aria-expanded={menuOpen}
+              aria-controls="site-mobile-menu"
               aria-label={
                 menuOpen
                   ? "Zamknij menu"
                   : "Otwórz menu"
               }
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-700 transition hover:bg-stone-50 lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-800 transition hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 lg:hidden"
             >
               {menuOpen ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 6l12 12" />
-
-                  <path d="M18 6L6 18" />
-                </svg>
+                <CloseIcon />
               ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M4 7h16" />
-
-                  <path d="M4 12h16" />
-
-                  <path d="M4 17h16" />
-                </svg>
+                <MenuIcon />
               )}
             </button>
           </div>
         </div>
+      </header>
 
-        {menuOpen && (
-          <>
-            <button
-              type="button"
-              aria-label="Zamknij menu"
-              onClick={
-                closeMenu
-              }
-              className="fixed inset-0 top-[64px] z-40 bg-stone-950/20 backdrop-blur-[2px] lg:hidden"
+      {/* PRZYCIEMNIENIE TŁA */}
+
+      {menuOpen && (
+        <button
+          type="button"
+          aria-label="Zamknij menu"
+          onClick={() => closeMenu(true)}
+          className="fixed inset-x-0 bottom-0 top-16 z-[55] bg-stone-950/35 backdrop-blur-[2px] lg:hidden"
+        />
+      )}
+
+      {/* WYSUWANE MENU MOBILNE */}
+
+      <div
+        id="site-mobile-menu"
+        className={`${
+          menuOpen ? "block" : "hidden"
+        } fixed inset-x-0 top-16 z-[60] max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain rounded-b-[26px] border-b border-stone-200 bg-white shadow-[0_20px_55px_rgba(28,25,23,0.18)] lg:hidden`}
+      >
+        <div className="mx-auto max-w-lg px-4 pb-6 pt-5 sm:px-6">
+          {/* WYSZUKIWARKA W MENU */}
+
+          <form
+            action="/okazje"
+            method="get"
+            role="search"
+            className="flex gap-2 rounded-2xl border border-stone-200 bg-stone-50 p-1.5"
+          >
+            <label
+              htmlFor="menu-product-search"
+              className="sr-only"
+            >
+              Szukaj produktu
+            </label>
+
+            <input
+              id="menu-product-search"
+              name="q"
+              type="search"
+              maxLength={120}
+              placeholder="Czego szukasz?"
+              className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-base text-stone-900 outline-none placeholder:text-stone-400"
             />
 
-            <div
-              id="mobile-navigation"
-              className="absolute inset-x-0 top-full z-50 border-t border-stone-100 bg-white shadow-xl lg:hidden"
+            <button
+              type="submit"
+              className="min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-extrabold text-white hover:bg-rose-700"
             >
-              <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-                <div className="mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
-                    Gdzie chcesz
-                    przejść?
-                  </p>
+              Szukaj
+            </button>
+          </form>
 
-                  <p className="mt-1 text-xs leading-5 text-stone-400">
-                    Wybierz to,
-                    czego teraz
-                    szukasz.
-                  </p>
-                </div>
+          <p className="mt-5 text-[11px] font-black uppercase tracking-[0.12em] text-rose-700">
+            Odkrywaj
+          </p>
 
-                <nav
-                  aria-label="Menu mobilne"
-                  className="grid gap-2"
-                >
-                  {navigation.map(
-                    (
-                      item
-                    ) => {
-                      const active =
-                        isActive(
-                          item
-                        );
+          {/* LINKI MENU */}
 
-                      return (
-                        <Link
-                          key={
-                            item.type
-                          }
-                          href={
-                            item.href
-                          }
-                          onClick={
-                            closeMenu
-                          }
-                          aria-current={
-                            active
-                              ? "page"
-                              : undefined
-                          }
-                          className={[
-                            "flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition",
-                            active
-                              ? "border-rose-100 bg-rose-50"
-                              : "border-stone-100 bg-stone-50 hover:border-rose-100 hover:bg-rose-50",
-                          ].join(
-                            " "
-                          )}
-                        >
-                          <div className="min-w-0">
-                            <p
-                              className={[
-                                "text-sm font-black",
-                                active
-                                  ? "text-rose-700"
-                                  : "text-stone-800",
-                              ].join(
-                                " "
-                              )}
-                            >
-                              {
-                                item.label
-                              }
-                            </p>
+          <nav
+            aria-label="Menu mobilne"
+            className="mt-2 grid grid-cols-2 gap-2"
+          >
+            {MENU.map((item, index) => {
+              const active = activeLink(
+                pathname,
+                item.href
+              );
 
-                            <p className="mt-0.5 truncate text-[10px] leading-5 text-stone-400">
-                              {
-                                item.description
-                              }
-                            </p>
-                          </div>
-
-                          <span
-                            aria-hidden="true"
-                            className={[
-                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-sm shadow-sm",
-                              active
-                                ? "text-rose-600"
-                                : "text-stone-400",
-                            ].join(
-                              " "
-                            )}
-                          >
-                            →
-                          </span>
-                        </Link>
-                      );
-                    }
-                  )}
-                </nav>
-
-                <div className="mt-4 border-t border-stone-100 pt-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-stone-400">
-                    Szybkie przejścia
-                  </p>
-
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <Link
-                      href="/okazje?maxPrice=50"
-                      onClick={
-                        closeMenu
-                      }
-                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-black text-stone-600 transition hover:bg-rose-50 hover:text-rose-700"
-                    >
-                      💸 Do 50 zł
-                    </Link>
-
-                    <Link
-                      href="/okazje?sort=newest"
-                      onClick={
-                        closeMenu
-                      }
-                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-black text-stone-600 transition hover:bg-rose-50 hover:text-rose-700"
-                    >
-                      🆕 Najnowsze
-                    </Link>
-
-                    <Link
-                      href="/afiliacja"
-                      onClick={
-                        closeMenu
-                      }
-                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-bold text-stone-500 transition hover:bg-stone-100"
-                    >
-                      Afiliacja
-                    </Link>
-
-                    <Link
-                      href="/kontakt"
-                      onClick={
-                        closeMenu
-                      }
-                      className="flex min-h-11 items-center justify-center rounded-xl bg-stone-50 px-3 text-center text-xs font-bold text-stone-500 transition hover:bg-stone-100"
-                    >
-                      Kontakt
-                    </Link>
-                  </div>
-                </div>
-
+              return (
                 <Link
-                  href="/tiktok"
-                  onClick={
-                    closeMenu
+                  key={item.href}
+                  ref={
+                    index === 0
+                      ? firstMenuLinkRef
+                      : undefined
                   }
-                  className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-stone-950 px-5 text-sm font-black text-white shadow-sm transition hover:bg-stone-800"
-                >
-                  Produkty z TikToka
-                  →
-                </Link>
-
-                <Link
-                  href="/promocje-shein"
-                  onClick={
-                    closeMenu
+                  href={item.href}
+                  onClick={() =>
+                    closeMenu()
                   }
-                  className="mt-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700"
+                  aria-current={
+                    active
+                      ? "page"
+                      : undefined
+                  }
+                  className={`flex min-h-[76px] min-w-0 flex-col justify-center rounded-2xl border p-3 transition ${
+                    active
+                      ? "border-rose-200 bg-rose-50"
+                      : "border-stone-200 bg-white hover:border-rose-200 hover:bg-stone-50"
+                  }`}
                 >
                   <span
-                    aria-hidden="true"
+                    className={`text-sm font-black ${
+                      active
+                        ? "text-rose-700"
+                        : "text-stone-900"
+                    }`}
                   >
-                    🔥
+                    {item.label}
                   </span>
 
-                  Zobacz promocje
-                  SHEIN
+                  <span className="mt-1 line-clamp-2 text-[11px] leading-4 text-stone-500">
+                    {item.description}
+                  </span>
                 </Link>
+              );
+            })}
+          </nav>
 
-                <p className="mt-3 text-center text-[9px] leading-5 text-stone-400">
-                  Produkty,
-                  promocje
-                  i kody zebrane
-                  w jednym miejscu.
-                </p>
-              </div>
-            </div>
-          </>
-        )}
-      </header>
+          {/* SZYBKIE SKRÓTY */}
+
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-stone-100 pt-4">
+            <Link
+              href="/okazje?maxPrice=50"
+              onClick={() => closeMenu()}
+              className="inline-flex min-h-10 items-center rounded-full bg-rose-50 px-3.5 text-xs font-extrabold text-rose-700"
+            >
+              Do 50 zł
+            </Link>
+
+            <Link
+              href="/okazje?maxPrice=100"
+              onClick={() => closeMenu()}
+              className="inline-flex min-h-10 items-center rounded-full bg-stone-100 px-3.5 text-xs font-bold text-stone-700"
+            >
+              Do 100 zł
+            </Link>
+
+            <Link
+              href="/afiliacja"
+              onClick={() => closeMenu()}
+              className="inline-flex min-h-10 items-center rounded-full bg-stone-100 px-3.5 text-xs font-bold text-stone-700"
+            >
+              Afiliacja
+            </Link>
+
+            <Link
+              href="/kontakt"
+              onClick={() => closeMenu()}
+              className="inline-flex min-h-10 items-center rounded-full bg-stone-100 px-3.5 text-xs font-bold text-stone-700"
+            >
+              Kontakt
+            </Link>
+          </div>
+        </div>
+      </div>
 
       <MobileBottomNav />
     </>
+  );
+}
+
+/* IKONY */
+
+function SearchIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4-4" />
+    </svg>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className="h-5 w-5"
+    >
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className="h-5 w-5"
+    >
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
   );
 }

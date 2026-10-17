@@ -1,559 +1,340 @@
-import type {
-  Metadata,
-} from "next";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import CategoryExplorer, {
   type CategoryExplorerItem,
 } from "@/components/CategoryExplorer";
-
-import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
-import {
-  getCategorySeo,
-} from "@/lib/categories";
-
-import {
-  getProducts,
-} from "@/lib/products";
-
+import { getCategorySeo } from "@/lib/categories";
+import { getProducts } from "@/lib/products";
 import {
   getSiteUrl,
   SITE_LANGUAGE,
   SITE_NAME,
 } from "@/lib/site";
 
-export const revalidate =
-  60;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title:
-    "Kategorie SHEIN – moda, dodatki, beauty i dom",
-
+  title: "Kategorie produktów i okazji",
   description:
-    "Przeglądaj kategorie produktów w Trend za Mniej. Sukienki, bluzy, swetry, buty, torebki, biżuteria, beauty, dom i inne wybrane okazje SHEIN.",
+    "Przeglądaj kategorie produktów w Trend za Mniej. Ubrania, buty, torebki, biżuteria, uroda i inne znaleziska w jednym miejscu.",
 
   alternates: {
-    canonical:
-      "/kategorie",
+    canonical: "/kategorie",
   },
 
   robots: {
-    index:
-      true,
-
-    follow:
-      true,
-
-    googleBot: {
-      index:
-        true,
-
-      follow:
-        true,
-
-      "max-image-preview":
-        "large",
-
-      "max-snippet":
-        -1,
-
-      "max-video-preview":
-        -1,
-    },
+    index: true,
+    follow: true,
   },
 
   openGraph: {
-    type:
-      "website",
-
-    locale:
-      "pl_PL",
-
-    url:
-      "/kategorie",
-
-    siteName:
-      SITE_NAME,
-
-    title:
-      "Kategorie produktów | Trend za Mniej",
-
+    type: "website",
+    locale: "pl_PL",
+    url: "/kategorie",
+    siteName: SITE_NAME,
+    title: "Kategorie produktów | Trend za Mniej",
     description:
-      "Znajdź interesującą kategorię i szybciej przejdź do wybranych produktów oraz okazji.",
+      "Wybierz kategorię i znajdź interesujące produkty.",
+    images: ["/opengraph-image"],
   },
 
   twitter: {
-    card:
-      "summary_large_image",
-
-    title:
-      "Kategorie produktów | Trend za Mniej",
-
+    card: "summary_large_image",
+    title: "Kategorie produktów",
     description:
-      "Moda, dodatki, beauty, dom i inne kategorie produktów w jednym miejscu.",
-
-    images: [
-      "/opengraph-image",
-    ],
+      "Odkrywaj ubrania, dodatki i inne znaleziska.",
+    images: ["/opengraph-image"],
   },
 };
 
 export default async function CategoriesPage() {
-  const products =
-    await getProducts();
+  const products = await getProducts();
 
-  const categoryMap =
-    new Map<
-      string,
-      {
-        count: number;
-        image: string;
-      }
-    >();
-
-  for (
-    const product
-    of products
-  ) {
-    const categoryName =
-      product.category.trim();
-
-    if (
-      !categoryName
-    ) {
-      continue;
+  const categoryMap = new Map<
+    string,
+    {
+      count: number;
+      image: string;
     }
+  >();
 
-    const current =
-      categoryMap.get(
-        categoryName
-      );
+  for (const product of products) {
+    const name = product.category?.trim();
 
-    if (
-      current
-    ) {
-      current.count +=
-        1;
+    if (!name) continue;
 
-      continue;
-    }
+    const current = categoryMap.get(name);
 
-    categoryMap.set(
-      categoryName,
-      {
-        count:
-          1,
+    if (current) {
+      current.count += 1;
 
-        image:
-          product.image,
+      if (!current.image && product.image?.trim()) {
+        current.image = product.image.trim();
       }
-    );
+    } else {
+      categoryMap.set(name, {
+        count: 1,
+        image: product.image?.trim() || "",
+      });
+    }
   }
 
-  const categories:
-    CategoryExplorerItem[] =
-    Array.from(
-      categoryMap.entries()
-    )
-      .map(
-        ([
+  const categories: CategoryExplorerItem[] =
+    [...categoryMap.entries()]
+      .map(([name, data]) => {
+        const seo = getCategorySeo(name);
+
+        return {
           name,
-          data,
-        ]) => {
-          const seo =
-            getCategorySeo(
-              name
-            );
-
-          return {
-            name,
-
-            slug:
-              seo.slug,
-
-            description:
-              seo.description,
-
-            count:
-              data.count,
-
-            image:
-              data.image,
-          };
-        }
-      )
+          slug: seo.slug,
+          description: seo.description,
+          count: data.count,
+          image: data.image,
+        };
+      })
       .sort(
-        (
-          first,
-          second
-        ) => {
-          if (
-            second.count !==
-            first.count
-          ) {
-            return (
-              second.count -
-              first.count
-            );
-          }
-
-          return first.name.localeCompare(
-            second.name,
-            "pl"
-          );
-        }
+        (a, b) =>
+          b.count - a.count ||
+          a.name.localeCompare(b.name, "pl")
       );
 
-  const siteUrl =
-    getSiteUrl();
-
-  const pageUrl =
-    `${siteUrl}/kategorie`;
+  const siteUrl = getSiteUrl();
+  const pageUrl = `${siteUrl}/kategorie`;
 
   const structuredData = {
-    "@context":
-      "https://schema.org",
-
+    "@context": "https://schema.org",
     "@graph": [
       {
-        "@type":
-          "CollectionPage",
-
-        "@id":
-          `${pageUrl}#webpage`,
-
-        url:
-          pageUrl,
-
-        name:
-          "Kategorie produktów",
-
-        description:
-          "Kategorie produktów i okazji dostępnych w Trend za Mniej.",
-
-        inLanguage:
-          SITE_LANGUAGE,
-
+        "@type": "CollectionPage",
+        "@id": `${pageUrl}#webpage`,
+        url: pageUrl,
+        name: "Kategorie produktów",
+        inLanguage: SITE_LANGUAGE,
         isPartOf: {
-          "@id":
-            `${siteUrl}/#website`,
+          "@id": `${siteUrl}/#website`,
         },
-
         breadcrumb: {
-          "@id":
-            `${pageUrl}#breadcrumb`,
+          "@id": `${pageUrl}#breadcrumb`,
         },
-
         mainEntity: {
-          "@id":
-            `${pageUrl}#categories`,
+          "@id": `${pageUrl}#categories`,
         },
       },
-
       {
-        "@type":
-          "BreadcrumbList",
-
-        "@id":
-          `${pageUrl}#breadcrumb`,
-
+        "@type": "BreadcrumbList",
+        "@id": `${pageUrl}#breadcrumb`,
         itemListElement: [
           {
-            "@type":
-              "ListItem",
-
-            position:
-              1,
-
-            name:
-              "Trend za Mniej",
-
-            item:
-              siteUrl,
+            "@type": "ListItem",
+            position: 1,
+            name: "Start",
+            item: siteUrl,
           },
-
           {
-            "@type":
-              "ListItem",
-
-            position:
-              2,
-
-            name:
-              "Kategorie",
-
-            item:
-              pageUrl,
+            "@type": "ListItem",
+            position: 2,
+            name: "Kategorie",
+            item: pageUrl,
           },
         ],
       },
-
       {
-        "@type":
-          "ItemList",
-
-        "@id":
-          `${pageUrl}#categories`,
-
-        name:
-          "Kategorie produktów",
-
-        numberOfItems:
-          categories.length,
-
-        itemListElement:
-          categories.map(
-            (
-              category,
-              index
-            ) => ({
-              "@type":
-                "ListItem",
-
-              position:
-                index +
-                1,
-
-              name:
-                category.name,
-
-              url:
-                `${siteUrl}/kategoria/${category.slug}`,
-            })
-          ),
+        "@type": "ItemList",
+        "@id": `${pageUrl}#categories`,
+        name: "Kategorie produktów",
+        numberOfItems: categories.length,
+        itemListElement: categories.map(
+          (category, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: category.name,
+            url:
+              `${siteUrl}/kategoria/${category.slug}`,
+          })
+        ),
       },
     ],
   };
 
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
+    <main className="min-h-screen bg-stone-50 pb-20 text-stone-900 lg:pb-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html:
-            JSON.stringify(
-              structuredData
-            ).replace(
-              /</g,
-              "\\u003c"
-            ),
+          __html: JSON.stringify(
+            structuredData
+          ).replace(/</g, "\\u003c"),
         }}
       />
 
       <SiteHeader />
 
-      <section className="relative overflow-hidden border-b border-stone-200 bg-white">
+      {/* NAGŁÓWEK */}
+
+      <header className="relative overflow-hidden border-b border-stone-200 bg-white">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[-220px] h-[420px] w-[700px] -translate-x-1/2 rounded-full bg-rose-100/60 blur-3xl"
+          className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-rose-100/70 blur-3xl"
         />
 
-        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-14 lg:py-16">
+        <div className="relative mx-auto max-w-7xl px-4 pb-7 pt-6 sm:px-6 sm:pb-11 sm:pt-10">
           <nav
             aria-label="Okruszki"
-            className="mx-auto flex max-w-4xl items-center justify-center gap-2 text-xs font-semibold text-stone-400"
+            className="flex items-center gap-2 text-xs font-semibold text-stone-500"
           >
             <Link
               href="/"
-              className="transition hover:text-rose-600"
+              className="hover:text-rose-700"
             >
               Start
             </Link>
 
-            <span
-              aria-hidden="true"
-            >
-              /
-            </span>
+            <span aria-hidden="true">/</span>
 
-            <span className="text-stone-600">
+            <span
+              aria-current="page"
+              className="text-stone-800"
+            >
               Kategorie
             </span>
           </nav>
 
-          <div className="mx-auto mt-6 max-w-4xl text-center">
-            <div className="flex justify-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-black text-rose-700">
-                <span
-                  aria-hidden="true"
-                >
-                  🛍️
+          <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-3xl">
+              <span className="inline-flex rounded-full border border-rose-100 bg-rose-50 px-3 py-1.5 text-xs font-extrabold text-rose-700">
+                Znajdź swój styl
+              </span>
+
+              <h1 className="mt-3 text-balance text-[clamp(2.1rem,5vw,3.7rem)] font-black leading-[1.08] tracking-[-0.05em] text-stone-950">
+                Wszystko zaczyna się od{" "}
+                <span className="text-rose-600">
+                  dobrej kategorii.
                 </span>
+              </h1>
 
-                Wszystko uporządkowane
-                w jednym miejscu
-              </span>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
+                Wybierz ubrania, dodatki, beauty
+                albo produkty do domu. Pokażemy
+                Ci znaleziska z wybranego działu.
+              </p>
             </div>
 
-            <h1 className="mx-auto mt-5 max-w-4xl text-balance text-4xl font-black leading-[1.03] tracking-[-0.05em] text-stone-900 sm:text-5xl lg:text-[58px]">
-              Znajdź produkty
-              według{" "}
-              <span className="text-rose-600">
-                kategorii
-              </span>
-            </h1>
+            <div className="flex shrink-0 gap-2">
+              <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                <strong className="block text-xl font-black text-stone-950">
+                  {categories.length}
+                </strong>
 
-            <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-7 text-stone-500 sm:text-lg sm:leading-8">
-              Nie musisz przeglądać
-              wszystkiego. Wybierz
-              rodzaj produktu,
-              który Cię interesuje,
-              i od razu przejdź
-              do odpowiednich
-              znalezisk.
-            </p>
+                <span className="text-xs font-semibold text-stone-500">
+                  kategorii
+                </span>
+              </div>
 
-            <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs font-bold text-stone-500">
-              <span className="rounded-full bg-stone-100 px-3 py-2">
-                {
-                  categories.length
-                }{" "}
-                kategorii
-              </span>
+              <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                <strong className="block text-xl font-black text-stone-950">
+                  {products.length}
+                </strong>
 
-              <span className="rounded-full bg-stone-100 px-3 py-2">
-                {
-                  products.length
-                }{" "}
-                produktów
-              </span>
-
-              <span className="rounded-full bg-stone-100 px-3 py-2">
-                Kategorie aktualizują
-                się automatycznie
-              </span>
+                <span className="text-xs font-semibold text-stone-500">
+                  produktów
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section className="border-b border-stone-200 bg-stone-50">
-        <div className="mx-auto max-w-7xl px-5 py-9 sm:px-6 sm:py-12">
-          <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-600">
-              Wybierz kategorię
-            </p>
+      {/* WYSZUKIWANIE KATEGORII */}
 
-            <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-stone-900 sm:text-4xl">
-              Czego szukasz?
-            </h2>
+      <section
+        id="lista-kategorii"
+        aria-labelledby="categories-heading"
+        className="scroll-mt-24"
+      >
+        <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-700">
+                Odkrywaj
+              </p>
 
-            <p className="mt-3 text-sm leading-7 text-stone-500 sm:text-base">
-              Możesz wyszukać
-              kategorię po nazwie
-              albo ograniczyć listę
-              do ubrań, dodatków,
-              beauty czy produktów
-              do domu.
-            </p>
+              <h2
+                id="categories-heading"
+                className="mt-1 text-2xl font-black tracking-[-0.035em] text-stone-950 sm:text-3xl"
+              >
+                Czego szukasz?
+              </h2>
+
+              <p className="mt-2 text-sm text-stone-600">
+                Wyszukaj dział lub wybierz
+                rodzaj produktów.
+              </p>
+            </div>
+
+            <Link
+              href="/okazje"
+              className="inline-flex min-h-10 items-center text-sm font-extrabold text-rose-700 hover:text-rose-800"
+            >
+              Wszystkie produkty →
+            </Link>
           </div>
 
-          <div className="mt-7">
-            {categories.length >
-            0 ? (
-              <CategoryExplorer
-                categories={
-                  categories
-                }
-              />
-            ) : (
-              <div className="rounded-[24px] border border-dashed border-stone-300 bg-white px-5 py-12 text-center">
-                <h2 className="text-xl font-black text-stone-900">
-                  Brak kategorii
-                  do wyświetlenia
-                </h2>
+          {categories.length > 0 ? (
+            <CategoryExplorer categories={categories} />
+          ) : (
+            <div className="rounded-[22px] border border-dashed border-stone-300 bg-white px-6 py-12 text-center">
+              <h3 className="text-lg font-black">
+                Brak kategorii do wyświetlenia
+              </h3>
 
-                <p className="mt-2 text-sm leading-7 text-stone-500">
-                  Kategorie pojawią
-                  się tutaj po dodaniu
-                  aktywnych produktów.
-                </p>
-              </div>
-            )}
-          </div>
+              <p className="mt-2 text-sm leading-7 text-stone-600">
+                Kategorie pojawią się po dodaniu
+                aktywnych produktów do katalogu.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-14">
-          <div className="grid gap-4 md:grid-cols-3">
-            <InfoCard
-              icon="🔎"
-              title="Wybierz kategorię"
-            >
-              Zacznij od rodzaju
-              produktu zamiast
-              przeglądać cały
-              katalog.
-            </InfoCard>
+      {/* DODATKOWA NAWIGACJA */}
 
-            <InfoCard
-              icon="🏷️"
-              title="Użyj filtrów"
-            >
-              Po wejściu do okazji
-              możesz dodatkowo
-              zawęzić produkty
-              według ceny
-              i sortowania.
-            </InfoCard>
+      <section className="border-t border-stone-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-11">
+          <div className="flex flex-col gap-5 rounded-[24px] bg-stone-900 p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-300">
+                Jeszcze więcej inspiracji
+              </p>
 
-            <InfoCard
-              icon="🔥"
-              title="Sprawdź promocje"
-            >
-              Jeżeli nie szukasz
-              konkretnej rzeczy,
-              możesz przejść
-              do aktualnych
-              kampanii SHEIN.
-            </InfoCard>
-          </div>
-        </div>
-      </section>
+              <h2 className="mt-2 text-xl font-black tracking-tight sm:text-2xl">
+                Nie wiesz, od czego zacząć?
+              </h2>
 
-      <section className="bg-stone-50">
-        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-14">
-          <div className="overflow-hidden rounded-[28px] bg-stone-900 p-6 text-white sm:p-8 lg:p-10">
-            <div className="grid gap-7 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">
-                  Inny sposób
-                  szukania
-                </p>
+              <p className="mt-2 max-w-lg text-sm leading-7 text-stone-300">
+                Zajrzyj do pełnego katalogu
+                albo sprawdź kampanie SHEIN.
+              </p>
+            </div>
 
-                <h2 className="mt-2 text-2xl font-black tracking-[-0.035em] sm:text-3xl">
-                  Wolisz zobaczyć
-                  wszystkie produkty?
-                </h2>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/okazje"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-extrabold text-white transition hover:bg-rose-500"
+              >
+                Zobacz produkty
+              </Link>
 
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-300">
-                  Przejdź do okazji
-                  i skorzystaj
-                  z wyszukiwarki,
-                  ceny, kategorii
-                  oraz sortowania.
-                </p>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2 md:min-w-[360px]">
-                <Link
-                  href="/okazje"
-                  className="flex min-h-12 items-center justify-center rounded-2xl bg-rose-600 px-5 text-sm font-black text-white transition hover:bg-rose-500"
-                >
-                  Wszystkie produkty
-                </Link>
-
-                <Link
-                  href="/promocje-shein"
-                  className="flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-stone-900 transition hover:bg-stone-100"
-                >
-                  Promocje SHEIN
-                </Link>
-              </div>
+              <Link
+                href="/promocje-shein"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-extrabold text-stone-900 transition hover:bg-rose-50"
+              >
+                Promocje SHEIN
+              </Link>
             </div>
           </div>
         </div>
@@ -561,37 +342,5 @@ export default async function CategoriesPage() {
 
       <SiteFooter />
     </main>
-  );
-}
-
-function InfoCard({
-  icon,
-  title,
-  children,
-}: {
-  icon: string;
-
-  title: string;
-
-  children:
-    React.ReactNode;
-}) {
-  return (
-    <div className="rounded-[22px] border border-stone-200 bg-stone-50 p-5">
-      <span
-        aria-hidden="true"
-        className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-lg shadow-sm"
-      >
-        {icon}
-      </span>
-
-      <h3 className="mt-4 text-lg font-black text-stone-900">
-        {title}
-      </h3>
-
-      <p className="mt-2 text-sm leading-7 text-stone-500">
-        {children}
-      </p>
-    </div>
   );
 }

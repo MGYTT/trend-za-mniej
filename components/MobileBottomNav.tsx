@@ -1,377 +1,249 @@
+
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import {
-  useEffect,
-} from "react";
+type Tab =
+  | "home"
+  | "offers"
+  | "tiktok"
+  | "promotions"
+  | "categories";
 
-import {
-  usePathname,
-} from "next/navigation";
-
-type NavigationItem = {
+type TabItem = {
+  type: Tab;
   label: string;
-
   href: string;
-
-  type:
-    | "home"
-    | "offers"
-    | "promotions"
-    | "categories";
 };
 
-const navigation:
-  NavigationItem[] = [
+const TABS: TabItem[] = [
   {
-    label:
-      "Start",
-
-    href:
-      "/",
-
-    type:
-      "home",
+    type: "home",
+    label: "Start",
+    href: "/",
   },
-
   {
-    label:
-      "Produkty",
-
-    href:
-      "/okazje",
-
-    type:
-      "offers",
+    type: "offers",
+    label: "Produkty",
+    href: "/okazje",
   },
-
   {
-    label:
-      "Promocje",
-
-    href:
-      "/promocje-shein",
-
-    type:
-      "promotions",
+    type: "tiktok",
+    label: "TikTok",
+    href: "/tiktok",
   },
-
   {
-    label:
-      "Kategorie",
-
-    href:
-      "/kategorie",
-
-    type:
-      "categories",
+    type: "promotions",
+    label: "Promocje",
+    href: "/promocje-shein",
+  },
+  {
+    type: "categories",
+    label: "Kategorie",
+    href: "/kategorie",
   },
 ];
 
-export default function MobileBottomNav() {
-  const pathname =
-    usePathname();
-
-  const visible =
-    pathname ===
-      "/" ||
-    pathname ===
-      "/okazje" ||
-    pathname ===
-      "/promocje-shein" ||
-    pathname ===
-      "/kategorie" ||
-    pathname.startsWith(
-      "/kategoria/"
-    );
-
-  useEffect(() => {
-    if (
-      !visible
-    ) {
-      document.body.classList.remove(
-        "has-mobile-bottom-nav"
-      );
-
-      return;
-    }
-
-    document.body.classList.add(
-      "has-mobile-bottom-nav"
-    );
-
-    return () => {
-      document.body.classList.remove(
-        "has-mobile-bottom-nav"
-      );
-    };
-  }, [
-    visible,
-  ]);
-
-  if (
-    !visible
-  ) {
-    return null;
+function activeTab(
+  pathname: string,
+  type: Tab
+) {
+  if (type === "home") {
+    return pathname === "/";
   }
 
-  function isActive(
-    item:
-      NavigationItem
-  ) {
-    if (
-      item.type ===
-      "home"
-    ) {
-      return (
-        pathname ===
-        "/"
-      );
-    }
+  if (type === "offers") {
+    return pathname === "/okazje";
+  }
 
-    if (
-      item.type ===
-      "offers"
-    ) {
-      return (
-        pathname ===
-        "/okazje"
-      );
-    }
+  if (type === "tiktok") {
+    return pathname === "/tiktok";
+  }
 
-    if (
-      item.type ===
-      "promotions"
-    ) {
-      return (
-        pathname ===
-        "/promocje-shein"
-      );
-    }
+  if (type === "promotions") {
+    return pathname === "/promocje-shein";
+  }
 
-    return (
-      pathname ===
-        "/kategorie" ||
-      pathname.startsWith(
-        "/kategoria/"
-      )
+  return (
+    pathname === "/kategorie" ||
+    pathname.startsWith("/kategoria/")
+  );
+}
+
+export default function MobileBottomNav() {
+  const pathname = usePathname();
+
+  /*
+   * Na stronie produktu działa osobny
+   * dolny przycisk przejścia do SHEIN.
+   */
+
+  const visible =
+    pathname === "/" ||
+    pathname === "/okazje" ||
+    pathname === "/tiktok" ||
+    pathname === "/promocje-shein" ||
+    pathname === "/kategorie" ||
+    pathname.startsWith("/kategoria/");
+
+  /*
+   * Istniejący globals.css dodaje
+   * odstęp pod stroną, gdy dolny
+   * pasek jest widoczny.
+   */
+
+  useEffect(() => {
+    document.body.classList.toggle(
+      "has-mobile-bottom-nav",
+      visible
     );
+
+    return () =>
+      document.body.classList.remove(
+        "has-mobile-bottom-nav"
+      );
+  }, [visible]);
+
+  if (!visible) {
+    return null;
   }
 
   return (
     <nav
-      aria-label="Nawigacja mobilna"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/97 shadow-[0_-5px_20px_rgba(28,25,23,0.07)] backdrop-blur-xl lg:hidden"
+      aria-label="Szybka nawigacja mobilna"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 shadow-[0_-6px_24px_rgba(28,25,23,0.09)] backdrop-blur-xl lg:hidden"
     >
       <div
-        className="mx-auto grid max-w-lg grid-cols-4 px-2 pt-1.5"
+        className="mx-auto grid max-w-lg grid-cols-5 gap-0.5 px-1.5 pt-1.5"
         style={{
           paddingBottom:
-            "max(0.5rem, env(safe-area-inset-bottom))",
+            "max(0.45rem, env(safe-area-inset-bottom))",
         }}
       >
-        {navigation.map(
-          (
-            item
-          ) => {
-            const active =
-              isActive(
-                item
-              );
+        {TABS.map((item) => {
+          const active = activeTab(
+            pathname,
+            item.type
+          );
 
-            return (
-              <Link
-                key={
-                  item.type
-                }
-                href={
-                  item.href
-                }
-                aria-current={
-                  active
-                    ? "page"
-                    : undefined
-                }
-                className={[
-                  "group relative flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl px-1",
-                  "text-[9px] font-black transition sm:text-[10px]",
-                  active
-                    ? "text-rose-700"
-                    : "text-stone-400 active:bg-stone-50",
-                ].join(
-                  " "
-                )}
-              >
-                {active && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-0 h-[3px] w-8 rounded-full bg-rose-600"
-                  />
-                )}
+          return (
+            <Link
+              key={item.type}
+              href={item.href}
+              aria-current={
+                active ? "page" : undefined
+              }
+              className={`group flex min-h-[58px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-[10px] font-extrabold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 ${
+                active
+                  ? "bg-rose-50 text-rose-700"
+                  : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+              }`}
+            >
+              <TabIcon type={item.type} />
 
-                <span
-                  className={[
-                    "flex h-7 w-7 items-center justify-center rounded-lg transition",
-                    active
-                      ? "bg-rose-50 text-rose-600"
-                      : "text-stone-400",
-                  ].join(
-                    " "
-                  )}
-                >
-                  <NavigationIcon
-                    type={
-                      item.type
-                    }
-                  />
-                </span>
-
-                <span>
-                  {
-                    item.label
-                  }
-                </span>
-              </Link>
-            );
-          }
-        )}
+              <span className="truncate text-center leading-tight">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
 }
 
-function NavigationIcon({
+/* IKONY NAWIGACJI */
+
+function TabIcon({
   type,
 }: {
-  type:
-    | "home"
-    | "offers"
-    | "promotions"
-    | "categories";
+  type: Tab;
 }) {
-  if (
-    type ===
-    "home"
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className="h-[21px] w-[21px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="m3 11 9-8 9 8" />
-
-        <path d="M5 10v10h14V10" />
-
-        <path d="M9 20v-6h6v6" />
-      </svg>
-    );
-  }
-
-  if (
-    type ===
-    "offers"
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className="h-[21px] w-[21px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M6 8h12l1 12H5L6 8Z" />
-
-        <path d="M9 8a3 3 0 0 1 6 0" />
-      </svg>
-    );
-  }
-
-  if (
-    type ===
-    "promotions"
-  ) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className="h-[21px] w-[21px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M20 12 12 20 4 12l8-8Z" />
-
-        <circle
-          cx="9"
-          cy="9"
-          r="1"
-        />
-
-        <circle
-          cx="15"
-          cy="15"
-          r="1"
-        />
-
-        <path d="m15 9-6 6" />
-      </svg>
-    );
-  }
-
   return (
     <svg
-      viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-[21px] w-[21px]"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
+      className="h-[22px] w-[22px] shrink-0"
     >
-      <rect
-        x="3"
-        y="3"
-        width="7"
-        height="7"
-        rx="2"
-      />
+      {type === "home" && (
+        <>
+          <path d="m3 10 9-7 9 7" />
+          <path d="M5 9v11h14V9M9 20v-6h6v6" />
+        </>
+      )}
 
-      <rect
-        x="14"
-        y="3"
-        width="7"
-        height="7"
-        rx="2"
-      />
+      {type === "offers" && (
+        <>
+          <rect
+            x="4"
+            y="6"
+            width="16"
+            height="15"
+            rx="2"
+          />
+          <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+        </>
+      )}
 
-      <rect
-        x="3"
-        y="14"
-        width="7"
-        height="7"
-        rx="2"
-      />
+      {type === "tiktok" && (
+        <>
+          <rect
+            x="3"
+            y="5"
+            width="18"
+            height="14"
+            rx="3"
+          />
+          <path d="m10 9 5 3-5 3V9Z" />
+        </>
+      )}
 
-      <rect
-        x="14"
-        y="14"
-        width="7"
-        height="7"
-        rx="2"
-      />
+      {type === "promotions" && (
+        <>
+          <path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v8a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2V8Z" />
+          <path d="M12 6v12M9 10h.01M15 14h.01" />
+        </>
+      )}
+
+      {type === "categories" && (
+        <>
+          <rect
+            x="3"
+            y="3"
+            width="7"
+            height="7"
+            rx="1"
+          />
+          <rect
+            x="14"
+            y="3"
+            width="7"
+            height="7"
+            rx="1"
+          />
+          <rect
+            x="3"
+            y="14"
+            width="7"
+            height="7"
+            rx="1"
+          />
+          <rect
+            x="14"
+            y="14"
+            width="7"
+            height="7"
+            rx="1"
+          />
+        </>
+      )}
     </svg>
   );
 }
