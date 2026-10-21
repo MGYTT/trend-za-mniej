@@ -72,6 +72,10 @@ export type ResolvedLook = LookConfig & {
   available: boolean;
 };
 
+/**
+ * Resolves outfit configurations against current active catalog records.
+ * Do not expose inactive, incomplete or over-budget outfits in navigation.
+ */
 export function resolveLooks(products: Product[]): ResolvedLook[] {
   const lookup = new Map(products.filter((p) => p.active).map((p) => [p.slug, p]));
   return LOOKS.map((look) => {
@@ -97,4 +101,35 @@ export function resolveLooks(products: Product[]): ResolvedLook[] {
       available: missing === 0 && distinctProducts && withinBudget,
     };
   });
+}
+
+/** Active outfits that include the given product in the current catalog. */
+export function getLooksForProduct(
+  looks: readonly ResolvedLook[],
+  productSlug: string
+): ResolvedLook[] {
+  return looks.filter(
+    (look) =>
+      look.available &&
+      look.products.some((product) => product.slug === productSlug)
+  );
+}
+
+/** Active outfits containing at least one product in a category. */
+export function getLooksForCategory(
+  looks: readonly ResolvedLook[],
+  category: string
+): ResolvedLook[] {
+  const normalizedCategory = category.trim().toLocaleLowerCase("pl-PL");
+  if (!normalizedCategory) return [];
+
+  return looks.filter(
+    (look) =>
+      look.available &&
+      look.products.some(
+        (product) =>
+          product.category.trim().toLocaleLowerCase("pl-PL") ===
+          normalizedCategory
+      )
+  );
 }

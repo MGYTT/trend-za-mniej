@@ -24,8 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LookPage({ params }: Props) {
   const { slug } = await params;
-  const look = resolveLooks(await getProducts()).find((item) => item.slug === slug);
-  if (!look || !look.available) notFound();
+  const eligibleLooks = resolveLooks(await getProducts()).filter((item) => item.available);
+  const look = eligibleLooks.find((item) => item.slug === slug);
+  if (!look) notFound();
+  const otherLooks = eligibleLooks.filter((item) => item.slug !== look.slug).slice(0, 3);
   return (
     <main className="min-h-screen bg-stone-50 text-stone-900">
       <SiteHeader />
@@ -49,6 +51,31 @@ export default async function LookPage({ params }: Props) {
           <p className="mt-3 leading-7 text-stone-700">{look.tip}</p>
           <p className="mt-4 text-sm leading-6 text-stone-500">Suma obejmuje tylko pokazane produkty, bez kosztów dostawy. Ceny zapisano przy publikacji ofert — rzeczywiste ceny, rozmiary i dostępność sprawdź w sklepie przed zakupem. Linki do sklepów mogą być afiliacyjne; nie prowadzimy sprzedaży.</p>
         </aside>
+        {otherLooks.length > 0 && (
+          <section aria-labelledby="other-outfits-title" className="mt-12">
+            <h2 id="other-outfits-title" className="text-2xl font-black tracking-tight">
+              Zobacz też inne stylizacje
+            </h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {otherLooks.map((other) => (
+                <Link
+                  key={other.slug}
+                  href={`/stylizacje/${other.slug}`}
+                  className="flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-rose-600"
+                >
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-rose-700">{other.occasion}</p>
+                    <h3 className="mt-2 text-lg font-black">{other.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-stone-600">{other.intro}</p>
+                  </div>
+                  <div className="mt-4 border-t border-stone-100 pt-4 font-black text-rose-700">
+                    {formatPrice(other.total)} · Zobacz zestaw →
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </article>
       <SiteFooter />
     </main>

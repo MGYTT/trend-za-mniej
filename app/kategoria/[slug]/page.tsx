@@ -26,6 +26,8 @@ import {
   SITE_LANGUAGE,
   SITE_NAME,
 } from "@/lib/site";
+import { formatPrice } from "@/lib/products";
+import { getLooksForCategory, resolveLooks } from "@/lib/stylizacje";
 
 type CategoryPageProps = {
   params: Promise<{
@@ -161,14 +163,15 @@ export default async function CategoryPage({
     notFound();
   }
 
-  const products =
-    await getProducts({
-      category:
-        category.name,
+  const [products, allProducts] = await Promise.all([
+    getProducts({ category: category.name, sort: "newest" }),
+    getProducts(),
+  ]);
 
-      sort:
-        "newest",
-    });
+  const categoryLooks = getLooksForCategory(
+    resolveLooks(allProducts),
+    category.name
+  ).slice(0, 3);
 
   if (
     products.length ===
@@ -475,6 +478,46 @@ export default async function CategoryPage({
           )}
         </div>
       </section>
+
+      {categoryLooks.length > 0 && (
+        <section className="border-t border-rose-100 bg-rose-50/40">
+          <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-14">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-700">
+                  Wykorzystaj te produkty w praktyce
+                </p>
+                <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                  Gotowe stylizacje z tej kategorii
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  Kompletne zestawy z wybranych produktów w określonym budżecie.
+                </p>
+              </div>
+              <Link href="/stylizacje" className="text-sm font-extrabold text-rose-700 hover:underline">
+                Zobacz wszystkie →
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {categoryLooks.map((look) => (
+                <Link
+                  key={look.slug}
+                  href={`/stylizacje/${look.slug}`}
+                  className="group block rounded-2xl border border-rose-100 bg-white p-5 shadow-sm transition hover:border-rose-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-rose-600"
+                >
+                  <p className="text-xs font-extrabold uppercase tracking-wide text-rose-700">{look.occasion}</p>
+                  <h3 className="mt-2 text-lg font-black text-stone-900 group-hover:text-rose-700">{look.title}</h3>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-600">{look.intro}</p>
+                  <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4 text-sm">
+                    <span className="text-stone-500">{look.products.length} produkty, bez dostawy</span>
+                    <strong>{formatPrice(look.total)} →</strong>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="border-y border-stone-200 bg-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_0.85fr] lg:gap-14">

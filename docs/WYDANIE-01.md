@@ -34,3 +34,11 @@ npm run build
 ## Ograniczenia MVP
 
 Aktualne stylizacje są skonfigurowane ręcznie w `lib/stylizacje.ts`; administracja zestawami z panelu to osobny etap. Zsumowane ceny nie obejmują wysyłki i mogą się różnić od cen w sklepie. Tylko zatwierdzone prowizje z programu afiliacyjnego należy traktować jako zarobek.
+
+## Uzupełnienie: linkowanie wewnętrzne
+
+- Z aktywnej strony produktu można przejść do gotowych stylizacji zawierających ten produkt.
+- Kategoria pokazuje pasujące kompletne stylizacje, bez wyświetlania wygasłych lub przekraczających budżet.
+- Każda stylizacja udostępnia odnośniki do innych dostępnych zestawów, co ułatwia nawigację i odkrywanie treści.
+- Linkowanie służy użytkownikom, nie jest gwarancją indeksowania przez Google.
+- Dopisano dwa testy ręcznie uruchamianego skryptu Node.js; bez GitHub Actions.

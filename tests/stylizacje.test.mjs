@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveLooks, LOOKS } from "../lib/stylizacje.ts";
+import { resolveLooks, LOOKS, getLooksForProduct, getLooksForCategory } from "../lib/stylizacje.ts";
 
 const fixtures = [
   ["damski-dopasowany-basic-t-shirt",53],["damskie-czarne-casualowe-spodnie",83.15],
@@ -48,4 +48,25 @@ test("Konfiguracje zestawów są unikalne",()=>{
   assert.ok(l.productSlugs.length>=2 && l.productSlugs.length<=4);
   assert.equal(new Set(l.productSlugs).size,l.productSlugs.length);
  }
+});
+
+// Fixture extensions exercise eligibility and navigation membership.
+test("Odnośnik produktu prowadzi tylko do pełnych zestawów", () => {
+  const outfits = resolveLooks(fixtures);
+  const matches = getLooksForProduct(outfits, "damskie-jeansy-z-wzorem");
+  assert.deepEqual(matches.map((look) => look.slug), ["sweter-i-jeansy-do-100-zl"]);
+  const overBudget = fixtures.map((p) =>
+    p.slug === "damskie-jeansy-z-wzorem" ? {...p,price:69} : p
+  );
+  assert.equal(getLooksForProduct(resolveLooks(overBudget), "damskie-jeansy-z-wzorem").length, 0);
+});
+test("Odnośniki kategorii ignorują niedostępne zestawy", () => {
+  const categorized = fixtures.map((p) => ({
+    ...p, category: p.slug.includes("jeansy") ? "Jeansy" : "Koszulki"
+  }));
+  const matches = getLooksForCategory(resolveLooks(categorized), "JEANSY");
+  assert.equal(matches.length, 3);
+  const inactive = categorized.map((p) => p.slug === "damskie-jeansy-z-wzorem" ? {...p,active:false} : p);
+  assert.equal(getLooksForCategory(resolveLooks(inactive), "jeansy").length, 2);
+  assert.equal(getLooksForCategory(resolveLooks(categorized), "   ").length, 0);
 });

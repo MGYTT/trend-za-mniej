@@ -9,6 +9,7 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { slugifyCategory } from "@/lib/categories";
 import { getCurrentSlugForOldProductSlug } from "@/lib/product-redirect";
+import { getLooksForProduct, resolveLooks } from "@/lib/stylizacje";
 import {
   formatPrice,
   getProductBySlug,
@@ -258,15 +259,20 @@ export default async function ProductPage({
   const url =
     `${siteUrl}/produkt/${product.slug}`;
 
-  const relatedProducts = (
-    await getProducts({
-      category: product.category,
-    })
-  )
-    .filter(
-      (item) => item.id !== product.id
-    )
+  const [categoryProducts, allProducts] = await Promise.all([
+    getProducts({ category: product.category }),
+    getProducts(),
+  ]);
+
+  const relatedProducts = categoryProducts
+    .filter((item) => item.id !== product.id)
     .slice(0, 4);
+
+  // Show only complete outfits containing this active product.
+  const matchingLooks = getLooksForProduct(
+    resolveLooks(allProducts),
+    product.slug
+  ).slice(0, 3);
 
   /*
    * SEO:
@@ -765,6 +771,49 @@ export default async function ProductPage({
             </div>
           </aside>
         </div>
+
+        {/* PRAKTYCZNE STYLIZACJE Z TYM PRODUKTEM */}
+        {matchingLooks.length > 0 && (
+          <section aria-labelledby="product-outfits-title" className="mt-12 lg:mt-16">
+            <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-700">
+                  Pomysł na cały zestaw
+                </p>
+                <h2 id="product-outfits-title" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                  Z czym połączyć ten produkt?
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  Gotowe stylizacje z tym elementem — bez samodzielnego dobierania całego zestawu.
+                </p>
+              </div>
+              <Link href="/stylizacje" className="text-sm font-extrabold text-rose-700 hover:underline">
+                Wszystkie stylizacje →
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {matchingLooks.map((look) => (
+                <Link
+                  key={look.slug}
+                  href={`/stylizacje/${look.slug}`}
+                  className="group flex h-full flex-col justify-between rounded-2xl border border-rose-100 bg-white p-5 shadow-sm transition hover:border-rose-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-rose-600"
+                >
+                  <div>
+                    <span className="text-xs font-extrabold uppercase tracking-wide text-rose-700">{look.occasion}</span>
+                    <h3 className="mt-2 text-lg font-black leading-snug text-stone-950 group-hover:text-rose-700">
+                      {look.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-stone-600">{look.intro}</p>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4">
+                    <span className="text-xs font-medium text-stone-500">{look.products.length} produkty, bez dostawy</span>
+                    <span className="font-black text-stone-900">{formatPrice(look.total)} →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* PODOBNE PRODUKTY */}
 
