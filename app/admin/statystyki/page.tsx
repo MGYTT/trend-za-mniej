@@ -6,6 +6,7 @@ import {
 
 import AdminHeader from "@/components/admin/AdminHeader";
 import ClicksChart from "@/components/admin/ClicksChart";
+import { LOOKS } from "@/lib/stylizacje";
 
 import {
   createClient,
@@ -24,6 +25,12 @@ type DayRow = {
   clicks:
     | number
     | string;
+};
+
+type SourceStatRow = {
+  source_type: string;
+  outfit_slug: string | null;
+  clicks: number | string;
 };
 
 type ProductStatRow = {
@@ -101,6 +108,7 @@ export default async function StatisticsPage({
     chartResult,
     rankingResult,
     allClicksResult,
+    sourceResult,
   ] =
     await Promise.all([
       supabase.rpc(
@@ -133,7 +141,15 @@ export default async function StatisticsPage({
               true,
           }
         ),
+
+      supabase.rpc("get_affiliate_source_stats", {
+        p_days: selectedDays,
+      }),
     ]);
+
+  if (sourceResult.error) {
+    console.error("Raport źródeł kliknięć niedostępny:", sourceResult.error);
+  }
 
   if (
     chartResult.error
@@ -247,6 +263,29 @@ export default async function StatisticsPage({
     ranking[0] ??
     null;
 
+  const sourceRows: SourceStatRow[] = sourceResult.error
+    ? []
+    : ((sourceResult.data ?? []) as SourceStatRow[]);
+
+  const outfitClicks = sourceRows
+    .filter((row) => row.source_type === "outfit")
+    .reduce((sum, row) => sum + Number(row.clicks), 0);
+  const productClicks = sourceRows
+    .filter((row) => row.source_type === "product")
+    .reduce((sum, row) => sum + Number(row.clicks), 0);
+  const unknownClicks = sourceRows
+    .filter((row) => row.source_type === "unknown")
+    .reduce((sum, row) => sum + Number(row.clicks), 0);
+
+  const sortedLooks = sourceRows
+    .filter((row) => row.source_type === "outfit" && row.outfit_slug)
+    .map((row) => ({
+      slug: row.outfit_slug!,
+      title: LOOKS.find((look) => look.slug === row.outfit_slug)?.title ?? "Stylizacja",
+      clicks: Number(row.clicks),
+    }))
+    .sort((a, b) => b.clicks - a.clicks);
+
   return (
     <main className="min-h-screen bg-[#f7f7f8] text-stone-900">
       <AdminHeader />
@@ -338,6 +377,64 @@ export default async function StatisticsPage({
             helper="z ruchem"
             icon="days"
           />
+        </section>
+
+        <section aria-labelledby="source-report-title" className="mt-4 overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm">
+          <div className="border-b border-stone-100 p-5 sm:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+              Nowe dane
+            </p>
+            <h2 id="source-report-title" className="mt-2 text-xl font-black tracking-tight">
+              Skąd przychodzą kliknięcia do SHEIN?
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+              Źródła kliknięć z ostatnich {selectedDays} dni. Nie są to zamówienia ani zatwierdzone prowizje.
+            </p>
+          </div>
+
+          {sourceResult.error ? (
+            <p className="p-5 text-sm leading-6 text-amber-800 sm:p-6">
+              Raport źródeł nie jest jeszcze aktywny. Wymaga zastosowania skryptu
+              docs/sql/affiliate-click-attribution.sql w Supabase podczas wydania 02.
+              Dotychczasowe statystyki nadal działają.
+            </p>
+          ) : (
+            <div className="p-5 sm:p-6">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-rose-50 p-4">
+                  <p className="text-xs font-semibold text-stone-600">Z gotowych stylizacji</p>
+                  <p className="mt-2 text-3xl font-black text-rose-800">{outfitClicks}</p>
+                </div>
+                <div className="rounded-2xl bg-stone-50 p-4">
+                  <p className="text-xs font-semibold text-stone-600">Z podstron produktów</p>
+                  <p className="mt-2 text-3xl font-black text-stone-950">{productClicks}</p>
+                </div>
+                <div className="rounded-2xl bg-stone-50 p-4">
+                  <p className="text-xs font-semibold text-stone-600">Źródło nieustalone</p>
+                  <p className="mt-2 text-3xl font-black text-stone-950">{unknownClicks}</p>
+                </div>
+              </div>
+              <h3 className="mt-7 text-lg font-black">Najczęściej klikane stylizacje</h3>
+              {sortedLooks.length > 0 ? (
+                <ol className="mt-3 divide-y divide-stone-100">
+                  {sortedLooks.map((look) => (
+                    <li key={look.slug} className="flex items-center justify-between gap-4 py-3">
+                      <span className="min-w-0 text-sm font-bold text-stone-700">{look.title}</span>
+                      <strong className="shrink-0 text-base font-black">{look.clicks} klik.</strong>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="mt-3 text-sm text-stone-500">
+                  Nie odnotowano jeszcze kliknięć z gotowych stylizacji.
+                </p>
+              )}
+              <p className="mt-5 text-xs leading-5 text-stone-500">
+                Starsze kliknięcia nie mają przypisanej stylizacji. Źródła są orientacyjne
+                i nie mogą służyć do rozliczeń sprzedażowych.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="mt-4 overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm">
