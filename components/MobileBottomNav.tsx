@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 type Tab =
   | "home"
   | "offers"
-  | "tiktok"
+  | "outfits"
   | "promotions"
   | "categories";
 
@@ -30,9 +30,9 @@ const TABS: TabItem[] = [
     href: "/okazje",
   },
   {
-    type: "tiktok",
-    label: "TikTok",
-    href: "/tiktok",
+    type: "outfits",
+    label: "Stylizacje",
+    href: "/stylizacje",
   },
   {
     type: "promotions",
@@ -58,8 +58,8 @@ function activeTab(
     return pathname === "/okazje";
   }
 
-  if (type === "tiktok") {
-    return pathname === "/tiktok";
+  if (type === "outfits") {
+    return pathname === "/stylizacje" || pathname.startsWith("/stylizacje/");
   }
 
   if (type === "promotions") {
@@ -83,6 +83,8 @@ export default function MobileBottomNav() {
   const visible =
     pathname === "/" ||
     pathname === "/okazje" ||
+    pathname === "/stylizacje" ||
+    pathname.startsWith("/stylizacje/") ||
     pathname === "/tiktok" ||
     pathname === "/promocje-shein" ||
     pathname === "/kategorie" ||
@@ -192,18 +194,9 @@ function TabIcon({
         </>
       )}
 
-      {type === "tiktok" && (
-        <>
-          <rect
-            x="3"
-            y="5"
-            width="18"
-            height="14"
-            rx="3"
-          />
-          <path d="m10 9 5 3-5 3V9Z" />
-        </>
-      )}
+      {type === "outfits" && (
+        <path d="m7 3 5 2 5-2 4 4-3 4-2-1v11H8V10l-2 1-3-4 4-4Z" />
+      )
 
       {type === "promotions" && (
         <>

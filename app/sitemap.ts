@@ -18,6 +18,9 @@ import {
   getSiteUrl,
 } from "@/lib/site";
 
+import { getProducts } from "@/lib/products";
+import { resolveLooks } from "@/lib/stylizacje";
+
 export const revalidate =
   300;
 
@@ -176,6 +179,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       {
         url:
           `${siteUrl}/okazje`,
+      },
+
+      {
+        url:
+          `${siteUrl}/stylizacje`,
       },
 
       {
@@ -341,7 +349,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       latestTikTokDate;
   }
 
+  // Only include published, complete outfits that still fit their budgets.
+  const lookPages: MetadataRoute.Sitemap = resolveLooks(await getProducts())
+    .filter((look) => look.available)
+    .map((look) => ({ url: `${siteUrl}/stylizacje/${look.slug}` }));
+
   return [
+    ...lookPages,
     ...staticPages,
     ...categoryPages,
     ...productPages,
