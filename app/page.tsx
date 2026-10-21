@@ -252,6 +252,13 @@ function Hero({
             </Link>
 
             <Link
+              href="/stylizacje"
+              className="rounded-full bg-rose-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-rose-700"
+            >
+              Gotowe stylizacje →
+            </Link>
+
+            <Link
               href="/tiktok"
               className="rounded-full bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700 transition hover:bg-rose-50 hover:text-rose-700"
             >

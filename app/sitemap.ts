@@ -180,6 +180,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       {
         url:
+          `${siteUrl}/stylizacje`,
+      },
+
+      {
+        url:
           `${siteUrl}/kategorie`,
       },
 
@@ -341,7 +346,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       latestTikTokDate;
   }
 
+  const lookPages: MetadataRoute.Sitemap = [
+    "casual-do-150-zl",
+    "do-pracy-do-150-zl",
+    "weekend-do-150-zl",
+    "jesienny-look-do-200-zl",
+    "sweter-i-jeansy-do-100-zl",
+  ].map((slug) => ({ url: `${siteUrl}/stylizacje/${slug}` }));
+
   return [
+    ...lookPages,
     ...staticPages,
     ...categoryPages,
     ...productPages,
