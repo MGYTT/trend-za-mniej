@@ -42,3 +42,17 @@ Aktualne stylizacje są skonfigurowane ręcznie w `lib/stylizacje.ts`; administr
 - Każda stylizacja udostępnia odnośniki do innych dostępnych zestawów, co ułatwia nawigację i odkrywanie treści.
 - Linkowanie służy użytkownikom, nie jest gwarancją indeksowania przez Google.
 - Dopisano dwa testy ręcznie uruchamianego skryptu Node.js; bez GitHub Actions.
+
+## Gotowy katalog i szybszy dostęp do ofert
+
+- Na `/stylizacje` są dostępne filtry: **maksymalna rzeczywista suma cen produktów** oraz okazja. Filtry są lokalne i nie tworzą wariantów URL pod indeksowanie.
+- Przeglądarka otrzymuje wyłącznie bezpieczny podgląd zestawów, bez pełnych danych produktów i linków partnera.
+- Na każdej stronie zestawu znajduje się osobny przycisk do SHEIN przy każdym produkcie, korzystający z istniejącej ścieżki `/go/[id]` i zliczający kliknięcie.
+- Na podstronach stylizacji dodano dane strukturalne BreadcrumbList i ItemList bez niepotwierdzonych cen bieżących.
+- Uzupełniono wyjaśnienie, że zakup następuje w SHEIN dla każdego produktu osobno.
+- Dodano `tests/outfit-filters.test.mjs` do ręcznego uruchamiania; GitHub Actions nie jest używane.
+
+Ręczny test filtrów (Node 22):
+```bash
+node --experimental-strip-types --test tests/outfit-filters.test.mjs
+```
