@@ -196,7 +196,7 @@ function TabIcon({
 
       {type === "outfits" && (
         <path d="m7 3 5 2 5-2 4 4-3 4-2-1v11H8V10l-2 1-3-4 4-4Z" />
-      )
+      )}
 
       {type === "promotions" && (
         <>
