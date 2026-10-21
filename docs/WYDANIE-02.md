@@ -41,3 +41,15 @@ Porównujemy udział kliknięć z gotowych stylizacji względem kliknięć z kar
 - Weryfikuj na zbiorczych danych, bez gromadzenia identyfikatorów użytkowników, IP ani ciasteczek w bazie.
 
 **Stan prac:** kod i skrypt przygotowane na gałęzi. Pełny build Next.js nie został jeszcze uruchomiony. Brak wdrożenia produkcyjnego oraz zmian w schemacie bazy.
+
+## Kontrola przed wdrożeniem — kompletna lista
+
+1. Sprawdź status [Database Advisors](./SECURITY-REVIEW.md). Ostrzeżenia SECURITY DEFINER wymagają analizy zależności, ale nie wykonujemy masowych REVOKE.
+2. Uruchom *tylko odczyt* `docs/sql/affiliate-attribution-preflight.sql`.
+3. Zrób backup bazy / sprawdź możliwość przywrócenia.
+4. Przejrzyj przygotowany skrypt migracyjny `docs/sql/affiliate-click-attribution.sql`. **Nie uruchomiony.**
+5. Po jego wykonaniu uruchom `docs/sql/affiliate-attribution-postflight.sql` i przetestuj dostęp anonimowy oraz użytkownika niebędącego administratorem.
+6. Ręcznie uruchom `npm run test:affiliate`, `npm run lint`, `npm run build` w pełnym lokalnym repo.
+7. Dopiero po pozytywnym wyniku planujemy jeden merge do `main` i jedno wdrożenie Vercel.
+
+**Wyniki lokalne 21.10.2026**: testy Node.js dla `affiliate-attribution` i `affiliate-stats`: **10/10 PASS**; `tsc --noEmit` dla tych dwóch modułów: **PASS**. Nie zastępuje to pełnego `npm run build`.
