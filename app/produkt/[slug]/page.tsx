@@ -252,7 +252,7 @@ export default async function ProductPage({
   const comparison =
     getPriceDifference(product);
 
-  const goHref = `/go/${product.id}`;
+  const goHref = `/go/${product.id}?origin=product`;
 
   const siteUrl = getSiteUrl();
 

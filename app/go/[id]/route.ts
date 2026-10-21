@@ -9,6 +9,8 @@ import {
 import {
   createAdminClient,
 } from "@/lib/supabase/admin";
+import { resolveClickAttribution } from "@/lib/affiliate-attribution";
+import { LOOKS } from "@/lib/stylizacje";
 
 type RouteContext = {
   params: Promise<{
@@ -34,30 +36,35 @@ export async function GET(
   }
 
   try {
-    const supabase =
-      createAdminClient();
+    const supabase = createAdminClient();
+    const attribution = resolveClickAttribution(
+      new URL(request.url).searchParams,
+      product.slug,
+      LOOKS
+    );
 
-    const { error } =
-      await supabase
-        .from(
-          "affiliate_clicks"
-        )
-        .insert({
-          product_id:
-            product.id,
-        });
+    const { error } = await supabase
+      .from("affiliate_clicks")
+      .insert({
+        product_id: product.id,
+        source_type: attribution.sourceType,
+        outfit_slug: attribution.outfitSlug,
+      });
 
-    if (error) {
-      console.error(
-        "Nie udało się zapisać kliknięcia:",
-        error
-      );
+    if (error?.code === "PGRST204" || error?.code === "42703") {
+      // Graceful compatibility before the one-time SQL upgrade is applied.
+      const fallback = await supabase
+        .from("affiliate_clicks")
+        .insert({ product_id: product.id });
+
+      if (fallback.error) {
+        console.error("Błąd zapisania kliknięcia:", fallback.error);
+      }
+    } else if (error) {
+      console.error("Błąd zapisania kliknięcia:", error);
     }
   } catch (error) {
-    console.error(
-      "Błąd zapisywania kliknięcia:",
-      error
-    );
+    console.error("Błąd zapisywania kliknięcia:", error);
   }
 
   return NextResponse.redirect(
