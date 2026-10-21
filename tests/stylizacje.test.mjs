@@ -16,13 +16,13 @@ test("Wszystkie pięć zestawów mieści się w budżetach",()=>{
  const looks=resolveLooks(fixtures);
  assert.equal(looks.length,5);
  assert.equal(looks.filter(x=>x.available).length,5);
- assert.equal(find(looks,"sweter-i-jeansy-do-100-zl").total,99);
+ assert.equal(find(looks,"streetwear-do-100-zl").total,99);
  assert.equal(find(looks,"jesienny-look-do-200-zl").total,188.63);
  for(const l of looks) assert.ok(l.total<=l.maxBudget);
 });
 test("Wzrost ceny wyłącza przekroczony budżet",()=>{
  const changed=fixtures.map(p=>p.slug==="damskie-jeansy-z-wzorem"?{...p,price:69}:p);
- const look=find(resolveLooks(changed),"sweter-i-jeansy-do-100-zl");
+ const look=find(resolveLooks(changed),"streetwear-do-100-zl");
  assert.equal(look.total,101.45);
  assert.equal(look.withinBudget,false);
  assert.equal(look.available,false);
@@ -40,7 +40,7 @@ test("Brak produktu ukrywa zestaw",()=>{
 });
 test("Nieprawidłowa cena nie przechodzi walidacji",()=>{
  const changed=fixtures.map(p=>p.slug==="damskie-jeansy-z-wzorem"?{...p,price:NaN}:p);
- assert.equal(find(resolveLooks(changed),"sweter-i-jeansy-do-100-zl").available,false);
+ assert.equal(find(resolveLooks(changed),"streetwear-do-100-zl").available,false);
 });
 test("Konfiguracje zestawów są unikalne",()=>{
  assert.equal(new Set(LOOKS.map(l=>l.slug)).size,LOOKS.length);
@@ -54,7 +54,7 @@ test("Konfiguracje zestawów są unikalne",()=>{
 test("Odnośnik produktu prowadzi tylko do pełnych zestawów", () => {
   const outfits = resolveLooks(fixtures);
   const matches = getLooksForProduct(outfits, "damskie-jeansy-z-wzorem");
-  assert.deepEqual(matches.map((look) => look.slug), ["sweter-i-jeansy-do-100-zl"]);
+  assert.deepEqual(matches.map((look) => look.slug), ["streetwear-do-100-zl"]);
   const overBudget = fixtures.map((p) =>
     p.slug === "damskie-jeansy-z-wzorem" ? {...p,price:69} : p
   );
@@ -69,4 +69,13 @@ test("Odnośniki kategorii ignorują niedostępne zestawy", () => {
   const inactive = categorized.map((p) => p.slug === "damskie-jeansy-z-wzorem" ? {...p,active:false} : p);
   assert.equal(getLooksForCategory(resolveLooks(inactive), "jeansy").length, 2);
   assert.equal(getLooksForCategory(resolveLooks(categorized), "   ").length, 0);
+});
+
+test("Każda stylizacja ma autorskie uzasadnienie i informację o brakujących elementach", () => {
+  for (const look of LOOKS) {
+    assert.equal(look.whyItWorks.length, 2);
+    assert.ok(look.whyItWorks.every((reason) => reason.length >= 35));
+    assert.ok(look.excluded.length >= 25);
+    assert.ok(look.tip.length >= 25);
+  }
 });

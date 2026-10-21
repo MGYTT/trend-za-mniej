@@ -56,3 +56,11 @@ Ręczny test filtrów (Node 22):
 ```bash
 node --experimental-strip-types --test tests/outfit-filters.test.mjs
 ```
+
+## Treści redakcyjne i zaufanie
+
+- Nazwy i opisy pięciu stylizacji zostały dostosowane do opisów produktów w bazie Supabase (21.10.2026).
+- Zestaw ze swetrem z krótkim rękawem i jeansami moro nosi teraz nazwę **Streetwear do 100 zł**, z adresem `/stylizacje/streetwear-do-100-zl`. Stary adres `sweter-i-jeansy-do-100-zl` pochodził wyłącznie z nieopublikowanej gałęzi i nie wymaga przekierowania.
+- Każda podstrona zawiera argumenty „Dlaczego te elementy do siebie pasują?” oraz informacje „Czego nie obejmuje cena?”.
+- Metadane Open Graph i Twitter stron stylizacji wykorzystują zdjęcie rzeczywistego produktu z zestawu.
+- Przed wdrożeniem należy ręcznie potwierdzić wygląd zestawów na zdjęciach, warianty i ceny w sklepie.

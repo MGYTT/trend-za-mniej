@@ -117,7 +117,7 @@ export default function OutfitExplorer({ looks }: { looks: OutfitPreview[] }) {
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-stone-600">{look.intro}</p>
                 <div className="mt-auto flex items-center justify-between gap-2 border-t border-stone-100 pt-5">
-                  <span className="text-xs font-medium text-stone-500">{look.productCount} elementy · bez dostawy</span>
+                  <span className="text-xs font-medium text-stone-500">{look.productCount} {look.productCount === 1 ? "produkt" : look.productCount < 5 ? "produkty" : "produktów"} · bez dostawy</span>
                   <strong className="shrink-0 text-xl font-black text-stone-950">{priceFormatter.format(look.total)}</strong>
                 </div>
                 <Link

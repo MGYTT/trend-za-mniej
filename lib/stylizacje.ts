@@ -7,6 +7,8 @@ export type LookConfig = {
   style: string;
   intro: string;
   tip: string;
+  whyItWorks: readonly string[];
+  excluded: string;
   maxBudget: number;
   productSlugs: readonly string[];
 };
@@ -14,51 +16,76 @@ export type LookConfig = {
 export const LOOKS: readonly LookConfig[] = [
   {
     slug: "casual-do-150-zl",
-    title: "Casual do 150 zł",
+    title: "Czarny casual do 150 zł",
     occasion: "Na co dzień",
-    style: "Casual",
-    intro: "Prosty zestaw na zwykły dzień: dopasowana góra i wygodne spodnie.",
-    tip: "Sprawdź tabelę rozmiarów obu produktów — dopasowanie jest ważniejsze niż oznaczenie S/M/L.",
+    style: "Casual z detalem",
+    intro: "Czarny top z kwadratowym dekoltem i spodnie z asymetryczną talią — zestaw oparty na dwóch dopasowanych kolorystycznie elementach.",
+    tip: "Sprawdź wymiary w talii i długość nogawek; oznaczenie rozmiaru może różnić się między modelami.",
+    whyItWorks: [
+      "Czarny top z długim rękawem i kwadratowym dekoltem stanowi prostą bazę.",
+      "Spodnie z talią w kształcie litery V dodają charakteru bez potrzeby dokupowania dodatków.",
+    ],
+    excluded: "Buty, torba i biżuteria nie są wliczone do ceny.",
     maxBudget: 150,
     productSlugs: ["damski-dopasowany-basic-t-shirt", "damskie-czarne-casualowe-spodnie"],
   },
   {
     slug: "do-pracy-do-150-zl",
-    title: "Do pracy do 150 zł",
+    title: "Prosty zestaw do pracy do 150 zł",
     occasion: "Do pracy",
     style: "Smart casual",
-    intro: "Neutralna bluzka i spodnie z wysokim stanem tworzą prostą bazę do pracy.",
-    tip: "Przed zakupem sprawdź skład materiałów oraz zasady ubioru w miejscu pracy.",
+    intro: "Bluzka z długim rękawem i wiązaniem zestawiona z czarnymi spodniami o prostych nogawkach.",
+    tip: "Sprawdź materiał bluzki i tabelę rozmiarów obu produktów; poziom formalności zależy od miejsca pracy.",
+    whyItWorks: [
+      "Wiązanie i kontrastowe wykończenie bluzki stanowią subtelny element dekoracyjny.",
+      "Czarne spodnie z wysokim stanem i prostymi nogawkami są neutralnym uzupełnieniem góry.",
+    ],
+    excluded: "Obuwie, okrycie wierzchnie i torba nie są wliczone do ceny.",
     maxBudget: 150,
     productSlugs: ["bluzka-damska-z-dlugim-rekawem", "damskie-eleganckie-casualowe-spodnie"],
   },
   {
     slug: "weekend-do-150-zl",
-    title: "Weekend do 150 zł",
+    title: "Luźny weekend do 150 zł",
     occasion: "Na weekend",
-    style: "Luźny",
-    intro: "Luźna koszula i jeansy do swobodnego zestawu weekendowego.",
-    tip: "To zestaw dwóch elementów, bez butów i dodatków. Sprawdź długość nogawek przed zakupem.",
+    style: "Swobodny casual",
+    intro: "Koszula w kratę o luźnym kroju i letnie jeansy z prostymi nogawkami oraz talią paperbag.",
+    tip: "Koszula ma luźny krój, a jeansy talię paperbag; zwróć uwagę na rzeczywiste wymiary i materiał.",
+    whyItWorks: [
+      "Kraciasta koszula wprowadza wzór, a prosta nogawka jeansów równoważy luźną górę.",
+      "Obie rzeczy można nosić osobno z innymi ubraniami z własnej szafy.",
+    ],
+    excluded: "Buty i akcesoria nie należą do zestawu; nie obejmuje on również dostawy.",
     maxBudget: 150,
     productSlugs: ["damska-koszula-na-co-dzien-o-luznym-kroju", "damskie-letnie-jeansy-z-prostymi-nogawkami"],
   },
   {
     slug: "jesienny-look-do-200-zl",
-    title: "Jesienny look do 200 zł",
+    title: "Zestaw z trenczem do 200 zł",
     occasion: "Na chłodniejsze dni",
-    style: "Warstwowy",
-    intro: "Top, jeansy i lekki trencz — zestaw z dodatkową warstwą na przejściową pogodę.",
-    tip: "Trencz może nie wystarczyć w deszczu lub zimnie; sprawdź parametry materiału i wymiary.",
+    style: "Warstwowy casual",
+    intro: "Top z koronkowymi detalami, jeansy i krótki beżowy trencz — trzy elementy na przejściową pogodę.",
+    tip: "Sprawdź, czy trencz odpowiada oczekiwanej porze roku; oferta nie potwierdza wodoodporności ani ocieplenia.",
+    whyItWorks: [
+      "Beżowy krótki trencz może pełnić funkcję wierzchniej warstwy na chłodniejsze dni.",
+      "Top z ozdobnymi detalami tworzy kontrast z jeansami i pozwala zdjąć trencz w pomieszczeniu.",
+    ],
+    excluded: "Obuwie, torba oraz dodatki nie są ujęte w sumie; trencz nie zastępuje kurtki zimowej.",
     maxBudget: 200,
     productSlugs: ["damski-top-bazowy-z-wstawkam", "damskie-zwezane-jeansy", "bezowy-luzny-krotki-trencz"],
   },
   {
-    slug: "sweter-i-jeansy-do-100-zl",
-    title: "Sweter i jeansy do 100 zł",
+    slug: "streetwear-do-100-zl",
+    title: "Streetwear do 100 zł",
     occasion: "Na co dzień",
-    style: "Minimalistyczny",
-    intro: "Dwie proste rzeczy tworzą bazę codziennej stylizacji.",
-    tip: "Kwota obejmuje wyłącznie te dwa produkty, bez dostawy i dodatków.",
+    style: "Streetwear",
+    intro: "Sweter z krótkim rękawem zestawiony z jeansami we wzór kamuflażu — wyrazista, codzienna propozycja.",
+    tip: "Wzór moro przyciąga uwagę. Przed zakupem sprawdź pas jeansów oraz to, że sweter ma krótki rękaw.",
+    whyItWorks: [
+      "Jeansy z kamuflażowym wzorem są wyrazistym elementem całego zestawu.",
+      "Sweter o jednolitym kolorze i krótkim rękawie pozwala zachować równowagę między wzorem a górą.",
+    ],
+    excluded: "Buty, kurtka i dodatki nie są wliczone do sumy.",
     maxBudget: 100,
     productSlugs: ["damski-sweter-casualowy-w-kolorze", "damskie-jeansy-z-wzorem"],
   },

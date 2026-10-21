@@ -25,6 +25,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: look.title,
     description: look.intro + " Zobacz elementy zestawu, łączną cenę w katalogu i wskazówki przed zakupem.",
     alternates: { canonical: "/stylizacje/" + look.slug },
+    openGraph: {
+      type: "website",
+      url: "/stylizacje/" + look.slug,
+      title: look.title,
+      description: look.intro,
+      images: look.products[0]?.image
+        ? [{ url: look.products[0].image, alt: look.products[0].name }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: look.title,
+      description: look.intro,
+      images: look.products[0]?.image ? [look.products[0].image] : undefined,
+    },
   };
 }
 
@@ -136,7 +151,24 @@ export default async function LookPage({ params }: Props) {
           </div>
         </section>
 
-        <aside className="mt-12 max-w-4xl rounded-3xl border border-stone-200 bg-white p-6 sm:p-8">
+        <section aria-labelledby="why-this-outfit" className="mt-12 max-w-5xl rounded-3xl border border-stone-200 bg-white p-6 sm:p-8">
+          <p className="text-xs font-black uppercase tracking-widest text-rose-700">Pomoc w wyborze</p>
+          <h2 id="why-this-outfit" className="mt-2 text-2xl font-black tracking-tight">
+            Dlaczego te elementy do siebie pasują?
+          </h2>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+            {look.whyItWorks.map((reason) => (
+              <li key={reason} className="rounded-2xl bg-stone-50 p-4 text-sm leading-7 text-stone-700">
+                <span aria-hidden="true" className="mr-2 font-black text-rose-700">✓</span>
+                {reason}
+              </li>
+            ))}
+          </ul>
+          <h3 className="mt-7 text-lg font-black text-stone-900">Czego nie obejmuje cena?</h3>
+          <p className="mt-2 text-sm leading-7 text-stone-600">{look.excluded}</p>
+        </section>
+
+        <aside className="mt-6 max-w-5xl rounded-3xl border border-stone-200 bg-white p-6 sm:p-8">
           <h2 className="text-xl font-black">Wskazówka przed zakupem</h2>
           <p className="mt-3 leading-7 text-stone-700">{look.tip}</p>
           <p className="mt-4 text-sm leading-6 text-stone-600">
