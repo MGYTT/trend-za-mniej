@@ -21,6 +21,11 @@ const MENU: MenuItem[] = [
     href: "/",
   },
   {
+    label: "Stylizacje",
+    description: "Gotowe zestawy w Twoim budżecie",
+    href: "/stylizacje",
+  },
+  {
     label: "Produkty",
     description: "Wszystkie znaleziska",
     href: "/okazje",
@@ -60,6 +65,10 @@ function activeLink(
       pathname === "/okazje" ||
       pathname.startsWith("/produkt/")
     );
+  }
+
+  if (href === "/stylizacje") {
+    return pathname === "/stylizacje" || pathname.startsWith("/stylizacje/");
   }
 
   if (href === "/kategorie") {
