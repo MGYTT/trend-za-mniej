@@ -61,3 +61,20 @@ W wersji przygotowanej wcześniej plik `docs/sql/affiliate-click-attribution.sql
 Przygotowano osobną, ograniczoną zmianę uprawnień `docs/sql/security-queue-lockdown.sql` (patrz `docs/SECURITY-REVIEW.md`) i kontrolę wyników `docs/sql/security-queue-postflight.sql`. Przed zastosowaniem na produkcji wymaga zatwierdzenia oraz sprawdzenia triggera w środowisku testowym.
 
 Nowe **testy statyczne struktury SQL**: `npm run test:release-sql`. Testy NIE wykonują migracji ani nie zastępują sprawdzenia bazy.
+
+## Bramka wydania bez GitHub Actions i bez Vercel
+
+Przed każdym przyszłym wdrożeniem:
+```bash
+npm ci
+npm run verify:release
+```
+Polecenie uruchamia kolejno:
+1. Parser TypeScript dla plików `.ts` i `.tsx` w `app/`, `components/`, `lib/` oraz plikach konfiguracyjnych (`npm run check:syntax`). Wykrywa brakujący nawias JSX, który wcześniej zepsuł build Vercel.
+2. Trzy testy samego analizatora (`npm run test:syntax`).
+3. Testy atrybucji kliknięć, agregowania statystyk, SQL, stylizacji i filtrów.
+4. ESLint.
+5. Pełny build Next.js — dopiero ten krok daje wysoką pewność przed deployem.
+
+**Wynik testu analizatora (lokalny izolowany katalog, Node.js 22 + TypeScript): 3/3 PASS.**
+Skan całej aplikacji oraz pełny build nadal wymagają pobranego repozytorium i zależności. Nie oznaczamy wydania jako gotowego bez ich uruchomienia.
