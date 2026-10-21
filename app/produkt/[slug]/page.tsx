@@ -2,12 +2,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import ProductCard from "@/components/ProductCard";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { slugifyCategory } from "@/lib/categories";
+import { getCurrentSlugForOldProductSlug } from "@/lib/product-redirect";
 import {
   formatPrice,
   getProductBySlug,
@@ -123,6 +124,13 @@ export async function generateMetadata({
     await getProductBySlug(slug);
 
   if (!product) {
+    const currentSlug =
+      await getCurrentSlugForOldProductSlug(slug);
+
+    if (currentSlug) {
+      permanentRedirect(`/produkt/${currentSlug}`);
+    }
+
     return {
       title: "Produkt nie został znaleziony",
       robots: {
@@ -209,6 +217,13 @@ export default async function ProductPage({
     await getProductBySlug(slug);
 
   if (!product) {
+    const currentSlug =
+      await getCurrentSlugForOldProductSlug(slug);
+
+    if (currentSlug) {
+      permanentRedirect(`/produkt/${currentSlug}`);
+    }
+
     notFound();
   }
 
