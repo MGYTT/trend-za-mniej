@@ -53,3 +53,11 @@ Porównujemy udział kliknięć z gotowych stylizacji względem kliknięć z kar
 7. Dopiero po pozytywnym wyniku planujemy jeden merge do `main` i jedno wdrożenie Vercel.
 
 **Wyniki lokalne 21.10.2026**: testy Node.js dla `affiliate-attribution` i `affiliate-stats`: **10/10 PASS**; `tsc --noEmit` dla tych dwóch modułów: **PASS**. Nie zastępuje to pełnego `npm run build`.
+
+## Naprawa uszkodzonego pliku migracji i ochrona kolejki SEO
+
+W wersji przygotowanej wcześniej plik `docs/sql/affiliate-click-attribution.sql` miał urwany warunek SQL i zdublowany fragment funkcji. Plik został **w całości napisany ponownie**: jedna transakcja, jedno `CREATE OR REPLACE FUNCTION`, kompletne warunki, zbalansowane bloki `DO`. Nigdy nie wykonywano tego wadliwego skryptu na produkcyjnej bazie.
+
+Przygotowano osobną, ograniczoną zmianę uprawnień `docs/sql/security-queue-lockdown.sql` (patrz `docs/SECURITY-REVIEW.md`) i kontrolę wyników `docs/sql/security-queue-postflight.sql`. Przed zastosowaniem na produkcji wymaga zatwierdzenia oraz sprawdzenia triggera w środowisku testowym.
+
+Nowe **testy statyczne struktury SQL**: `npm run test:release-sql`. Testy NIE wykonują migracji ani nie zastępują sprawdzenia bazy.

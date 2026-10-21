@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:affiliate": "node --experimental-strip-types --test tests/affiliate-attribution.test.mjs tests/affiliate-stats.test.mjs"
+    "test:affiliate": "node --experimental-strip-types --test tests/affiliate-attribution.test.mjs tests/affiliate-stats.test.mjs",
+    "test:release-sql": "node --test tests/release-sql-structure.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
