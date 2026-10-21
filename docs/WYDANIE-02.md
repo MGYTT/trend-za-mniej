@@ -29,3 +29,15 @@ Kliknięcie produktu `/go/[id]` otrzymuje jedno z trzech źródeł:
 ## Metryki po starcie
 
 Porównujemy udział kliknięć z gotowych stylizacji względem kliknięć z kart produktów i nieustalonych źródeł. Samo zliczanie kliknięć nie pokazuje liczby sprzedaży; zatwierdzone prowizje sprawdzamy w programie partnerskim.
+
+## Weryfikacja i interpretacja wskaźników
+
+- Raport `get_affiliate_source_stats` liczy pełne dni kalendarzowe (dziś + 6 albo 29 poprzednich dni), **tak samo jak `get_clicks_by_day`**. Poprzednia wersja propozycji SQL liczyła ostatnie 7 lub 30 dobowych okresów i mogła dawać różnice.
+- Tabela `affiliate_clicks` ma włączony RLS. Z raportu mogą korzystać zalogowani administratorzy. Anonimowy użytkownik nie ma `SELECT` ani `INSERT`; nie wprowadzamy nowych polityk RLS.
+- W bazie dozwolone są jedynie kombinacje `source_type` i `outfit_slug`, które mają sens; `outfit_slug` może wystąpić tylko dla źródła `outfit`.
+- Udział stylizacji jest liczony w odniesieniu do **kliknięć o znanym pochodzeniu** (stylizacja + podstrona produktu); stare i nieustalone kliknięcia nie zniekształcają procentu. To udział kliknięć, a nie konwersja zakupu.
+- Testy pomocnicze, uruchamiane ręcznie: `node --experimental-strip-types --test tests/affiliate-stats.test.mjs`.
+- Po zastosowaniu SQL zweryfikuj, że sumy dla źródeł odpowiadają liczbie kliknięć w tym samym okresie, a raport jest niedostępny dla roli anonimowej i nie-administratora.
+- Weryfikuj na zbiorczych danych, bez gromadzenia identyfikatorów użytkowników, IP ani ciasteczek w bazie.
+
+**Stan prac:** kod i skrypt przygotowane na gałęzi. Pełny build Next.js nie został jeszcze uruchomiony. Brak wdrożenia produkcyjnego oraz zmian w schemacie bazy.

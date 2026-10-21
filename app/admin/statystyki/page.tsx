@@ -7,6 +7,7 @@ import {
 import AdminHeader from "@/components/admin/AdminHeader";
 import ClicksChart from "@/components/admin/ClicksChart";
 import { LOOKS } from "@/lib/stylizacje";
+import { summarizeAffiliateSources, type SourceStatRow } from "@/lib/affiliate-stats";
 
 import {
   createClient,
@@ -25,12 +26,6 @@ type DayRow = {
   clicks:
     | number
     | string;
-};
-
-type SourceStatRow = {
-  source_type: string;
-  outfit_slug: string | null;
-  clicks: number | string;
 };
 
 type ProductStatRow = {
@@ -267,24 +262,14 @@ export default async function StatisticsPage({
     ? []
     : ((sourceResult.data ?? []) as SourceStatRow[]);
 
-  const outfitClicks = sourceRows
-    .filter((row) => row.source_type === "outfit")
-    .reduce((sum, row) => sum + Number(row.clicks), 0);
-  const productClicks = sourceRows
-    .filter((row) => row.source_type === "product")
-    .reduce((sum, row) => sum + Number(row.clicks), 0);
-  const unknownClicks = sourceRows
-    .filter((row) => row.source_type === "unknown")
-    .reduce((sum, row) => sum + Number(row.clicks), 0);
+  const sourceSummary = summarizeAffiliateSources(sourceRows);
+  const { outfitClicks, productClicks, unknownClicks } = sourceSummary;
 
-  const sortedLooks = sourceRows
-    .filter((row) => row.source_type === "outfit" && row.outfit_slug)
-    .map((row) => ({
-      slug: row.outfit_slug!,
-      title: LOOKS.find((look) => look.slug === row.outfit_slug)?.title ?? "Stylizacja",
-      clicks: Number(row.clicks),
-    }))
-    .sort((a, b) => b.clicks - a.clicks);
+  const sortedLooks = sourceSummary.outfitRanking.map((row) => ({
+    slug: row.slug,
+    title: LOOKS.find((look) => look.slug === row.slug)?.title ?? "Stylizacja",
+    clicks: row.clicks,
+  }));
 
   return (
     <main className="min-h-screen bg-[#f7f7f8] text-stone-900">
@@ -413,6 +398,18 @@ export default async function StatisticsPage({
                   <p className="text-xs font-semibold text-stone-600">Źródło nieustalone</p>
                   <p className="mt-2 text-3xl font-black text-stone-950">{unknownClicks}</p>
                 </div>
+              </div>
+              <div className="mt-5 rounded-2xl border border-stone-100 p-4">
+                <p className="text-sm font-semibold text-stone-700">
+                  Udział stylizacji w kliknięciach ze znanym źródłem
+                </p>
+                <p className="mt-1 text-2xl font-black text-rose-700">
+                  {sourceSummary.outfitShareOfKnown}%
+                </p>
+                <p className="mt-1 text-xs leading-5 text-stone-500">
+                  Spośród {sourceSummary.knownClicks} kliknięć ze znanym źródłem.
+                  Nie uwzględnia kliknięć historycznych i o nieustalonym pochodzeniu.
+                </p>
               </div>
               <h3 className="mt-7 text-lg font-black">Najczęściej klikane stylizacje</h3>
               {sortedLooks.length > 0 ? (
