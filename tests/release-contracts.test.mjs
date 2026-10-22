@@ -90,7 +90,7 @@ test("quality audit reads catalog only and never mutates products", () => {
   assert.match(source, /FROM public\.products;/);
   assert.match(source, /shein_identity_status/);
   assert.match(source, /updated_at/);
-  assert.match(source, /onelink\\.shein\\.com/);
+  assert.ok(source.includes("onelink.shein.com"));
   assert.match(source, /orphan_clicks/);
   assert.doesNotMatch(source, /\b(?:UPDATE|DELETE|INSERT|ALTER|DROP|TRUNCATE|CREATE)\b/i);
 });
