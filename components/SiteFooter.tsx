@@ -9,6 +9,13 @@ import BrandLogo from "@/components/BrandLogo";
 const discoveryLinks = [
   {
     label:
+      "Gotowe stylizacje do 100–200 zł",
+
+    href:
+      "/stylizacje",
+  },
+  {
+    label:
       "Wszystkie okazje",
 
     href:
