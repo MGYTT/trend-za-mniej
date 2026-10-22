@@ -19,6 +19,8 @@ export type OutfitFilters = {
   occasion: string | null;
 };
 
+export type OutfitSort = "editorial" | "price-asc";
+
 export function filterOutfits(
   outfits: readonly OutfitPreview[],
   filters: OutfitFilters
@@ -35,6 +37,13 @@ export function filterOutfits(
     if (occasion !== null && outfit.occasion !== occasion) return false;
     return true;
   });
+}
+
+export function sortOutfits(outfits: readonly OutfitPreview[], sort: OutfitSort): OutfitPreview[] {
+  if (sort !== "price-asc") return [...outfits];
+  return [...outfits].sort((a, b) =>
+    Math.round(a.total * 100) - Math.round(b.total * 100)
+  );
 }
 
 export function availableBudgets(outfits: readonly OutfitPreview[]): number[] {
