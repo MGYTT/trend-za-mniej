@@ -42,3 +42,7 @@ Wytyczne:
 - https://developers.google.com/search/docs/fundamentals/creating-helpful-content?hl=pl
 - https://developers.google.com/search/docs/essentials/spam-policies
 - https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links?hl=pl
+
+## Uproszczenie nawigacji i strony głównej
+
+Na prośbę właściciela włączone do tego samego wydania: uproszczono nagłówek do 4 działań (Stylizacje, Poradniki, Produkty, Promocje), pozostałe działy dostępne w mobilnym menu i stopce. Dolny pasek mobilny ma 4 pozycje (Start, Stylizacje, Poradniki, Produkty). Strona główna prowadzi najpierw do 3 jasnych wyborów, następnie do 3 poradników i 4 wybranych produktów; usunięto powtarzające się sekcje nowych produktów, kategorii i promocji, ale odpowiednie adresy publiczne nadal działają. Sekcja /stylizacje ma krótki odnośnik do poradników zamiast powtarzania ich miniatur i kolejnego długiego tekstu. Wymaga kontroli UX i testów.

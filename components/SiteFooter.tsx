@@ -7,101 +7,19 @@ import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
 
 const discoveryLinks = [
-  {
-    label:
-      "Gotowe stylizacje do 100–200 zł",
-
-    href:
-      "/stylizacje",
-  },
-  {
-    label:
-      "Poradniki modowe",
-
-    href:
-      "/poradniki",
-  },
-  {
-    label:
-      "Wszystkie okazje",
-
-    href:
-      "/okazje",
-  },
-
-  {
-    label:
-      "Produkty z TikToka",
-
-    href:
-      "/tiktok",
-  },
-
-  {
-    label:
-      "Promocje SHEIN i kody",
-
-    href:
-      "/promocje-shein",
-  },
-
-  {
-    label:
-      "Kategorie produktów",
-
-    href:
-      "/kategorie",
-  },
-
-  {
-    label:
-      "Najnowsze",
-
-    href:
-      "/#najnowsze",
-  },
-
-  {
-    label:
-      "O Trend za Mniej",
-
-    href:
-      "/o-nas",
-  },
+  { label: "Stylizacje", href: "/stylizacje" },
+  { label: "Poradniki", href: "/poradniki" },
+  { label: "Produkty", href: "/okazje" },
+  { label: "Kategorie", href: "/kategorie" },
+  { label: "Promocje SHEIN", href: "/promocje-shein" },
+  { label: "Z TikToka", href: "/tiktok" },
 ];
 
 const informationLinks = [
-  {
-    label:
-      "Jak wybieramy okazje",
-
-    href:
-      "/o-nas",
-  },
-
-  {
-    label:
-      "Informacja o afiliacji",
-
-    href:
-      "/afiliacja",
-  },
-
-  {
-    label:
-      "Polityka prywatności",
-
-    href:
-      "/polityka-prywatnosci",
-  },
-
-  {
-    label:
-      "Kontakt",
-
-    href:
-      "/kontakt",
-  },
+  { label: "O Trend za Mniej", href: "/o-nas" },
+  { label: "Afiliacja", href: "/afiliacja" },
+  { label: "Prywatność", href: "/polityka-prywatnosci" },
+  { label: "Kontakt", href: "/kontakt" },
 ];
 
 export default function SiteFooter() {
@@ -118,15 +36,9 @@ export default function SiteFooter() {
             />
 
             <p className="mt-4 max-w-md text-sm leading-7 text-stone-500">
-              Wybrane ubrania,
-              dodatki, promocje
-              SHEIN i ciekawe
-              znaleziska zebrane
-              w jednym miejscu,
-              żeby łatwiej znaleźć
-              coś interesującego
-              bez przeglądania
-              setek ofert.
+              Zacznij od gotowej stylizacji, sprawdź poradnik
+              lub przeglądaj pojedyncze produkty. W każdym zestawie
+              pokazujemy, co wchodzi w jego skład.
             </p>
 
             <div className="mt-5 max-w-lg rounded-[18px] border border-stone-200 bg-stone-50 p-4">

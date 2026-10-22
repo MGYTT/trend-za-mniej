@@ -88,7 +88,7 @@ test("home, footer, and outfits link to guides", () => {
   assert.match(home, /<EditorialGuides \/>/);
   assert.match(home, /href=\{"\/poradniki\/" \+ guide\.slug\}/);
   assert.match(footer, /"\/poradniki"/);
-  assert.match(outfits, /STYLE_GUIDES\.map\(\(guide\) =>/);
+  assert.match(outfits, /href="\/poradniki"/);
   assert.match(outfitDetail, /getGuidesForLook\(look\.slug\)/);
   assert.match(outfitDetail, /"\/poradniki\/" \+ guide\.slug/);
 });

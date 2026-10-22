@@ -4,28 +4,16 @@ import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { STYLE_GUIDES } from "@/lib/poradniki";
-import { slugifyCategory } from "@/lib/categories";
 import {
   getProducts,
   getFeaturedProducts,
   formatPrice,
   type Product,
 } from "@/lib/products";
-import {
-  SHEIN_PROMOTIONS,
-  type SheinPromotion,
-} from "@/lib/shein-promotions";
 
 export const revalidate = 60;
 
-const FEATURED_LIMIT = 8;
-const LATEST_LIMIT = 4;
-const CATEGORY_LIMIT = 8;
-
-type CategoryLink = {
-  name: string;
-  href: string;
-};
+const FEATURED_LIMIT = 4;
 
 /* ======================================================
    PRZYGOTOWANIE DANYCH
@@ -39,35 +27,6 @@ function uniqueById(products: Product[]): Product[] {
     seen.add(product.id);
     return true;
   });
-}
-
-function getHomeCategories(
-  products: Product[]
-): CategoryLink[] {
-  const counts = new Map<string, number>();
-
-  for (const product of products) {
-    const category = product.category?.trim();
-
-    if (!category) continue;
-
-    counts.set(
-      category,
-      (counts.get(category) ?? 0) + 1
-    );
-  }
-
-  return [...counts.entries()]
-    .sort(
-      (a, b) =>
-        b[1] - a[1] ||
-        a[0].localeCompare(b[0], "pl")
-    )
-    .slice(0, CATEGORY_LIMIT)
-    .map(([name]) => ({
-      name,
-      href: `/kategoria/${slugifyCategory(name)}`,
-    }));
 }
 
 /* ======================================================
@@ -86,25 +45,10 @@ export default async function Home() {
     ...allProducts,
   ]).slice(0, FEATURED_LIMIT);
 
-  const featuredIds = new Set(
-    featured.map((product) => product.id)
-  );
-
-  const latest = allProducts
-    .filter(
-      (product) => !featuredIds.has(product.id)
-    )
-    .slice(0, LATEST_LIMIT);
-
-  const categories =
-    getHomeCategories(allProducts);
-
   const heroProduct = featured.find(
     (product) => Boolean(product.image?.trim())
   );
 
-  const promotions =
-    SHEIN_PROMOTIONS.slice(0, 2);
 
   return (
     <main className="min-h-screen bg-stone-50 text-stone-900">
@@ -112,33 +56,19 @@ export default async function Home() {
 
       <Hero product={heroProduct} />
 
-      <Categories categories={categories} />
-
-      <ProductSection
-        id="polecane"
-        eyebrow="Wybrane dla Ciebie"
-        title="Odkryj coś dla siebie"
-        subtitle="Modne znaleziska z naszego katalogu."
-        products={featured}
-        background="white"
-        emptyText="Pierwsze znaleziska pojawią się tutaj po dodaniu produktów."
-      />
-
       <DiscoveryShortcuts />
 
       <EditorialGuides />
 
       <ProductSection
-        id="najnowsze"
-        eyebrow="Nowości"
-        title="Jeszcze więcej inspiracji"
-        subtitle="Kolejne produkty, które możesz sprawdzić."
-        products={latest}
-        background="stone"
-        emptyText="Na razie to wszystkie dostępne znaleziska. Sprawdź pełny katalog."
+        id="polecane"
+        eyebrow="Wybrane produkty"
+        title="Kilka propozycji z katalogu"
+        subtitle="Wolisz przeglądać pojedyncze elementy? Zacznij od kilku wybranych ofert."
+        products={featured}
+        background="white"
+        emptyText="Na razie nie ma produktów w katalogu."
       />
-
-      <Promotions promotions={promotions} />
 
       <HowItWorks />
 
@@ -336,59 +266,6 @@ function HeroVisual({
         </div>
       </Link>
     </div>
-  );
-}
-
-/* ======================================================
-   KATEGORIE
-====================================================== */
-
-function Categories({
-  categories,
-}: {
-  categories: CategoryLink[];
-}) {
-  return (
-    <section
-      aria-labelledby="home-categories-heading"
-      className="border-b border-stone-200 bg-white"
-    >
-      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2
-            id="home-categories-heading"
-            className="text-sm font-extrabold text-stone-900 sm:text-base"
-          >
-            Przeglądaj kategorie
-          </h2>
-
-          <Link
-            href="/kategorie"
-            className="shrink-0 text-xs font-extrabold text-rose-700 hover:text-rose-800 sm:text-sm"
-          >
-            Wszystkie
-            <span aria-hidden="true"> →</span>
-          </Link>
-        </div>
-
-        {categories.length > 0 && (
-          <nav
-            aria-label="Kategorie produktów"
-            className="horizontal-scroll -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
-          >
-            {categories.map((category) => (
-              <Link
-                key={category.href}
-                href={category.href}
-                className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-stone-200 bg-stone-50 px-3.5 text-xs font-bold text-stone-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 sm:min-h-11 sm:px-4 sm:text-sm"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </nav>
-        )}
-      </div>
-    </section>
   );
 }
 
@@ -602,45 +479,16 @@ function HomeProductCard({
 
 function DiscoveryShortcuts() {
   return (
-    <section
-      aria-labelledby="home-discover-heading"
-      className="border-b border-stone-200 bg-rose-50/50"
-    >
-      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10">
-        <div className="flex items-center justify-between gap-3">
-          <h2
-            id="home-discover-heading"
-            className="text-lg font-black tracking-tight text-stone-900 sm:text-2xl"
-          >
-            Odkrywaj po swojemu
-          </h2>
-
-          <Link
-            href="/okazje"
-            className="text-xs font-extrabold text-rose-700 hover:text-rose-800 sm:text-sm"
-          >
-            Wszystkie okazje →
-          </Link>
-        </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4">
-          <DiscoveryLink
-            href="/okazje?maxPrice=50"
-            title="Do 50 zł"
-            subtitle="Mały budżet"
-          />
-
-          <DiscoveryLink
-            href="/okazje?maxPrice=100"
-            title="Do 100 zł"
-            subtitle="Więcej wyboru"
-          />
-
-          <DiscoveryLink
-            href="/tiktok"
-            title="Z TikToka"
-            subtitle="Nasze inspiracje"
-          />
+    <section aria-labelledby="home-discover-heading" className="border-b border-stone-200 bg-rose-50/50">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-11">
+        <p className="text-xs font-black uppercase tracking-widest text-rose-700">Od czego zacząć?</p>
+        <h2 id="home-discover-heading" className="mt-2 text-2xl font-black tracking-tight text-stone-950 sm:text-3xl">
+          Wybierz, czego potrzebujesz
+        </h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <DiscoveryLink href="/stylizacje" title="Stylizacje" subtitle="Gotowe zestawy według budżetu" />
+          <DiscoveryLink href="/poradniki" title="Poradniki" subtitle="Pomoc w dobraniu ubrań" />
+          <DiscoveryLink href="/okazje" title="Produkty" subtitle="Przeglądaj pojedyncze oferty" />
         </div>
       </div>
     </section>
@@ -713,98 +561,6 @@ function EditorialGuides() {
             </Link>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ======================================================
-   PROMOCJE SHEIN
-====================================================== */
-
-function Promotions({
-  promotions,
-}: {
-  promotions: SheinPromotion[];
-}) {
-  if (promotions.length === 0) return null;
-
-  return (
-    <section
-      aria-labelledby="home-promotions-heading"
-      className="border-b border-stone-200 bg-white"
-    >
-      <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-12">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <SectionTitle
-            id="home-promotions-heading"
-            eyebrow="SHEIN"
-            title="Kody i kampanie"
-            subtitle="Sprawdź możliwości i warunki bezpośrednio w sklepie."
-          />
-
-          <Link
-            href="/promocje-shein"
-            className="hidden min-h-10 items-center gap-1 text-sm font-extrabold text-rose-700 hover:text-rose-800 sm:inline-flex"
-          >
-            Wszystkie promocje
-            <ArrowIcon />
-          </Link>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:gap-4 md:grid-cols-2">
-          {promotions.map((promotion) => (
-            <Link
-              key={promotion.id}
-              href="/promocje-shein"
-              className="group rounded-[20px] border border-rose-100 bg-gradient-to-br from-rose-50/80 via-white to-white p-4 transition hover:border-rose-300 hover:shadow-md sm:p-6"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-white px-3 py-1.5 text-[11px] font-extrabold text-rose-700 shadow-sm">
-                  {promotion.badge}
-                </span>
-
-                <ArrowIcon />
-              </div>
-
-              <h3 className="mt-3 line-clamp-2 text-lg font-black leading-snug tracking-tight text-stone-900 sm:text-xl">
-                {promotion.title}
-              </h3>
-
-              <p className="mt-2 line-clamp-2 text-xs leading-6 text-stone-600 sm:text-sm">
-                {promotion.description}
-              </p>
-
-              {promotion.code && (
-                <p className="mt-3 text-xs font-bold text-stone-600">
-                  Kod kampanii:{" "}
-                  <span className="font-black tracking-wider text-rose-700">
-                    {promotion.code}
-                  </span>
-                </p>
-              )}
-
-              <span className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-extrabold text-rose-700 group-hover:text-rose-800">
-                Zobacz szczegóły
-                <ArrowIcon />
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        <p className="mt-3 text-xs leading-5 text-stone-500">
-          Kody kampanii nie zawsze oznaczają
-          kupony do wpisania w koszyku.
-          Aktualne zasady sprawdź w SHEIN.
-        </p>
-
-        <Link
-          href="/promocje-shein"
-          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-extrabold text-rose-700 sm:hidden"
-        >
-          Wszystkie promocje
-          <ArrowIcon />
-        </Link>
       </div>
     </section>
   );
