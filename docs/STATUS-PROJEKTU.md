@@ -50,3 +50,7 @@ Aktualizacja: 22 października 2026 r.
 - Nie tworzymy nowego systemu identyfikacji użytkowników, cookies ani zapisywania IP.
 - Nie deklarujemy pełnej gotowości do produkcji bez przejścia `npm run build` i testów SQL.
 - Ostrzeżenie dotyczące kolejki SEO wciąż dotyczy **aktualnej produkcyjnej bazy**, dopóki przygotowana poprawka nie zostanie zastosowana.
+
+## Najnowszy krok kontroli jakości
+
+Zabezpieczono rozpoznawanie pochodzenia kliknięć przed wielokrotnymi i sprzecznymi parametrami URL. Testy odzwierciedlają wszystkie produkty z pięciu redakcyjnych stylizacji. Zmiana nie dotyka Supabase ani publicznych tras — dotyczy tylko nieopublikowanego Wydania 02.

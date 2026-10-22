@@ -20,15 +20,26 @@ export function resolveClickAttribution(
   productSlug: string,
   outfits: readonly OutfitDefinition[]
 ): ClickAttribution {
-  const origin = params.get("origin");
-  if (origin === "product") {
-    return { sourceType: "product", outfitSlug: null };
+  const unknown: ClickAttribution = {
+    sourceType: "unknown",
+    outfitSlug: null,
+  };
+
+  // Ambiguous parameters must not be counted as reliable attribution.
+  const origins = params.getAll("origin");
+  if (origins.length !== 1) return unknown;
+
+  const lookSlugs = params.getAll("look");
+  if (origins[0] === "product") {
+    return lookSlugs.length === 0
+      ? { sourceType: "product", outfitSlug: null }
+      : unknown;
   }
 
-  if (origin === "outfit") {
-    const slug = params.get("look");
+  if (origins[0] === "outfit" && lookSlugs.length === 1) {
+    const slug = lookSlugs[0];
     if (
-      slug &&
+      slug.length <= 100 &&
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) &&
       outfits.some(
         (outfit) =>
@@ -40,5 +51,5 @@ export function resolveClickAttribution(
     }
   }
 
-  return { sourceType: "unknown", outfitSlug: null };
+  return unknown;
 }

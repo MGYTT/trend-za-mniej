@@ -86,3 +86,11 @@ Skan całej aplikacji oraz pełny build nadal wymagają pobranego repozytorium i
 - Z rankingu można otworzyć aktywnie zdefiniowane stylizacje; historyczne nieznane slugi nie prowadzą do potencjalnych stron 404.
 - Trzy nowe testy dotyczą uzgodnienia sum, brakujących danych oraz błędnych liczb.
 - Ogólny opis prac i lista blokad: [Aktualny stan projektu](./STATUS-PROJEKTU.md).
+
+## Kontrola wiarygodności parametrów linków afiliacyjnych
+
+- Powielone `origin` lub `look` nie są traktowane jako wiarygodne źródło kliknięcia.
+- Link z `origin=product` nie może jednocześnie zgłaszać `look`.
+- Dla źródła `outfit` sprawdzamy rzeczywistą przynależność produktu do konkretnej stylizacji w redakcyjnym katalogu.
+- Dodano trzy testy regresyjne, w tym test wszystkich pięciu stylizacji i ich rzeczywistych produktów.
+- To zabezpiecza jakość danych analitycznych; źródła parametru URL nadal nie należy utożsamiać z potwierdzoną sprzedażą.
