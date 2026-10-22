@@ -54,3 +54,10 @@ Aktualizacja: 22 października 2026 r.
 ## Najnowszy krok kontroli jakości
 
 Zabezpieczono rozpoznawanie pochodzenia kliknięć przed wielokrotnymi i sprzecznymi parametrami URL. Testy odzwierciedlają wszystkie produkty z pięciu redakcyjnych stylizacji. Zmiana nie dotyka Supabase ani publicznych tras — dotyczy tylko nieopublikowanego Wydania 02.
+
+## Blokady publikacji sprawdzone 22.10.2026
+
+- Baza jest na Supabase Free, brak potwierdzonej kopii pozwalającej odtworzyć produkcję. Przygotowano `scripts/backup-supabase-before-release.sh` oraz `docs/BACKUP-I-DEPLOY-02.md`, ale kopia nie została wykonana.
+- Lokalny pełny Next.js build nadal niedostępny (brak pobranych zależności i możliwości sklonowania repozytorium ze środowiska uruchomieniowego).
+- W repozytorium dodano kontraktowe testy powiązań przycisków afiliacyjnych z trasą `/go` oraz migracją uprawnień.
+- **Nie wdrażać do produkcji** dopóki nie potwierdzimy kopii, testu jej odtworzenia, migracji testowych i pełnego `npm run verify:release`.

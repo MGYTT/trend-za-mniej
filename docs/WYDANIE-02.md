@@ -94,3 +94,7 @@ Skan całej aplikacji oraz pełny build nadal wymagają pobranego repozytorium i
 - Dla źródła `outfit` sprawdzamy rzeczywistą przynależność produktu do konkretnej stylizacji w redakcyjnym katalogu.
 - Dodano trzy testy regresyjne, w tym test wszystkich pięciu stylizacji i ich rzeczywistych produktów.
 - To zabezpiecza jakość danych analitycznych; źródła parametru URL nadal nie należy utożsamiać z potwierdzoną sprzedażą.
+
+## Bezpieczny start Wydania 02
+
+Zobacz [procedurę kopii bezpieczeństwa i jednego wdrożenia](./BACKUP-I-DEPLOY-02.md). Repozytorium zawiera skrypt wykonywania logicznej kopii Supabase Free i testy spójności linków afiliacyjnych.
