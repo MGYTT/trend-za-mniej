@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -26,7 +26,7 @@ export async function checkSyntax(root = process.cwd(), targets = DEFAULT_TARGET
         for (const issue of source.parseDiagnostics) {
           const loc = source.getLineAndCharacterOfPosition(issue.start ?? 0);
           errors.push({
-            file: relative(root, path),
+            file: relative(root, path).split(sep).join("/"),
             line: loc.line + 1,
             column: loc.character + 1,
             message: ts.flattenDiagnosticMessageText(issue.messageText, " "),
