@@ -48,26 +48,26 @@ test("Supabase Free backup procedure exports roles, schema and data privately", 
 
 test("login uses Next.js internal Link instead of document navigation", () => {
   const login = load("../app/login/page.tsx");
-  assert.match(login, /import Link from "next\\/link"/);
-  assert.match(login, /<Link\\s+href="\\/"/);
-  assert.doesNotMatch(login, /<a\\s+href="\\/"/);
+  assert.ok(login.includes('import Link from "next/link"'));
+  assert.ok(login.includes('<Link\\n          href="/"'));
+  assert.ok(!login.includes('<a\\n          href="/"'));
 });
 
 test("React legacy lint exemptions are limited to the nine affected files", () => {
   const config = load("../eslint.config.mjs");
   const legacyFiles = [
-      "app/admin/nowa-oferta/page.tsx",
-      "components/SiteHeader.tsx",
-      "components/admin/AdminAppShell.tsx",
-      "components/admin/AdminHeader.tsx",
-      "components/admin/AdminProductList.tsx",
-      "components/admin/AdminSeoQualityManager.tsx",
-      "components/admin/AdminTikTokManager.tsx",
-      "components/admin/PublishConfirmation.tsx",
-      "components/admin/SocialMediaStudio.tsx"
+    "app/admin/nowa-oferta/page.tsx",
+    "components/SiteHeader.tsx",
+    "components/admin/AdminAppShell.tsx",
+    "components/admin/AdminHeader.tsx",
+    "components/admin/AdminProductList.tsx",
+    "components/admin/AdminSeoQualityManager.tsx",
+    "components/admin/AdminTikTokManager.tsx",
+    "components/admin/PublishConfirmation.tsx",
+    "components/admin/SocialMediaStudio.tsx",
   ];
-  assert.match(config, /"react-hooks\\/set-state-in-effect": "warn"/);
-  assert.doesNotMatch(config, /"react-hooks\\/set-state-in-effect": "off"/);
+  assert.ok(config.includes('"react-hooks/set-state-in-effect": "warn"'));
+  assert.ok(!config.includes('"react-hooks/set-state-in-effect": "off"'));
   for (const file of legacyFiles) {
     assert.ok(config.includes(JSON.stringify(file)), file);
   }
