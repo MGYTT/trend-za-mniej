@@ -11,10 +11,12 @@
 
 ## Kopia na Windows bez Dockera
 
-Do wykonania kopii kluczowych danych aplikacji wystarczą lokalne narzędzia klienta **PostgreSQL 17** — `pg_dump` oraz `pg_restore`, bez instalowania serwera PostgreSQL ani kontenerów. Można zainstalować same narzędzia Command Line Tools z [oficjalnej strony PostgreSQL](https://www.postgresql.org/download/windows/).
+**PostgreSQL 18.6 pobrany przez użytkownika jest odpowiedni do utworzenia zrzutu bazy PostgreSQL 17**: oficjalne `pg_dump` obsługuje serwery starszej wersji. Narzędzie w wersji 18 nie gwarantuje jednak odtworzenia na starszym serwerze 17 bez dostosowań — dlatego test odzyskiwania jest obowiązkowy. Instalator uruchamiamy wyłącznie z opcją **Command Line Tools**, bez PostgreSQL Server, pgAdmin oraz Stack Builder.
+
+Do wykonania kopii kluczowych danych aplikacji wystarczą lokalne narzędzia klienta **PostgreSQL 17 lub 18** — `pg_dump` oraz `pg_restore`, bez instalowania serwera PostgreSQL ani kontenerów. Można zainstalować same narzędzia Command Line Tools z [oficjalnej strony PostgreSQL](https://www.postgresql.org/download/windows/).
 
 1. Otwórz PowerShell w katalogu projektu i pobierz zmiany: `git pull --ff-only`.
-2. Sprawdź dostępność narzędzi: `pg_dump --version` i `pg_restore --version`. Skrypt potrafi też znaleźć standardową instalację `C:\Program Files\PostgreSQL\17\bin`.
+2. Sprawdź dostępność narzędzi: `pg_dump --version` i `pg_restore --version`. Skrypt potrafi też znaleźć standardową instalację `C:\Program Files\PostgreSQL\18\bin` lub `C:\Program Files\PostgreSQL\17\bin`.
 3. W [Supabase Dashboard](https://supabase.com/dashboard/project/cpbyhabvmstevjyyrgpw) kliknij **Connect** i wybierz **Session pooler**. Zanotuj tylko hostname oraz nazwę użytkownika PostgreSQL; port musi wynosić **5432**, bazą jest `postgres`.
 4. Uruchom:
    ```powershell

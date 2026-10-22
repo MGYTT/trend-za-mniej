@@ -9,13 +9,19 @@ $ErrorActionPreference = "Stop"
 function Resolve-PgTool([string]$Name) {
   $command = Get-Command $Name -ErrorAction SilentlyContinue
   if ($null -ne $command) { return $command.Source }
-  $fallback = Join-Path $env:ProgramFiles ("PostgreSQL\17\bin\" + $Name + ".exe")
-  if (Test-Path -LiteralPath $fallback -PathType Leaf) { return $fallback }
-  throw ("Brak " + $Name + ". Potrzebne są narzędzia klienta PostgreSQL 17 (bez serwera i bez Dockera).")
+  foreach ($major in @(18, 17)) {
+    $fallback = Join-Path $env:ProgramFiles ("PostgreSQL\" + $major + "\bin\" + $Name + ".exe")
+    if (Test-Path -LiteralPath $fallback -PathType Leaf) { return $fallback }
+  }
+  throw ("Brak " + $Name + ". Zainstaluj Command Line Tools PostgreSQL 17 lub 18 (bez serwera i Dockera).")
 }
 
 $dumpExe = Resolve-PgTool "pg_dump"
-$restoreExe = Resolve-PgTool "pg_restore"
+# Prefer pg_restore next to pg_dump so both tools use the same PostgreSQL major version.
+$restoreExe = Join-Path (Split-Path -Parent $dumpExe) "pg_restore.exe"
+if (-not (Test-Path -LiteralPath $restoreExe -PathType Leaf)) {
+  $restoreExe = Resolve-PgTool "pg_restore"
+}
 $versionLine = (& $dumpExe --version) -join " "
 $majorMatch = [regex]::Match($versionLine, '(?i)PostgreSQL\)\s*(\d+)')
 if (-not $majorMatch.Success -or [int]$majorMatch.Groups[1].Value -lt 17) {
@@ -98,6 +104,7 @@ try {
   Write-Host "Archiwum jest czytelne, obie kluczowe tabele są na liście."
   Write-Host "Kopia zapisana w: $destinationPath"
   Write-Host "WAŻNE: to tylko public, nie pełny eksport Auth/Storage ani plików Storage API."
+  Write-Host "Archiwum z pg_dump 18 może wymagać dostosowania przy odtwarzaniu na serwerze 17; konieczny test odzyskiwania."
   Write-Host "Przetestuj odtwarzanie do oddzielnej bazy przed migracją produkcyjną."
 } finally {
   foreach ($key in $vars) {

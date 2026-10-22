@@ -75,3 +75,11 @@ test("React legacy lint exemptions are limited to the nine affected files", () =
     assert.ok(config.includes(JSON.stringify(file)), file);
   }
 });
+
+test("Windows PostgreSQL 18 backup tools are supported without Docker", () => {
+  const backup = load("../scripts/backup-supabase-before-release.ps1");
+  assert.ok(backup.includes("foreach ($major in @(18, 17))"));
+  assert.ok(backup.includes("pg_restore.exe"));
+  assert.ok(backup.includes("Resolve-PgTool \"pg_dump\""));
+  assert.doesNotMatch(backup, /& docker/);
+});
