@@ -177,39 +177,23 @@ export default async function LooksPage() {
         )}
       </section>
 
-      <section id="poradnik-stylizacji" aria-labelledby="guide-title" className="border-y border-stone-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
-          <p className="text-xs font-black uppercase tracking-widest text-rose-700">Poradnik kupowania z głową</p>
-          <h2 id="guide-title" className="mt-3 max-w-3xl text-balance text-3xl font-black tracking-tight sm:text-4xl">
-            Jak skompletować stylizację, nie kupując niepotrzebnych rzeczy?
-          </h2>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-stone-600">
-            Dobry zestaw ma pasować do Twojego dnia i rzeczy, które już masz w szafie.
-            Dlatego pokazujemy nie tylko zdjęcia, ale także skład i ograniczenia każdego kompletu.
-          </p>
-          <div className="mt-9 grid gap-4 md:grid-cols-3">
-            <article className="rounded-3xl border border-stone-200 p-6">
-              <span className="text-xs font-black tracking-widest text-rose-700">01 / OKAZJA</span>
-              <h3 className="mt-3 text-xl font-black">Zacznij od tego, dokąd idziesz</h3>
-              <p className="mt-3 text-sm leading-7 text-stone-600">
-                Do pracy wybierz neutralną bazę i sprawdź wymagania dotyczące stroju. Na weekend postaw na wygodne kroje i materiał odpowiedni do pogody.
-              </p>
-            </article>
-            <article className="rounded-3xl border border-stone-200 p-6">
-              <span className="text-xs font-black tracking-widest text-rose-700">02 / KOSZT</span>
-              <h3 className="mt-3 text-xl font-black">Policz wszystkie potrzebne elementy</h3>
-              <p className="mt-3 text-sm leading-7 text-stone-600">
-                Suma na stronie dotyczy produktów z zestawu. Sprawdź, czy masz już buty i dodatki, a u sprzedawcy dolicz dostawę i ewentualne opłaty.
-              </p>
-            </article>
-            <article className="rounded-3xl border border-stone-200 p-6">
-              <span className="text-xs font-black tracking-widest text-rose-700">03 / ROZMIAR</span>
-              <h3 className="mt-3 text-xl font-black">Zweryfikuj każdą ofertę</h3>
-              <p className="mt-3 text-sm leading-7 text-stone-600">
-                Sprawdź tabelę rozmiarów, skład, wariant kolorystyczny, dostępność i aktualną cenę. Każdy produkt otwierasz i kupujesz osobno w SHEIN.
-              </p>
-            </article>
+      <section id="poradnik-stylizacji" aria-labelledby="guide-title"
+        className="scroll-mt-24 border-y border-stone-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-widest text-rose-700">Potrzebujesz podpowiedzi?</p>
+            <h2 id="guide-title" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+              Nie wiesz, od czego zacząć?
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-stone-600">
+              W poradnikach podpowiadamy, jak dobrać fason, budżet i rozmiar,
+              zanim przejdziesz do konkretnych ofert.
+            </p>
           </div>
+          <Link href="/poradniki"
+            className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-stone-950 px-6 text-sm font-black text-white hover:bg-stone-800">
+            Przejdź do poradników →
+          </Link>
         </div>
       </section>
 

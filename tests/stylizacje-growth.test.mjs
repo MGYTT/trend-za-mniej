@@ -68,6 +68,26 @@ test("outfits are discoverable from the global footer and homepage", () => {
   const footer = load("../components/SiteFooter.tsx");
   const home = load("../app/page.tsx");
   assert.match(footer, /"\/stylizacje"/);
-  assert.match(footer, /Gotowe stylizacje do 100/);
+  assert.match(footer, /label: "Stylizacje"/);
   assert.match(home, /href="\/stylizacje"/);
+});
+
+test("the storefront offers only three primary choices, with extras still reachable", () => {
+  const header = load("../components/SiteHeader.tsx");
+  const home = load("../app/page.tsx");
+  const bottom = load("../components/MobileBottomNav.tsx");
+  const footer = load("../components/SiteFooter.tsx");
+  assert.match(header, /const MENU: MenuItem\[\] = \[/);
+  assert.match(header, /const EXTRA_MENU: MenuItem\[\] = \[/);
+  assert.match(header, /href: "\/poradniki"/);
+  assert.match(home, /title="Stylizacje"/);
+  assert.match(home, /title="Poradniki"/);
+  assert.match(home, /title="Produkty"/);
+  assert.doesNotMatch(home, /<Categories categories=/);
+  assert.doesNotMatch(home, /<Promotions promotions=/);
+  assert.doesNotMatch(home, /id="najnowsze"/);
+  assert.match(bottom, /grid-cols-4/);
+  assert.match(bottom, /pathname\.startsWith\("\/poradniki\/"\)/);
+  assert.match(footer, /href: "\/kategorie"/);
+  assert.match(footer, /href: "\/promocje-shein"/);
 });

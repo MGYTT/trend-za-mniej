@@ -7,6 +7,7 @@ import ProductPhoto from "@/components/ProductPhoto";
 import { getProducts, formatPrice } from "@/lib/products";
 import { LOOKS, resolveLooks } from "@/lib/stylizacje";
 import { getSiteUrl } from "@/lib/site";
+import { getGuidesForLook } from "@/lib/poradniki";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
@@ -193,6 +194,29 @@ export default async function LookPage({ params }: Props) {
             Jak działają linki afiliacyjne? →
           </Link>
         </aside>
+
+        {getGuidesForLook(look.slug).length > 0 && (
+          <section aria-labelledby="look-guides-title" className="mt-12">
+            <h2 id="look-guides-title" className="text-2xl font-black tracking-tight">
+              Dowiedz się, jak nosić tę stylizację
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+              Poznaj praktyczne wskazówki o fasonach, budżecie i sprawdzaniu ofert
+              przed zakupem.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {getGuidesForLook(look.slug).map((guide) => (
+                <Link key={guide.slug} href={"/poradniki/" + guide.slug}
+                  className="rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-rose-200 hover:shadow-sm">
+                  <span className="text-xs font-bold uppercase tracking-wide text-rose-700">{guide.category}</span>
+                  <h3 className="mt-2 text-lg font-black">{guide.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-stone-600">{guide.summary}</p>
+                  <span className="mt-4 inline-flex text-sm font-black text-rose-700">Przeczytaj poradnik →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {otherLooks.length > 0 && (
           <section aria-labelledby="other-outfits-title" className="mt-12">

@@ -20,6 +20,7 @@ import {
 
 import { getProducts } from "@/lib/products";
 import { resolveLooks } from "@/lib/stylizacje";
+import { STYLE_GUIDES } from "@/lib/poradniki";
 
 export const revalidate =
   300;
@@ -184,6 +185,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       {
         url:
           `${siteUrl}/stylizacje`,
+      },
+
+      {
+        url:
+          `${siteUrl}/poradniki`,
       },
 
       {
@@ -354,8 +360,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((look) => look.available)
     .map((look) => ({ url: `${siteUrl}/stylizacje/${look.slug}` }));
 
+  const guidePages: MetadataRoute.Sitemap = STYLE_GUIDES.map((guide) => ({
+    url: `${siteUrl}/poradniki/${guide.slug}`,
+  }));
+
   return [
     ...lookPages,
+    ...guidePages,
     ...staticPages,
     ...categoryPages,
     ...productPages,

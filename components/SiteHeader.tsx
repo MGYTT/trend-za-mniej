@@ -14,42 +14,19 @@ type MenuItem = {
   href: string;
 };
 
+// Cztery główne decyzje zakupowe; pozostałe miejsca w sekcji pomocniczej.
 const MENU: MenuItem[] = [
-  {
-    label: "Strona główna",
-    description: "Wróć na początek",
-    href: "/",
-  },
-  {
-    label: "Stylizacje",
-    description: "Gotowe zestawy w Twoim budżecie",
-    href: "/stylizacje",
-  },
-  {
-    label: "Produkty",
-    description: "Wszystkie znaleziska",
-    href: "/okazje",
-  },
-  {
-    label: "Kategorie",
-    description: "Wybierz interesujący dział",
-    href: "/kategorie",
-  },
-  {
-    label: "Promocje SHEIN",
-    description: "Kampanie i kody",
-    href: "/promocje-shein",
-  },
-  {
-    label: "TikTok",
-    description: "Produkty z naszych filmów",
-    href: "/tiktok",
-  },
-  {
-    label: "O nas",
-    description: "Poznaj Trend za Mniej",
-    href: "/o-nas",
-  },
+  { label: "Stylizacje", description: "Gotowe zestawy w budżecie", href: "/stylizacje" },
+  { label: "Poradniki", description: "Jak wybrać ubiór?", href: "/poradniki" },
+  { label: "Produkty", description: "Przeglądaj wszystkie oferty", href: "/okazje" },
+  { label: "Promocje", description: "Kody i kampanie SHEIN", href: "/promocje-shein" },
+];
+
+const EXTRA_MENU: MenuItem[] = [
+  { label: "Kategorie", description: "Przeglądaj produkty według działu", href: "/kategorie" },
+  { label: "Z TikToka", description: "Rzeczy z naszych filmów", href: "/tiktok" },
+  { label: "O nas", description: "Poznaj Trend za Mniej", href: "/o-nas" },
+  { label: "Kontakt", description: "Napisz do nas", href: "/kontakt" },
 ];
 
 function activeLink(
@@ -67,8 +44,8 @@ function activeLink(
     );
   }
 
-  if (href === "/stylizacje") {
-    return pathname === "/stylizacje" || pathname.startsWith("/stylizacje/");
+  if (href === "/stylizacje" || href === "/poradniki") {
+    return pathname === href || pathname.startsWith(href + "/");
   }
 
   if (href === "/kategorie") {
@@ -176,9 +153,7 @@ export default function SiteHeader() {
             aria-label="Nawigacja główna"
             className="hidden items-center gap-0.5 lg:flex"
           >
-            {MENU.filter(
-              (item) => item.href !== "/"
-            ).map((item) => {
+            {MENU.map((item) => {
               const active = activeLink(
                 pathname,
                 item.href
@@ -211,16 +186,9 @@ export default function SiteHeader() {
             <Link
               href="/okazje"
               aria-label="Szukaj produktów"
-              className="hidden h-11 w-11 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-rose-50 hover:text-rose-700 min-[360px]:inline-flex lg:hidden"
+              className="hidden h-11 w-11 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-rose-50 hover:text-rose-700 min-[360px]:inline-flex"
             >
               <SearchIcon />
-            </Link>
-
-            <Link
-              href="/okazje"
-              className="hidden min-h-10 items-center justify-center rounded-xl bg-rose-600 px-4 text-[13px] font-extrabold text-white transition hover:bg-rose-700 lg:inline-flex"
-            >
-              Znajdź produkt
             </Link>
 
             <button
@@ -359,41 +327,23 @@ export default function SiteHeader() {
             })}
           </nav>
 
-          {/* SZYBKIE SKRÓTY */}
-
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-stone-100 pt-4">
-            <Link
-              href="/okazje?maxPrice=50"
-              onClick={() => closeMenu()}
-              className="inline-flex min-h-10 items-center rounded-full bg-rose-50 px-3.5 text-xs font-extrabold text-rose-700"
-            >
-              Do 50 zł
-            </Link>
-
-            <Link
-              href="/okazje?maxPrice=100"
-              onClick={() => closeMenu()}
-              className="inline-flex min-h-10 items-center rounded-full bg-stone-100 px-3.5 text-xs font-bold text-stone-700"
-            >
-              Do 100 zł
-            </Link>
-
-            <Link
-              href="/afiliacja"
-              onClick={() => closeMenu()}
-              className="inline-flex min-h-10 items-center rounded-full bg-stone-100 px-3.5 text-xs font-bold text-stone-700"
-            >
-              Afiliacja
-            </Link>
-
-            <Link
-              href="/kontakt"
-              onClick={() => closeMenu()}
-              className="inline-flex min-h-10 items-center rounded-full bg-stone-100 px-3.5 text-xs font-bold text-stone-700"
-            >
-              Kontakt
-            </Link>
-          </div>
+          {/* Nie mieszaj skrótów zakupowych z nawigacją główną. */}
+          <nav aria-label="Pozostałe sekcje" className="mt-5 border-t border-stone-100 pt-4">
+            <p className="text-xs font-black uppercase tracking-wide text-stone-500">Pozostałe</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {EXTRA_MENU.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => closeMenu()}
+                  aria-current={activeLink(pathname, item.href) ? "page" : undefined}
+                  className="flex min-h-11 items-center rounded-xl px-3 text-sm font-bold text-stone-700 hover:bg-stone-50 hover:text-rose-700"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
         </div>
       </div>
 
