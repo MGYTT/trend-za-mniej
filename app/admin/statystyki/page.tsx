@@ -7,7 +7,7 @@ import {
 import AdminHeader from "@/components/admin/AdminHeader";
 import ClicksChart from "@/components/admin/ClicksChart";
 import { LOOKS } from "@/lib/stylizacje";
-import { summarizeAffiliateSources, type SourceStatRow } from "@/lib/affiliate-stats";
+import { summarizeAffiliateSources, affiliateTotalsMatch, type SourceStatRow } from "@/lib/affiliate-stats";
 
 import {
   createClient,
@@ -265,11 +265,20 @@ export default async function StatisticsPage({
   const sourceSummary = summarizeAffiliateSources(sourceRows);
   const { outfitClicks, productClicks, unknownClicks } = sourceSummary;
 
-  const sortedLooks = sourceSummary.outfitRanking.map((row) => ({
-    slug: row.slug,
-    title: LOOKS.find((look) => look.slug === row.slug)?.title ?? "Stylizacja",
-    clicks: row.clicks,
-  }));
+  const affiliateReportMatches =
+    !sourceResult.error &&
+    !chartResult.error &&
+    affiliateTotalsMatch(sourceSummary, periodClicks);
+
+  const sortedLooks = sourceSummary.outfitRanking.map((row) => {
+    const matchedLook = LOOKS.find((look) => look.slug === row.slug);
+    return {
+      slug: row.slug,
+      title: matchedLook?.title ?? "Archiwalna stylizacja",
+      known: Boolean(matchedLook),
+      clicks: row.clicks,
+    };
+  });
 
   return (
     <main className="min-h-screen bg-[#f7f7f8] text-stone-900">
@@ -411,12 +420,35 @@ export default async function StatisticsPage({
                   Nie uwzględnia kliknięć historycznych i o nieustalonym pochodzeniu.
                 </p>
               </div>
+              {!affiliateReportMatches && (
+                <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                  <strong>Sprawdź kompletność danych.</strong>
+                  Suma źródeł kliknięć nie zgadza się z raportem dziennym
+                  albo raport dzienny jest niedostępny. Nie traktuj tych
+                  statystyk jako pełnego wyniku do czasu wyjaśnienia różnicy.
+                </div>
+              )}
+              {affiliateReportMatches && (
+                <p className="mt-4 text-xs font-semibold text-stone-500">
+                  Zestawienie zgadza się z licznikiem wszystkich kliknięć
+                  w tym samym okresie.
+                </p>
+              )}
               <h3 className="mt-7 text-lg font-black">Najczęściej klikane stylizacje</h3>
               {sortedLooks.length > 0 ? (
                 <ol className="mt-3 divide-y divide-stone-100">
                   {sortedLooks.map((look) => (
                     <li key={look.slug} className="flex items-center justify-between gap-4 py-3">
-                      <span className="min-w-0 text-sm font-bold text-stone-700">{look.title}</span>
+                      {look.known ? (
+                        <Link
+                          href={"/stylizacje/" + look.slug}
+                          className="min-w-0 text-sm font-bold text-rose-700 hover:underline focus-visible:outline-2 focus-visible:outline-rose-600"
+                        >
+                          {look.title} →
+                        </Link>
+                      ) : (
+                        <span className="min-w-0 text-sm font-bold text-stone-700">{look.title}</span>
+                      )}
                       <strong className="shrink-0 text-base font-black">{look.clicks} klik.</strong>
                     </li>
                   ))}

@@ -78,3 +78,11 @@ Polecenie uruchamia kolejno:
 
 **Wynik testu analizatora (lokalny izolowany katalog, Node.js 22 + TypeScript): 3/3 PASS.**
 Skan całej aplikacji oraz pełny build nadal wymagają pobranego repozytorium i zależności. Nie oznaczamy wydania jako gotowego bez ich uruchomienia.
+
+## Kontrola jakości raportu kliknięć
+
+- Raport administracyjny porównuje sumę źródeł ze starym licznikiem kliknięć w tym samym okresie.
+- Gdy wynik się nie zgadza lub raport dzienny nie działa, pokazuje ostrzeżenie zamiast sugerować, że statystyki są kompletne.
+- Z rankingu można otworzyć aktywnie zdefiniowane stylizacje; historyczne nieznane slugi nie prowadzą do potencjalnych stron 404.
+- Trzy nowe testy dotyczą uzgodnienia sum, brakujących danych oraz błędnych liczb.
+- Ogólny opis prac i lista blokad: [Aktualny stan projektu](./STATUS-PROJEKTU.md).

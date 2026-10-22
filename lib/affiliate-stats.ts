@@ -48,3 +48,24 @@ export function summarizeAffiliateSources(rows: readonly SourceStatRow[]) {
     })).sort((a, b) => b.clicks - a.clicks || a.slug.localeCompare(b.slug)),
   };
 }
+
+/**
+ * Both numbers are expected to use the same calendar-day window.
+ * This fails closed on invalid period totals instead of presenting
+ * misleading figures as complete analytics.
+ */
+export function affiliateTotalsMatch(
+  sourceSummary: ReturnType<typeof summarizeAffiliateSources>,
+  reportedPeriodClicks: number
+): boolean {
+  if (!Number.isSafeInteger(reportedPeriodClicks) || reportedPeriodClicks < 0) {
+    return false;
+  }
+
+  return (
+    sourceSummary.outfitClicks +
+      sourceSummary.productClicks +
+      sourceSummary.unknownClicks ===
+    reportedPeriodClicks
+  );
+}

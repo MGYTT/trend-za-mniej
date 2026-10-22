@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { summarizeAffiliateSources } from "../lib/affiliate-stats.ts";
+import { summarizeAffiliateSources, affiliateTotalsMatch } from "../lib/affiliate-stats.ts";
 
 test("counts all sources and consolidates duplicate outfit rows", () => {
   const s = summarizeAffiliateSources([
@@ -47,4 +47,28 @@ test("unrecognized types and outfit clicks without slugs are unknown", () => {
   ]);
   assert.equal(s.unknownClicks, 5);
   assert.equal(s.knownClicks, 0);
+});
+
+test("report reconciliation succeeds for same-period total", () => {
+  const summary = summarizeAffiliateSources([
+    { source_type: "outfit", outfit_slug: "one", clicks: 3 },
+    { source_type: "product", outfit_slug: null, clicks: 4 },
+    { source_type: "unknown", outfit_slug: null, clicks: 2 },
+  ]);
+  assert.equal(affiliateTotalsMatch(summary, 9), true);
+});
+
+test("report reconciliation detects missing categorized clicks", () => {
+  const summary = summarizeAffiliateSources([
+    { source_type: "outfit", outfit_slug: "one", clicks: 3 },
+  ]);
+  assert.equal(affiliateTotalsMatch(summary, 5), false);
+});
+
+test("report reconciliation rejects non-integer or invalid totals", () => {
+  const summary = summarizeAffiliateSources([]);
+  assert.equal(affiliateTotalsMatch(summary, NaN), false);
+  assert.equal(affiliateTotalsMatch(summary, -1), false);
+  assert.equal(affiliateTotalsMatch(summary, 0.5), false);
+  assert.equal(affiliateTotalsMatch(summary, 0), true);
 });
