@@ -68,7 +68,7 @@ test("outfits are discoverable from the global footer and homepage", () => {
   const footer = load("../components/SiteFooter.tsx");
   const home = load("../app/page.tsx");
   assert.match(footer, /"\/stylizacje"/);
-  assert.match(footer, /Gotowe stylizacje do 100/);
+  assert.match(footer, /label: "Stylizacje"/);
   assert.match(home, /href="\/stylizacje"/);
 });
 

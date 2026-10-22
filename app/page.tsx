@@ -118,9 +118,9 @@ function Hero({
           </h1>
 
           <p className="mt-3 max-w-lg text-sm leading-6 text-stone-600 sm:mt-5 sm:text-base sm:leading-8">
-            Ubrania, dodatki i ciekawe znaleziska
-            w jednym miejscu. Szukaj tego, co
-            pasuje do Ciebie i Twojego budżetu.
+            Wybierz gotową stylizację na konkretną okazję,
+            przeczytaj praktyczne porady lub znajdź pojedynczy produkt.
+            Ceny sprawdzaj przed zakupem u sprzedawcy.
           </p>
 
           {/* WYSZUKIWARKA */}
@@ -163,41 +163,6 @@ function Hero({
             </button>
           </form>
 
-          {/* SZYBKIE PRZEJŚCIA */}
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs font-semibold text-stone-500">
-              Na skróty:
-            </span>
-
-            <Link
-              href="/okazje?maxPrice=50"
-              className="rounded-full bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700 transition hover:bg-rose-50 hover:text-rose-700"
-            >
-              Do 50 zł
-            </Link>
-
-            <Link
-              href="/okazje?maxPrice=100"
-              className="rounded-full bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700 transition hover:bg-rose-50 hover:text-rose-700"
-            >
-              Do 100 zł
-            </Link>
-
-            <Link
-              href="/stylizacje"
-              className="rounded-full bg-rose-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-rose-700"
-            >
-              Gotowe stylizacje →
-            </Link>
-
-            <Link
-              href="/tiktok"
-              className="rounded-full bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700 transition hover:bg-rose-50 hover:text-rose-700"
-            >
-              Z TikToka
-            </Link>
-          </div>
         </div>
 
         <HeroVisual product={product} />

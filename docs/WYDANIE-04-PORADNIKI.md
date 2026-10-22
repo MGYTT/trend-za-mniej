@@ -46,3 +46,5 @@ Wytyczne:
 ## Uproszczenie nawigacji i strony głównej
 
 Na prośbę właściciela włączone do tego samego wydania: uproszczono nagłówek do 4 działań (Stylizacje, Poradniki, Produkty, Promocje), pozostałe działy dostępne w mobilnym menu i stopce. Dolny pasek mobilny ma 4 pozycje (Start, Stylizacje, Poradniki, Produkty). Strona główna prowadzi najpierw do 3 jasnych wyborów, następnie do 3 poradników i 4 wybranych produktów; usunięto powtarzające się sekcje nowych produktów, kategorii i promocji, ale odpowiednie adresy publiczne nadal działają. Sekcja /stylizacje ma krótki odnośnik do poradników zamiast powtarzania ich miniatur i kolejnego długiego tekstu. Wymaga kontroli UX i testów.
+
+W hero usunięto drugi zestaw chipów „Na skróty”, ponieważ powtarzał trzy główne ścieżki pod spodem. Wyszukiwarka pozostaje tylko dla osób szukających konkretnego produktu. Zachowano pojedyncze wejścia do stylizacji, poradników i katalogu.
