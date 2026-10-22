@@ -11,6 +11,7 @@ import {
 import {
   useRouter,
 } from "next/navigation";
+import Link from "next/link";
 
 import {
   createClient,
@@ -271,12 +272,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <a
+        <Link
           href="/"
           className="mt-6 block text-center text-sm font-semibold text-stone-500 hover:text-rose-600"
         >
           ← Wróć na stronę
-        </a>
+        </Link>
       </div>
     </main>
   );

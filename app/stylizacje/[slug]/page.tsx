@@ -131,7 +131,7 @@ export default async function LookPage({ params }: Props) {
                   <p className="mt-1 text-xs text-stone-500">Cena zapisana przy publikacji</p>
                   <div className="mt-4 grid grid-cols-1 gap-2">
                     <a
-                      href={"/go/" + product.id}
+                      href={"/go/" + product.id + "?origin=outfit&look=" + encodeURIComponent(look.slug)}
                       target="_blank"
                       rel="sponsored nofollow noopener noreferrer"
                       className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-extrabold text-white hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-600"

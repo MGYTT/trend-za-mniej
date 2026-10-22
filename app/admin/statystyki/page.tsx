@@ -6,6 +6,8 @@ import {
 
 import AdminHeader from "@/components/admin/AdminHeader";
 import ClicksChart from "@/components/admin/ClicksChart";
+import { LOOKS } from "@/lib/stylizacje";
+import { summarizeAffiliateSources, affiliateTotalsMatch, type SourceStatRow } from "@/lib/affiliate-stats";
 
 import {
   createClient,
@@ -101,6 +103,7 @@ export default async function StatisticsPage({
     chartResult,
     rankingResult,
     allClicksResult,
+    sourceResult,
   ] =
     await Promise.all([
       supabase.rpc(
@@ -133,7 +136,15 @@ export default async function StatisticsPage({
               true,
           }
         ),
+
+      supabase.rpc("get_affiliate_source_stats", {
+        p_days: selectedDays,
+      }),
     ]);
+
+  if (sourceResult.error) {
+    console.error("Raport źródeł kliknięć niedostępny:", sourceResult.error);
+  }
 
   if (
     chartResult.error
@@ -247,6 +258,28 @@ export default async function StatisticsPage({
     ranking[0] ??
     null;
 
+  const sourceRows: SourceStatRow[] = sourceResult.error
+    ? []
+    : ((sourceResult.data ?? []) as SourceStatRow[]);
+
+  const sourceSummary = summarizeAffiliateSources(sourceRows);
+  const { outfitClicks, productClicks, unknownClicks } = sourceSummary;
+
+  const affiliateReportMatches =
+    !sourceResult.error &&
+    !chartResult.error &&
+    affiliateTotalsMatch(sourceSummary, periodClicks);
+
+  const sortedLooks = sourceSummary.outfitRanking.map((row) => {
+    const matchedLook = LOOKS.find((look) => look.slug === row.slug);
+    return {
+      slug: row.slug,
+      title: matchedLook?.title ?? "Archiwalna stylizacja",
+      known: Boolean(matchedLook),
+      clicks: row.clicks,
+    };
+  });
+
   return (
     <main className="min-h-screen bg-[#f7f7f8] text-stone-900">
       <AdminHeader />
@@ -338,6 +371,115 @@ export default async function StatisticsPage({
             helper="z ruchem"
             icon="days"
           />
+        </section>
+
+        <section aria-labelledby="source-report-title" className="mt-4 overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm">
+          <div className="border-b border-stone-100 p-5 sm:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-rose-600">
+              Nowe dane
+            </p>
+            <h2 id="source-report-title" className="mt-2 text-xl font-black tracking-tight">
+              Skąd przychodzą kliknięcia do SHEIN?
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+              Źródła kliknięć z ostatnich {selectedDays} dni, zapisanych przez /go.
+              Bezpośrednie linki kampanii SHEIN mogą nie być tutaj policzone.
+              Kliknięcia nie są zakupami ani zatwierdzonymi prowizjami.
+            </p>
+          </div>
+
+          {sourceResult.error ? (
+            <p className="p-5 text-sm leading-6 text-amber-800 sm:p-6">
+              Raport źródeł nie jest jeszcze aktywny. Wymaga zastosowania skryptu
+              docs/sql/affiliate-click-attribution.sql w Supabase podczas wydania 02.
+              Dotychczasowe statystyki nadal działają.
+            </p>
+          ) : (
+            <div className="p-5 sm:p-6">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-rose-50 p-4">
+                  <p className="text-xs font-semibold text-stone-600">Z gotowych stylizacji</p>
+                  <p className="mt-2 text-3xl font-black text-rose-800">{outfitClicks}</p>
+                </div>
+                <div className="rounded-2xl bg-stone-50 p-4">
+                  <p className="text-xs font-semibold text-stone-600">Z podstron produktów</p>
+                  <p className="mt-2 text-3xl font-black text-stone-950">{productClicks}</p>
+                </div>
+                <div className="rounded-2xl bg-stone-50 p-4">
+                  <p className="text-xs font-semibold text-stone-600">Źródło nieustalone</p>
+                  <p className="mt-2 text-3xl font-black text-stone-950">{unknownClicks}</p>
+                </div>
+              </div>
+              <div className="mt-5 rounded-2xl border border-stone-100 p-4">
+                <p className="text-sm font-semibold text-stone-700">
+                  Udział stylizacji w kliknięciach ze znanym źródłem
+                </p>
+                <p className="mt-1 text-2xl font-black text-rose-700">
+                  {sourceSummary.knownClicks > 0
+                    ? `${sourceSummary.outfitShareOfKnown}%`
+                    : "Za wcześnie na ocenę"}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-stone-500">
+                  Rozpoznano źródło {sourceSummary.knownClicks} z {sourceSummary.totalClicks} kliknięć
+                  {sourceSummary.knownCoveragePercent === null
+                    ? " (brak kliknięć w okresie)."
+                    : ` (${sourceSummary.knownCoveragePercent}% pokrycia źródłem).`}
+                  Wskaźnik udziału stylizacji dotyczy wyłącznie kliknięć z rozpoznanym źródłem.
+                </p>
+                {sourceSummary.knownClicks === 0 && (
+                  <p role="status" className="mt-3 text-sm leading-6 text-stone-600">
+                    {sourceSummary.totalClicks === 0
+                      ? "Brak kliknięć do porównania. Poczekaj na nowe dane."
+                      : "Obecne kliknięcia nie mają jeszcze wiarygodnego źródła. Historycznych zdarzeń nie można przypisać stylizacjom wstecznie."}
+                  </p>
+                )}
+              </div>
+              {!affiliateReportMatches && (
+                <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                  <strong>Sprawdź kompletność danych.</strong>
+                  Suma źródeł kliknięć nie zgadza się z raportem dziennym
+                  albo raport dzienny jest niedostępny. Nie traktuj tych
+                  statystyk jako pełnego wyniku do czasu wyjaśnienia różnicy.
+                </div>
+              )}
+              {affiliateReportMatches && (
+                <p className="mt-4 text-xs font-semibold text-stone-500">
+                  Zestawienie zgadza się z licznikiem wszystkich kliknięć
+                  w tym samym okresie.
+                </p>
+              )}
+              <h3 className="mt-7 text-lg font-black">Najczęściej klikane stylizacje</h3>
+              {sortedLooks.length > 0 ? (
+                <ol className="mt-3 divide-y divide-stone-100">
+                  {sortedLooks.map((look) => (
+                    <li key={look.slug} className="flex items-center justify-between gap-4 py-3">
+                      {look.known ? (
+                        <Link
+                          href={"/stylizacje/" + look.slug}
+                          className="min-w-0 text-sm font-bold text-rose-700 hover:underline focus-visible:outline-2 focus-visible:outline-rose-600"
+                        >
+                          {look.title} →
+                        </Link>
+                      ) : (
+                        <span className="min-w-0 text-sm font-bold text-stone-700">{look.title}</span>
+                      )}
+                      <strong className="shrink-0 text-base font-black">{look.clicks} klik.</strong>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="mt-3 text-sm text-stone-500">
+                  Nie odnotowano jeszcze kliknięć z gotowych stylizacji.
+                </p>
+              )}
+              <p className="mt-5 text-xs leading-5 text-stone-500">
+                Aby porównać skuteczność stylizacji z produktami, zestaw te kliknięcia
+                z odsłonami odpowiednich stron w Vercel Analytics w tym samym okresie.
+                Bez odsłon nie obliczaj konwersji. Starsze źródła są nieznane,
+                a dane o zamówieniach i prowizjach sprawdzaj osobno w programie partnerskim.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="mt-4 overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm">

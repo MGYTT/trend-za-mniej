@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:affiliate": "node --experimental-strip-types --test tests/affiliate-attribution.test.mjs tests/affiliate-stats.test.mjs",
+    "test:release-sql": "node --test tests/release-sql-structure.test.mjs",
+    "check:syntax": "node scripts/check-typescript-syntax.mjs",
+    "test:syntax": "node --test tests/check-typescript-syntax.test.mjs",
+    "verify:release": "npm run check:syntax && npm run test:syntax && npm run test:affiliate && npm run test:release-sql && npm run test:release-contracts && node --experimental-strip-types --test tests/stylizacje.test.mjs tests/outfit-filters.test.mjs && npm run lint && npm run build",
+    "test:release-contracts": "node --test tests/release-contracts.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
