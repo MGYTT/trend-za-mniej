@@ -65,3 +65,10 @@ Zabezpieczono rozpoznawanie pochodzenia kliknięć przed wielokrotnymi i sprzecz
 ## ESLint na Windows — 22.10.2026
 
 Użytkownik uruchomił pełną kontrolę; zatrzymała się na 15 błędach ESLint (14 × React `set-state-in-effect`, 1 × nawigacja `<a>` w loginie) i 22 ostrzeżeniach. Link do strony głównej zastąpiono `next/link`; dla 9 starszych komponentów zamieniono jedynie rangę wskazanej reguły na ostrzeżenie. Dokładny wykaz wyjątków i plan trwałej refaktoryzacji: [LINT-REVIEW-02.md](./LINT-REVIEW-02.md). Ta zmiana nie oznacza, że efekty React zostały naprawione. Wymagane ponowne `npm run verify:release` na Windows.
+
+## Potwierdzony build Windows — 22.10.2026
+
+- `npm run verify:release` — **PASS**, w tym `npm run build` (Next.js 16.4.0, TypeScript i generowanie 32 stron statycznych).
+- `npm audit --omit=dev` — **0 podatności zależności produkcyjnych**. Bez tego wniosku o pełnym bezpieczeństwie narzędzi deweloperskich.
+- Supabase Free: kopia bazy i test odtwarzania **nadal niepotwierdzone**. Dodano PowerShell `scripts/backup-supabase-before-release.ps1`, działający lokalnie po instalacji Supabase CLI i Docker Desktop.
+- Kolejka SEO nadal ma `EXECUTE` dla `anon`; poprawkę SQL wykonamy po testach i kopii.

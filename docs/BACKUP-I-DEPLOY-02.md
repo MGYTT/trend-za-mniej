@@ -39,3 +39,21 @@ Instrukcja źródłowa: [Supabase — Backup and Restore using the CLI](https://
 - `npm run build`: **niewykonany** z powodu niedostępnych w środowisku zależności Next.js i braku dostępu do repozytorium przez Git.
 - GitHub Actions: **nieużywane**.
 - Vercel: **nie uruchamiać ponownego buildu**, dopóki testy, kopia i migracje testowe nie przejdą.
+
+## Windows PowerShell (zalecane dla Twojego komputera)
+
+Przygotowano osobny skrypt `scripts/backup-supabase-before-release.ps1`. Wymaga działającego **Docker Desktop** oraz **Supabase CLI**. Dane połączenia podajesz do ukrytego monitu po uruchomieniu skryptu — **nie wysyłaj ich do ChatGPT**.
+
+W katalogu projektu:
+```powershell
+git pull --ff-only
+powershell -NoProfile -File .\scripts\backup-supabase-before-release.ps1
+```
+
+Skrypt zapisuje kopię w nowym folderze `Dokumenty/TrendZaMniej-Backup-<data>` poza repozytorium; odmawia zapisu do folderu repozytorium lub nadpisania istniejącej kopii. Jeśli lokalne zasady PowerShell blokują skrypt, sprawdź ustawienia ze zaufanym administratorem — nie zmieniaj globalnej polityki uruchamiania.
+
+W folderze muszą znaleźć się: `roles.sql`, `schema.sql`, `data.sql`, `SHA256SUMS.txt`. Potwierdź liczbę i rozmiary plików, nie wklejaj tutaj zawartości. Dalszy warunek: sprawdzenie możliwości przywrócenia bazy w izolowanym środowisku testowym.
+
+### Wyniki ręcznych testów aplikacji (22.10.2026)
+
+Użytkownik potwierdził, że `npm run verify:release` zakończyło się sukcesem na Windows, w tym `next build` Next.js 16.4.0, TypeScript oraz wygenerowanie 32 stron statycznych. `npm audit --omit=dev` zgłosiło **0 podatności w zależnościach produkcyjnych**. W logu pozostają ostrzeżenia Edge Runtime i `z-index`, które nie zablokowały kompilacji. Nie wykonujemy kolejnego builda Vercel, dopóki migracje i kopie nie są gotowe.
