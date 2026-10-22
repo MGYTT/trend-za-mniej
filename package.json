@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:stylizacje": "node --experimental-strip-types --test tests/stylizacje.test.mjs tests/outfit-filters.test.mjs && node --test tests/stylizacje-growth.test.mjs",
+    "verify:stylizacje": "npm run test:stylizacje && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

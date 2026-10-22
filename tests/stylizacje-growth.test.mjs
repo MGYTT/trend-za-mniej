@@ -51,3 +51,14 @@ test("outfit cannot show missing or over-budget products", () => {
   assert.match(detail, /look\.excluded/);
   assert.match(detail, /look\.whyItWorks/);
 });
+
+test("release keeps legacy React warnings scoped and fixes the login internal link", () => {
+  const cfg = load("../eslint.config.mjs");
+  const login = load("../app/login/page.tsx");
+  assert.match(cfg, /"react-hooks\/set-state-in-effect": "warn"/);
+  assert.doesNotMatch(cfg, /"react-hooks\/set-state-in-effect": "off"/);
+  assert.equal((cfg.match(/\.tsx"/g) ?? []).length, 9);
+  assert.ok(login.includes('import Link from "next/link"'));
+  assert.ok(login.includes('<Link\n          href="/"'));
+  assert.ok(!login.includes('<a\n          href="/"'));
+});
