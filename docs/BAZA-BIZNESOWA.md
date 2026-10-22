@@ -66,3 +66,7 @@ Wszystkie 11 pozycji przypisanych w konfiguracji do pięciu zestawów (każdy ko
 **Wniosek redakcyjny:** Streetwear ma tylko 1 zł zapasu; w pierwszej kolejności sprawdzać go przy aktualizowaniu cen. Gdy zapisane ceny przekroczą budżet albo produkt będzie nieaktywny, istniejąca funkcja `resolveLooks` wyłącza niekompletny zestaw z katalogu. Nie zmieniaj limitów „na oko” bez aktualizacji oferty.
 
 Do potwierdzenia ręcznie u partnera: poprawne przekierowanie, rozmiary, dostępność, koszt dostawy, aktualność cen i zgodność fotografii z produktami.
+
+## Jakość katalogu — aktualizacja 23.10.2026
+
+Kontrola wszystkich 97 aktywnych ofert nie wykryła pustych pól opisowych, braków adresów zdjęć i linków HTTPS do SHEIN ani niedodatnich cen katalogowych. **97 aktywnych ofert nie ma jednak potwierdzonego `shein_product_key`** (74 `unresolved`, 23 `pending`); **86 nie było edytowanych przez ponad 7 dni**. To sygnał do kolejnej weryfikacji redakcyjnej, a nie dowód nieaktualnej ceny. Wszystkie 11 produktów z 5 stylizacji są aktywne, bez klucza produktu i bez edycji w ostatnich 7 dniach. Szczegóły i raport SQL: [JAKOSC-OFERT.md](./JAKOSC-OFERT.md).

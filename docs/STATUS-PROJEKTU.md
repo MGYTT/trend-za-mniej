@@ -105,3 +105,7 @@ Uzupełniono [BAZA-BIZNESOWA.md](./BAZA-BIZNESOWA.md) na podstawie aktualnych da
 ## Kontrola kompletności stylizacji — 22.10.2026
 
 Odczyt Supabase względem `lib/stylizacje.ts`: **5/5 zestawów kompletnych**, wszystkie przypisane produkty aktywne i w limitach zapisanych cen. Suma: Streetwear 99,00 zł / 100 zł, praca 111,75 zł / 150 zł, weekend 121,05 zł / 150 zł, casual 136,15 zł / 150 zł, trencz 188,63 zł / 200 zł. **Nie sprawdzano cen i dostępności u sprzedawcy.** Szczegóły w [BAZA-BIZNESOWA.md](./BAZA-BIZNESOWA.md).
+
+## Ostatnia kontrola jakości ofert — 23.10.2026
+
+W Supabase odczytem sprawdzono 97 aktywnych ofert: kompletne pola cen/linków/zdjęć/opisów, 0 nie-HTTPS linków SHEIN, ale **97 bez klucza identyfikacyjnego** (74 unresolved/23 pending) i 86 bez edycji rekordu w ostatnich 7 dniach. Wszystkie 11 produktów z 5 stylizacji aktywne, ale również bez potwierdzonego klucza. `updated_at` to edycja rekordu, nie audyt ceny. Dodano `docs/sql/jakosc-ofert-readonly.sql` oraz [JAKOSC-OFERT.md](./JAKOSC-OFERT.md). **Nic nie zapisywano w produkcji.**

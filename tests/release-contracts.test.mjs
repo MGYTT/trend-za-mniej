@@ -83,3 +83,13 @@ test("Windows PostgreSQL 18 backup tools are supported without Docker", () => {
   assert.ok(backup.includes("Resolve-PgTool \"pg_dump\""));
   assert.doesNotMatch(backup, /& docker/);
 });
+
+test("quality audit reads catalog only and never mutates products", () => {
+  const sql = load("../docs/sql/jakosc-ofert-readonly.sql");
+  const source = sql.replace(/--[^\n]*/g, "");
+  assert.match(source, /FROM public\.products;/);
+  assert.match(source, /shein_identity_status/);
+  assert.match(source, /updated_at/);
+  assert.match(source, /orphan_clicks/);
+  assert.doesNotMatch(source, /\b(?:UPDATE|DELETE|INSERT|ALTER|DROP|TRUNCATE|CREATE)\b/i);
+});

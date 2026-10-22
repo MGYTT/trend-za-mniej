@@ -47,4 +47,4 @@ Zmienne środowiskowe (wartości z paneli usług; **nigdy nie commituj wartości
 
 Najpierw pomagamy użytkownikowi wybrać **gotowy zestaw**, a dopiero potem rozwijamy nowe funkcje. Mierzymy odsłony, zainteresowanie i kliknięcia; zatwierdzone zamówienia oraz prowizje mogą pochodzić jedynie z panelu programu partnerskiego. Nie twierdzimy, że oferta ma najniższą cenę, jeśli nie została porównana i zweryfikowana.
 
-**Dokumenty:** [plan 90 dni](docs/PLAN-ROZWOJU.md) · [biznesowy stan wyjściowy](docs/BAZA-BIZNESOWA.md) · [Wydanie 02 — prosto](docs/WYDANIE-02-PROSTO.md) · [status techniczny](docs/STATUS-PROJEKTU.md) · [zasady bezpieczeństwa](docs/SECURITY-REVIEW.md).
+**Dokumenty:** [kontrola jakości ofert](docs/JAKOSC-OFERT.md) · [plan 90 dni](docs/PLAN-ROZWOJU.md) · [biznesowy stan wyjściowy](docs/BAZA-BIZNESOWA.md) · [Wydanie 02 — prosto](docs/WYDANIE-02-PROSTO.md) · [status techniczny](docs/STATUS-PROJEKTU.md) · [zasady bezpieczeństwa](docs/SECURITY-REVIEW.md).

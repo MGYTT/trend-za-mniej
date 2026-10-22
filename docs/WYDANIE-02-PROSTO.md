@@ -47,3 +47,7 @@ Alternatywa dla zaawansowanych — pełniejsza kopia schematu public przez `pg_d
 22.10.2026 użytkownik potwierdził zapis obu plików CSV. Następnie asystent wykonał wyłącznie odczyty w Supabase i potwierdził wszystkie kluczowe liczniki oraz uprawnienia. Symulacja źródła `unknown` dla istniejącej historii daje **7/7 kliknięć w 7 dni** i **34/34 w 30 dni**. Nie wykonano migracji SQL ani deploymentu.
 
 **Nie trzeba wykonywać ponownie eksportu ani instalować programu.** Pliki CSV pozostają lokalnie u właściciela. Ponieważ nie da się obecnie udowodnić ich odtwarzalności ani wykorzystać ich do przywrócenia całego schematu Auth/Storage, traktujemy je jako dodatkowe zabezpieczenie, a nie punkt pełnego odtworzenia produkcji. Pozostała blokada jest konkretnie udokumentowana w `STATUS-PROJEKTU.md`.
+
+## Następna kontrola biznesowa — 23.10.2026
+
+Przeprowadzono read-only kontrolę jakości wszystkich 97 aktywnych ofert. Linki i zdjęcia są strukturalnie kompletne, ale 97 ofert nie ma zweryfikowanego klucza SHEIN, a 86 nie było edytowanych przez 7 dni. Szczegóły: [JAKOSC-OFERT.md](./JAKOSC-OFERT.md). Nie zmieniano cen, produktów ani statusów. Nie uruchomiono migracji ani deploymentu.

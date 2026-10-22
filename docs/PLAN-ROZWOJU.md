@@ -126,3 +126,7 @@ Uruchomić mały eksperyment zamiast dużej przebudowy:
 - **Etap 2 (Wydanie 02):** kod atrybucji i admina przygotowany, build Windows zaliczony; migracja Supabase nadal niewykonana, bo CSV nie stanowi kompletnej i przetestowanej kopii do odtworzenia.
 - **Decyzja biznesowa:** przez pierwszych 14 dni po uruchomieniu pomiaru nie deklarujemy „wygranego” zestawu bez wiarygodnego mianownika odsłon i poprawnego udziału kliknięć ze znanym źródłem.
 - **Wymogi operacyjne:** bez GitHub Actions, bez płatnych dodatków i bez dodatkowych Vercel Preview. Publikacja dopiero po kontrolach przywracania danych.
+
+## 9. Jakość ofert przed skalowaniem ruchu — 23.10.2026
+
+Weryfikacja strukturalna 97 aktywnych ofert: pola HTTPS, opisy i ceny kompletne, ale żadna oferta nie ma potwierdzonego klucza identyfikacyjnego SHEIN, a 86 nie było edytowanych w ostatnim tygodniu. **Działanie P1:** sprawdzić w sklepie 11 produktów z pięciu gotowych stylizacji, zaczynając od Streetwear z zapasem katalogowym 1 zł; następnie systematycznie sprawdzać pozostałe oferty, wykorzystując istniejący moduł duplikatów. Bez masowego dodawania produktów i bez automatycznego poprawiania cen. Patrz [JAKOSC-OFERT.md](./JAKOSC-OFERT.md).
