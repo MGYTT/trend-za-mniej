@@ -99,3 +99,13 @@ test("zero clicks and historical-only clicks are not presented as outfit winners
   assert.equal(historical.knownClicks, 0);
   assert.deepEqual(historical.outfitRanking, []);
 });
+
+test("full coverage is possible but it is not a conversion rate", () => {
+  const s = summarizeAffiliateSources([
+    { source_type: "outfit", outfit_slug: "one", clicks: 3 },
+    { source_type: "product", outfit_slug: null, clicks: 2 },
+  ]);
+  assert.equal(s.totalClicks, 5);
+  assert.equal(s.knownCoveragePercent, 100);
+  assert.equal(s.outfitShareOfKnown, 60);
+});

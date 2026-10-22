@@ -50,3 +50,19 @@ Nie jesteśmy sklepem: pomagamy wybrać damskie stylizacje na okazję i budżet.
 Nie uruchamiać migracji bez zweryfikowanego planu odzyskiwania danych, a nie tylko CSV produktów. Aktualny plan Supabase: Free, bez pewnej automatycznej kopii możliwej do przywrócenia. Nie tworzyć dodatkowej płatnej gałęzi ani nie wykonywać nowego deploymentu Vercel, zanim release i uprawnienia nie przejdą przeglądu. Nie używać GitHub Actions.
 
 Po potwierdzeniu warunków wystarczy **jedno kontrolowane wdrożenie Wydania 02**.
+
+## Kontrola pięciu zestawów — katalog Supabase, 22.10.2026
+
+Wszystkie 11 pozycji przypisanych w konfiguracji do pięciu zestawów (każdy komplet ma 2–3 produkty) istnieje w `public.products` i jest oznaczonych jako aktywne. Ceny poniżej to **kwoty zapisane w katalogu**, nie aktualne ceny potwierdzone w sklepie SHEIN; nie obejmują dostawy ani dodatków wymienionych jako wyłączone z zestawu.
+
+| Stylizacja | Produkty | Zapisana suma | Limit | Zapas do limitu |
+| --- | ---: | ---: | ---: | ---: |
+| Streetwear do 100 zł | 2/2 aktywne | 99,00 zł | 100 zł | 1,00 zł |
+| Do pracy do 150 zł | 2/2 aktywne | 111,75 zł | 150 zł | 38,25 zł |
+| Weekend do 150 zł | 2/2 aktywne | 121,05 zł | 150 zł | 28,95 zł |
+| Casual do 150 zł | 2/2 aktywne | 136,15 zł | 150 zł | 13,85 zł |
+| Z trenczem do 200 zł | 3/3 aktywne | 188,63 zł | 200 zł | 11,37 zł |
+
+**Wniosek redakcyjny:** Streetwear ma tylko 1 zł zapasu; w pierwszej kolejności sprawdzać go przy aktualizowaniu cen. Gdy zapisane ceny przekroczą budżet albo produkt będzie nieaktywny, istniejąca funkcja `resolveLooks` wyłącza niekompletny zestaw z katalogu. Nie zmieniaj limitów „na oko” bez aktualizacji oferty.
+
+Do potwierdzenia ręcznie u partnera: poprawne przekierowanie, rozmiary, dostępność, koszt dostawy, aktualność cen i zgodność fotografii z produktami.
