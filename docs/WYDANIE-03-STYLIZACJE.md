@@ -44,3 +44,7 @@ Oparcie o wytyczne Google: [tworzenie przydatnych treści](https://developers.go
 ## Uwaga o istniejącym ESLint
 
 Na bazowym `main` wykryto wcześniej w Windows 14 błędów `react-hooks/set-state-in-effect` w dziewięciu istniejących komponentach i błąd linku `<a href="/">` na stronie logowania. Na tej gałęzi link został zmieniony na `next/link`, a wyłącznie w dziewięciu historycznych komponentach regułę zachowano jako ostrzeżenie zamiast błędu; nie została wyłączona globalnie. Refaktoryzacja tych efektów wymaga oddzielnych testów regresji. Nie jest to naprawa ich zachowania.
+
+## Linkowanie wewnętrzne
+
+Przeprowadzono audyt drogi do `/stylizacje`. Link jest już obecny w głównym menu, dolnej nawigacji mobilnej oraz w skrótach strony głównej. Dodano brakujący, opisowy odnośnik w stopce. Nie tworzymy osobnych stron filtrów ani duplikatów pod frazy, bo powodowałoby to niepotrzebne mnożenie bardzo podobnych stron.

@@ -62,3 +62,11 @@ test("release keeps legacy React warnings scoped and fixes the login internal li
   assert.ok(login.includes('<Link\n          href="/"'));
   assert.ok(!login.includes('<a\n          href="/"'));
 });
+
+test("outfits are discoverable from the global footer and homepage", () => {
+  const footer = load("../components/SiteFooter.tsx");
+  const home = load("../app/page.tsx");
+  assert.match(footer, /"\/stylizacje"/);
+  assert.match(footer, /Gotowe stylizacje do 100/);
+  assert.match(home, /href="\/stylizacje"/);
+});
