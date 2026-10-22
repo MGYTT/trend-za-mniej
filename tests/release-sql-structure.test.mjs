@@ -22,7 +22,7 @@ test("migration SQL has a single transaction and no duplicate CREATE FUNCTION", 
   assert.equal((migration.match(/CREATE INDEX IF NOT EXISTS/g) ?? []).length, 1);
 });
 test("all dollar-quoted SQL blocks have balanced delimiters", () => {
-  for (const tag of ["check_source", "check_consistency", "source_stats"]) {
+  for (const tag of ["verify_privacy", "check_source", "check_consistency", "source_stats"]) {
     const count = migration.split("$" + tag + "$").length - 1;
     assert.equal(count, 2, tag + " delimiter must appear exactly twice");
   }
@@ -45,4 +45,15 @@ test("queue lockdown only restricts direct RPC and leaves service role", () => {
   assert.match(queue, /FROM PUBLIC, anon, authenticated;/);
   assert.match(queue, /TO service_role;/);
   assert.doesNotMatch(queue, /DROP\s+(FUNCTION|TABLE)/);
+});
+
+test("migration limits locks and fails before altering a table with weaker privacy", () => {
+  assert.match(migration, /SET LOCAL lock_timeout = '5s'/);
+  assert.match(migration, /SET LOCAL statement_timeout = '60s'/);
+  assert.match(migration, /has_table_privilege\('anon', 'public\.affiliate_clicks', 'SELECT'\)/);
+  assert.match(migration, /has_table_privilege\('anon', 'public\.affiliate_clicks', 'INSERT'\)/);
+  const safetyGate = migration.indexOf("DO $verify_privacy$");
+  const change = migration.indexOf("ALTER TABLE public.affiliate_clicks");
+  assert.ok(safetyGate !== -1 && change > safetyGate);
+  assert.doesNotMatch(migration, /\bDROP\s+(TABLE|COLUMN)|\bTRUNCATE\b/i);
 });

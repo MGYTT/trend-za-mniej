@@ -3,7 +3,31 @@
 -- Dodajemy źródło kliknięcia, nie zapisujemy IP/cookies/użytkowników.
 -- Historię kliknięć zachowujemy (domyślnie 'unknown').
 
+
 BEGIN;
+-- Nie blokuj długo zapisów na działającej stronie.
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '60s';
+
+-- RLS i brak dostępu anon muszą być zachowane przez migrację.
+-- Jeśli zabezpieczenia różnią się od stanu zaakceptowanego w przeglądzie,
+-- przerwij transakcję zamiast wykonywać zmianę na nieznanym schemacie.
+DO $verify_privacy$
+BEGIN
+  IF NOT (
+    SELECT relrowsecurity
+    FROM pg_class
+    WHERE oid = 'public.affiliate_clicks'::regclass
+  ) THEN
+    RAISE EXCEPTION 'Wydanie 02: RLS affiliate_clicks nie jest wlaczone';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.affiliate_clicks', 'SELECT')
+     OR has_table_privilege('anon', 'public.affiliate_clicks', 'INSERT') THEN
+    RAISE EXCEPTION 'Wydanie 02: anon ma nieoczekiwane uprawnienia do klikniec';
+  END IF;
+END
+$verify_privacy$;
 
 ALTER TABLE public.affiliate_clicks
   ADD COLUMN IF NOT EXISTS source_type text NOT NULL DEFAULT 'unknown';

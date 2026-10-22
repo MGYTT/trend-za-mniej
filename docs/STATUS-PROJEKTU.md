@@ -76,3 +76,7 @@ Użytkownik uruchomił pełną kontrolę; zatrzymała się na 15 błędach ESLin
 ## Bez Dockera — korekta procedury
 
 Usunięto skrypt bash zależny od Docker/Supabase CLI; pozostawiono tylko PowerShell z natywnym klientem PostgreSQL dla schematu `public`. Kopia nie obejmuje Auth/Storage i wymaga osobnej próby odtworzenia. Projekt nie zmienia sposobu hostingu ani wdrażania.
+
+## Uproszczona procedura bez instalowania programów — 22.10.2026
+
+Nowy przewodnik: [WYDANIE-02-PROSTO.md](./WYDANIE-02-PROSTO.md). Sprawdzono odczytem bazę: 100 produktów, 34 kliknięcia, 37 przekierowań, 110 wpisów aktywności, 603 rekordy kolejki SEO, po dwa rekordy administratorów i obecności; RLS we wszystkich siedmiu tabelach. Brak osieroconych kliknięć i przekierowań. Jedyny prosty krok użytkownika to eksport pełnych CSV z tabel `products` i `affiliate_clicks` w panelu Supabase; **nie jest to pełny backup** i nie usuwa potrzeby planu przywracania. Migracja nie wykonana. W SQL dodano `lock_timeout`, `statement_timeout` i kontrolę RLS/anon przed zmianami.

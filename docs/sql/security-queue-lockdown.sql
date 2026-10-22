@@ -2,12 +2,15 @@
 -- Execute independently after DBA/owner review and verifying no frontend calls
 -- to queue_search_index_path. No other permissions are touched.
 --
--- products_queue_index_change trigger calls this function from a
--- SECURITY DEFINER function owned by postgres; therefore its privileged
--- internal call should remain possible. Verify by editing a test product
+-- The products_queue_index_change trigger invokes the internal
+-- public.queue_product_index_change() function (SECURITY DEFINER, postgres owner),
+-- which invokes public.queue_search_index_path(). Revoking anon/authenticated
+-- should not break this privileged path; verify by editing a test product
 -- in a NON-PRODUCTION database before using on production.
 
 BEGIN;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '30s';
 
 REVOKE EXECUTE ON FUNCTION public.queue_search_index_path(text, text)
   FROM PUBLIC, anon, authenticated;

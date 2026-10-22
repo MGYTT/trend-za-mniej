@@ -1,5 +1,7 @@
 # Wydanie 02 — skąd przychodzą kliknięcia do SHEIN?
 
+Najprostsza instrukcja i aktualna kontrola bezpieczeństwa: [Wydanie 02 — prosto](./WYDANIE-02-PROSTO.md).
+
 Stan: wersja robocza na gałęzi `release/wydanie-02-analityka`. Bez GitHub Actions i bez automatycznych Vercel Preview Deployments.
 
 ## Co mierzymy

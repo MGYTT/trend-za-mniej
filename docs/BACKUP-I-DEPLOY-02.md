@@ -1,3 +1,5 @@
+> **Prosta ścieżka dla właściciela serwisu:** [Wydanie 02 — bez instalowania programów](./WYDANIE-02-PROSTO.md). Poniższa instrukcja jest wariantem zaawansowanym, nie wymagamy jej przy codziennych pracach.
+
 # Wydanie 02 — kopia przed migracją Supabase, bez Dockera
 
 **W projekcie Trend za Mniej nie używamy Dockera.** Strona nadal jest wdrażana przez GitHub i Vercel, a baza pozostaje w Supabase. Ten dokument dotyczy wyłącznie jednorazowego zabezpieczenia danych przed migracją.
