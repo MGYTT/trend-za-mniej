@@ -59,8 +59,9 @@ test("release keeps legacy React warnings scoped and fixes the login internal li
   assert.doesNotMatch(cfg, /"react-hooks\/set-state-in-effect": "off"/);
   assert.equal((cfg.match(/\.tsx"/g) ?? []).length, 9);
   assert.ok(login.includes('import Link from "next/link"'));
-  assert.ok(login.includes('<Link\n          href="/"'));
-  assert.ok(!login.includes('<a\n          href="/"'));
+  // Check the actual JSX element, not a backslash-n string or exact indentation.
+  assert.match(login, /<Link\s+href=["']\/["']/);
+  assert.doesNotMatch(login, /<a\b[^>]*\bhref=["']\/["']/);
 });
 
 test("outfits are discoverable from the global footer and homepage", () => {
