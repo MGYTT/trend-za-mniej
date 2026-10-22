@@ -70,7 +70,7 @@ test("editorials hide unavailable looks and explain saved prices", () => {
   assert.match(detail, /ceny to sumy zapisane/i);
   assert.match(detail, /suma zapisanych cen, bez dostawy/i);
   assert.match(detail, /Bez fizycznych testów produktów/);
-  assert.match(listing, /nie przetestowaliśmy każdą rzecz/i);
+  assert.match(listing, /udawania, że przetestowaliśmy każdą rzecz/i);
   assert.match(detail, /\/afiliacja/);
   assert.doesNotMatch(detail, /href=\{product\.affiliateUrl\}/);
 });
