@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Stylizacja niedostępna", robots: { index: false, follow: false } };
   }
   return {
-    title: look.title,
-    description: look.intro + " Zobacz elementy zestawu, łączną cenę w katalogu i wskazówki przed zakupem.",
+    title: look.title + " – skład i suma cen",
+    description: look.intro + " Sprawdź skład stylizacji, sumę zapisanych cen i czego nie obejmuje komplet. Aktualne ceny i rozmiary potwierdź w SHEIN.",
     alternates: { canonical: "/stylizacje/" + look.slug },
     openGraph: {
       type: "website",
@@ -99,21 +99,30 @@ export default async function LookPage({ params }: Props) {
           <p className="text-xs font-extrabold uppercase tracking-widest text-rose-700">{look.occasion} · {look.style}</p>
           <h1 className="mt-3 text-balance text-4xl font-black tracking-tight sm:text-6xl">{look.title}</h1>
           <p className="mt-5 text-base leading-8 text-stone-600 sm:text-lg">{look.intro}</p>
+          <ul className="mt-6 flex flex-wrap gap-2 text-xs font-bold text-stone-700 sm:text-sm">
+            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">{look.products.length} elementy garderoby</li>
+            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Na okazję: {look.occasion.toLowerCase()}</li>
+            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Budżet: do {formatPrice(look.maxBudget)}</li>
+          </ul>
           <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 p-5">
             <p className="text-sm font-bold text-rose-900">Suma cen {look.products.length} elementów zapisanych w katalogu</p>
             <p className="mt-1 text-3xl font-black text-stone-950">{formatPrice(look.total)}</p>
             <p className="mt-2 text-xs leading-5 text-stone-600">Do założonego limitu {formatPrice(look.maxBudget)}. Bez dostawy; aktualną cenę sprawdź w sklepie.</p>
           </div>
+          <a href="#sklad-stylizacji" className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-stone-950 px-5 text-sm font-black text-white transition hover:bg-stone-800">
+            Zobacz ceny i oferty wszystkich elementów ↓
+          </a>
         </header>
 
-        <section aria-labelledby="outfit-items-title" className="mt-12">
+        <section id="sklad-stylizacji" aria-labelledby="outfit-items-title" className="mt-12 scroll-mt-24">
           <div className="max-w-3xl">
             <h2 id="outfit-items-title" className="text-2xl font-black tracking-tight sm:text-3xl">
               Co wchodzi w skład stylizacji?
             </h2>
             <p className="mt-2 text-sm leading-6 text-stone-600">
               Każdy produkt możesz obejrzeć dokładniej albo przejść bezpośrednio do oferty w SHEIN.
-              Nie ma jednego wspólnego koszyka dla całego zestawu.
+              Nie ma jednego wspólnego koszyka dla całego zestawu. Każdy link do SHEIN
+              jest partnerski; kliknięcie nie oznacza zakupu.
             </p>
           </div>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -131,7 +140,7 @@ export default async function LookPage({ params }: Props) {
                   <p className="mt-1 text-xs text-stone-500">Cena zapisana przy publikacji</p>
                   <div className="mt-4 grid grid-cols-1 gap-2">
                     <a
-                      href={"/go/" + product.id}
+                      href={"/go/" + product.id + "?origin=outfit&look=" + encodeURIComponent(look.slug)}
                       target="_blank"
                       rel="sponsored nofollow noopener noreferrer"
                       className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-extrabold text-white hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-600"
@@ -175,6 +184,10 @@ export default async function LookPage({ params }: Props) {
             Przed zakupem sprawdź w SHEIN aktualną cenę, rozmiar i dostępność każdego elementu.
             Wskazany koszt to suma cen z naszego katalogu, bez dostawy i ewentualnych opłat.
             Trend za Mniej nie prowadzi sprzedaży. Jeśli skorzystasz z linków do sklepu, możemy otrzymać prowizję afiliacyjną.
+          </p>
+          <p className="mt-4 text-sm leading-6 text-stone-600">
+            Sprawdź również, czy masz już w szafie elementy niewliczone w komplet.
+            Nasz opis jest propozycją stylizacji, nie opinią po fizycznym przetestowaniu każdego produktu.
           </p>
           <Link href="/afiliacja" className="mt-4 inline-flex min-h-10 items-center text-sm font-extrabold text-rose-700 hover:underline">
             Jak działają linki afiliacyjne? →

@@ -23,3 +23,23 @@ test("Opcje filtrów wynikają z ofert bez duplikatów", () => {
 test("Niepoprawna cena nie pojawia się w wynikach", () => {
   assert.deepEqual(filterOutfits([...looks,{slug:"bad",total:NaN,occasion:"Do pracy"}],{maxPrice:null,occasion:null}).length,3);
 });
+
+test("Sortowanie po zapisanej sumie nie zmienia oryginalnej kolejności", async () => {
+  const { sortOutfits } = await import("../lib/outfit-filters.ts");
+  const originals = [...looks];
+  assert.deepEqual(sortOutfits(originals, "price-asc").map((x) => x.slug), ["a", "b", "c"]);
+  assert.deepEqual(originals.map((x) => x.slug), ["a", "b", "c"]);
+  const reversed = [looks[2], looks[0], looks[1]];
+  assert.deepEqual(sortOutfits(reversed, "price-asc").map((x) => x.slug), ["a", "b", "c"]);
+  assert.deepEqual(sortOutfits(reversed, "editorial").map((x) => x.slug), ["c", "a", "b"]);
+});
+
+test("Sortowanie ceny jest stabilne przy identycznej sumie", async () => {
+  const { sortOutfits } = await import("../lib/outfit-filters.ts");
+  const same = [
+    { slug: "first", total: 99.99 },
+    { slug: "second", total: 99.99 },
+    { slug: "third", total: 101 },
+  ];
+  assert.deepEqual(sortOutfits(same, "price-asc").map((x) => x.slug), ["first", "second", "third"]);
+});
