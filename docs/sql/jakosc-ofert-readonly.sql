@@ -6,7 +6,10 @@ SELECT
   count(*)::bigint AS products_total,
   count(*) FILTER (WHERE active)::bigint AS active,
   count(*) FILTER (WHERE active AND (affiliate_url IS NULL OR btrim(affiliate_url)='' OR affiliate_url !~* '^https://'))::bigint AS missing_or_non_https_partner_url,
-  count(*) FILTER (WHERE active AND affiliate_url !~* '^https://[^/]*shein\\.')::bigint AS not_shein_domain_pattern,
+  count(*) FILTER (WHERE active AND (
+    substring(lower(affiliate_url) from '^https://([^/:?#]+)')
+      NOT IN ('onelink.shein.com', 'www.shein.com', 'shein.com')
+  ))::bigint AS unexpected_partner_hostname,
   count(*) FILTER (WHERE active AND (image_url IS NULL OR btrim(image_url)='' OR image_url !~* '^https://'))::bigint AS missing_or_non_https_image_url,
   count(*) FILTER (WHERE active AND (short_name IS NULL OR btrim(short_name)=''))::bigint AS missing_short_names,
   count(*) FILTER (WHERE active AND (description IS NULL OR btrim(description)=''))::bigint AS missing_descriptions,

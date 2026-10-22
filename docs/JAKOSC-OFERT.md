@@ -8,7 +8,7 @@
 | --- | ---: |
 | Produkty ogółem / aktywne | 100 / 97 |
 | Aktywne oferty z pustym lub nie-HTTPS adresem partnera | 0 |
-| Aktywne oferty bez zgodnego wzorca domeny SHEIN | 0 |
+| Aktywne oferty z nieoczekiwanym hostem partnerskim | 0 (97/97 używa `onelink.shein.com`) |
 | Aktywne oferty bez adresu zdjęcia HTTPS | 0 |
 | Aktywne oferty bez nazwy skróconej lub opisu | 0 |
 | Aktywne oferty z niedodatnią ceną katalogową | 0 |

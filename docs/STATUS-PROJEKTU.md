@@ -109,3 +109,5 @@ Odczyt Supabase względem `lib/stylizacje.ts`: **5/5 zestawów kompletnych**, ws
 ## Ostatnia kontrola jakości ofert — 23.10.2026
 
 W Supabase odczytem sprawdzono 97 aktywnych ofert: kompletne pola cen/linków/zdjęć/opisów, 0 nie-HTTPS linków SHEIN, ale **97 bez klucza identyfikacyjnego** (74 unresolved/23 pending) i 86 bez edycji rekordu w ostatnich 7 dniach. Wszystkie 11 produktów z 5 stylizacji aktywne, ale również bez potwierdzonego klucza. `updated_at` to edycja rekordu, nie audyt ceny. Dodano `docs/sql/jakosc-ofert-readonly.sql` oraz [JAKOSC-OFERT.md](./JAKOSC-OFERT.md). **Nic nie zapisywano w produkcji.**
+
+Kontrola hosta 23.10.2026: wszystkich 97 aktywnych ofert używa dokładnie hosta `onelink.shein.com`. Raport jakości sprawdza obecnie nazwę hosta zamiast luźnego dopasowania słowa „shein” w adresie; nie jest to potwierdzenie aktywności końcowej oferty po przekierowaniu.
