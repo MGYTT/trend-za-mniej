@@ -41,3 +41,9 @@ Alternatywa dla zaawansowanych — pełniejsza kopia schematu public przez `pg_d
 5. Wykonać **jeden** merge wydania do `main` i **jeden** deployment produkcyjny Vercel, następnie przetestować publiczne ścieżki.
 
 **STOP:** nie uruchamiać migracji ani deploymentu, jeśli brakuje zweryfikowanego odzyskiwania danych lub pojawi się niespójność w raportach. Nie korzystamy z GitHub Actions, nie uruchamiamy Vercel Preview, nie zakładamy płatnego projektu ani Supabase branch.
+
+## Po wykonaniu eksportu CSV
+
+22.10.2026 użytkownik potwierdził zapis obu plików CSV. Następnie asystent wykonał wyłącznie odczyty w Supabase i potwierdził wszystkie kluczowe liczniki oraz uprawnienia. Symulacja źródła `unknown` dla istniejącej historii daje **7/7 kliknięć w 7 dni** i **34/34 w 30 dni**. Nie wykonano migracji SQL ani deploymentu.
+
+**Nie trzeba wykonywać ponownie eksportu ani instalować programu.** Pliki CSV pozostają lokalnie u właściciela. Ponieważ nie da się obecnie udowodnić ich odtwarzalności ani wykorzystać ich do przywrócenia całego schematu Auth/Storage, traktujemy je jako dodatkowe zabezpieczenie, a nie punkt pełnego odtworzenia produkcji. Pozostała blokada jest konkretnie udokumentowana w `STATUS-PROJEKTU.md`.

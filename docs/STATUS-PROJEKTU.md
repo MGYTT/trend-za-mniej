@@ -80,3 +80,20 @@ Usunięto skrypt bash zależny od Docker/Supabase CLI; pozostawiono tylko PowerS
 ## Uproszczona procedura bez instalowania programów — 22.10.2026
 
 Nowy przewodnik: [WYDANIE-02-PROSTO.md](./WYDANIE-02-PROSTO.md). Sprawdzono odczytem bazę: 100 produktów, 34 kliknięcia, 37 przekierowań, 110 wpisów aktywności, 603 rekordy kolejki SEO, po dwa rekordy administratorów i obecności; RLS we wszystkich siedmiu tabelach. Brak osieroconych kliknięć i przekierowań. Jedyny prosty krok użytkownika to eksport pełnych CSV z tabel `products` i `affiliate_clicks` w panelu Supabase; **nie jest to pełny backup** i nie usuwa potrzeby planu przywracania. Migracja nie wykonana. W SQL dodano `lock_timeout`, `statement_timeout` i kontrolę RLS/anon przed zmianami.
+
+## Kontrola końcowa po zapisaniu CSV — 22.10.2026
+
+Użytkownik potwierdził zapis eksportów `public.products` i `public.affiliate_clicks` jako CSV poza repozytorium. To **kopia wierszy dwóch tabel**, nie backup całej bazy. Nie znamy integralności ani możliwości odtworzenia plików i nie wolno uznawać zadania backupu/restore za zaliczone.
+
+Odczyt Supabase (bez zapisywania lub zmiany schematu):
+
+- `products`: 100 (97 aktywnych); `affiliate_clicks`: 34 (7 z ostatnich 7 dni, 34 z 30 dni);
+- `product_slug_redirects`: 37; `product_activity`: 110; `search_index_queue`: 603; `admins`: 2; `admin_presence`: 2;
+- RLS = true na wszystkich siedmiu tabelach; dla `affiliate_clicks` rola `anon` nie ma `SELECT` ani `INSERT`;
+- 0 osieroconych kliknięć, 0 osieroconych przekierowań;
+- preflight: 0/2 nowych kolumn `source_type`/`outfit_slug` (migracja niewykonana);
+- read-only symulacja domyślnego źródła `unknown`: raport 7 dni = **7/7**, 30 dni = **34/34**;
+- właścicielem `queue_search_index_path` i trigger-funkcji `queue_product_index_change` jest `postgres` (obie `SECURITY DEFINER`); bezpośrednie `EXECUTE` kolejki nadal dostępne dla `anon` — do zabezpieczenia;
+- lokalny build Windows i `npm audit --omit=dev` już zaliczone wcześniej.
+
+**Wniosek:** raport logicznie zgodny z istniejącymi danymi; kod i zmiana są addytywne. Migracja SQL, zmiana uprawnień i deployment pozostają NIEURUCHOMIONE do czasu zweryfikowania strategii przywracania. Nie włączamy płatnych usług ani GitHub Actions.

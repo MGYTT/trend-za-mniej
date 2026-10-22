@@ -31,3 +31,6 @@ FROM pg_policies
 WHERE schemaname = 'public'
   AND tablename = 'affiliate_clicks'
 ORDER BY policyname;
+
+-- 5) Uproszczona całościowa kontrola preflight:
+-- docs/sql/wydanie-02-readonly-gate.sql
