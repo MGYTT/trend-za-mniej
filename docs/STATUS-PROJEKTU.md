@@ -97,3 +97,7 @@ Odczyt Supabase (bez zapisywania lub zmiany schematu):
 - lokalny build Windows i `npm audit --omit=dev` już zaliczone wcześniej.
 
 **Wniosek:** raport logicznie zgodny z istniejącymi danymi; kod i zmiana są addytywne. Migracja SQL, zmiana uprawnień i deployment pozostają NIEURUCHOMIONE do czasu zweryfikowania strategii przywracania. Nie włączamy płatnych usług ani GitHub Actions.
+
+## Biznes i pomiar — przegląd 22.10.2026
+
+Uzupełniono [BAZA-BIZNESOWA.md](./BAZA-BIZNESOWA.md) na podstawie aktualnych danych Supabase: 34 kliknięcia /go za 30 dni, 7 za 7 dni, 10 kliknięć z kategorii akcesoriów kosmetycznych (to mała próbka, nie dowód konwersji). Próba odczytu Vercel Web Analytics przez konektor zwróciła 403 (brak uprawnienia w tej sesji), więc nie dopisujemy zmyślonych odsłon. Plan przewiduje 14 dni pomiaru nowych kliknięć po wdrożeniu Wydania 02, z porównaniem tylko wtedy, gdy mamy spójne odsłony. Panel źródeł będzie wyświetlał pokrycie atrybucją i informację „Za wcześnie na ocenę” przy zerowej liczbie rozpoznanych źródeł. README zastąpiono instrukcją projektu.

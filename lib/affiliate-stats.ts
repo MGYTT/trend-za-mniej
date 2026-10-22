@@ -35,7 +35,11 @@ export function summarizeAffiliateSources(rows: readonly SourceStatRow[]) {
   }
 
   const knownClicks = outfitClicks + productClicks;
+  const totalClicks = knownClicks + unknownClicks;
   return {
+    totalClicks,
+    knownCoveragePercent:
+      totalClicks > 0 ? Math.round((knownClicks / totalClicks) * 100) : null,
     outfitClicks,
     productClicks,
     unknownClicks,

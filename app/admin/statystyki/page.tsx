@@ -382,7 +382,9 @@ export default async function StatisticsPage({
               Skąd przychodzą kliknięcia do SHEIN?
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-              Źródła kliknięć z ostatnich {selectedDays} dni. Nie są to zamówienia ani zatwierdzone prowizje.
+              Źródła kliknięć z ostatnich {selectedDays} dni, zapisanych przez /go.
+              Bezpośrednie linki kampanii SHEIN mogą nie być tutaj policzone.
+              Kliknięcia nie są zakupami ani zatwierdzonymi prowizjami.
             </p>
           </div>
 
@@ -413,12 +415,24 @@ export default async function StatisticsPage({
                   Udział stylizacji w kliknięciach ze znanym źródłem
                 </p>
                 <p className="mt-1 text-2xl font-black text-rose-700">
-                  {sourceSummary.outfitShareOfKnown}%
+                  {sourceSummary.knownClicks > 0
+                    ? `${sourceSummary.outfitShareOfKnown}%`
+                    : "Za wcześnie na ocenę"}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-stone-500">
-                  Spośród {sourceSummary.knownClicks} kliknięć ze znanym źródłem.
-                  Nie uwzględnia kliknięć historycznych i o nieustalonym pochodzeniu.
+                  Rozpoznano źródło {sourceSummary.knownClicks} z {sourceSummary.totalClicks} kliknięć
+                  {sourceSummary.knownCoveragePercent === null
+                    ? " (brak kliknięć w okresie)."
+                    : ` (${sourceSummary.knownCoveragePercent}% pokrycia źródłem).`}
+                  Wskaźnik udziału stylizacji dotyczy wyłącznie kliknięć z rozpoznanym źródłem.
                 </p>
+                {sourceSummary.knownClicks === 0 && (
+                  <p role="status" className="mt-3 text-sm leading-6 text-stone-600">
+                    {sourceSummary.totalClicks === 0
+                      ? "Brak kliknięć do porównania. Poczekaj na nowe dane."
+                      : "Obecne kliknięcia nie mają jeszcze wiarygodnego źródła. Historycznych zdarzeń nie można przypisać stylizacjom wstecznie."}
+                  </p>
+                )}
               </div>
               {!affiliateReportMatches && (
                 <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
@@ -459,8 +473,10 @@ export default async function StatisticsPage({
                 </p>
               )}
               <p className="mt-5 text-xs leading-5 text-stone-500">
-                Starsze kliknięcia nie mają przypisanej stylizacji. Źródła są orientacyjne
-                i nie mogą służyć do rozliczeń sprzedażowych.
+                Aby porównać skuteczność stylizacji z produktami, zestaw te kliknięcia
+                z odsłonami odpowiednich stron w Vercel Analytics w tym samym okresie.
+                Bez odsłon nie obliczaj konwersji. Starsze źródła są nieznane,
+                a dane o zamówieniach i prowizjach sprawdzaj osobno w programie partnerskim.
               </p>
             </div>
           )}

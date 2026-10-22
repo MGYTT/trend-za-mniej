@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trend za Mniej
 
-## Getting Started
+[trendzamniej.pl](https://trendzamniej.pl) — polski serwis afiliacyjny pomagający wybrać gotową stylizację damską na określoną okazję i do konkretnego budżetu. Pokazujemy sumę cen **zapisanych w katalogu**, elementy zestawu i linki do poszczególnych produktów SHEIN. Ceny, warianty i dostępność trzeba potwierdzać u sprzedawcy. Kliknięcie afiliacyjne **nie oznacza zakupu ani naliczonej prowizji**.
 
-First, run the development server:
+## Technologia i zakres
 
-```bash
+- **Next.js 16**, React, TypeScript, Tailwind — frontend i trasy serwerowe.
+- **Supabase** — produkty, historia kliknięć, uwierzytelnianie administratorów, RLS, SEO.
+- **Vercel** — hosting produkcyjny i analityka odsłon; brak nowego płatnego narzędzia.
+- **SHEIN** — zewnętrzne oferty afiliacyjne, zakup następuje w sklepie partnera.
+- **Gotowe stylizacje** — pięć ręcznie redagowanych zestawów z konfiguracji `lib/stylizacje.ts`, widoki `/stylizacje` i `/stylizacje/[slug]`.
+- **Przejścia afiliacyjne** — `/go/[id]`. Wydanie 02 rozbudowuje zapis źródła (stylizacja/produkt/nieznane) i statystyki w `/admin/statystyki`.
+
+## Uruchomienie lokalne (bez Dockera)
+
+Wymagany Node.js 22, npm i poprawny plik `.env.local` istniejącego projektu. Po sklonowaniu repozytorium:
+
+```powershell
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Do ręcznej kontroli przed wydaniem (bez GitHub Actions):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```powershell
+npm run verify:release
+npm audit --omit=dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Zmienne środowiskowe (wartości z paneli usług; **nigdy nie commituj wartości ani `.env.local`**):
 
-## Learn More
+| Zmienna | Znaczenie |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Adres projektu Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Klucz publiczny dla klienta przeglądarkowego |
+| `SUPABASE_SECRET_KEY` | Sekret **wyłącznie serwerowy** do zapisu kliknięć i działań uprzywilejowanych |
 
-To learn more about Next.js, take a look at the following resources:
+## Proces wdrażania
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `main` odpowiada produkcji. Rozwój na gałęziach `release/*`; Vercel Preview dla tych gałęzi jest wyłączony.
+- **Nie używamy ani nie tworzymy GitHub Actions.** Testy i pełny build są uruchamiane ręcznie.
+- Przed migracją Supabase: kontrola RLS i uprawnień, kompletne zabezpieczenie danych, weryfikacja odtwarzania oraz test SQL w izolacji. Nie uruchamiaj migracji tylko dlatego, że `npm run build` przeszedł.
+- **Nie scalaj ani nie wdrażaj automatycznie** zmian bez zakończonej kontroli i świadomej decyzji.
+- Nie zakładaj płatnych usług, dodatkowego projektu lub bazy testowej bez potwierdzenia kosztów.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Zasady biznesowe
 
-## Deploy on Vercel
+Najpierw pomagamy użytkownikowi wybrać **gotowy zestaw**, a dopiero potem rozwijamy nowe funkcje. Mierzymy odsłony, zainteresowanie i kliknięcia; zatwierdzone zamówienia oraz prowizje mogą pochodzić jedynie z panelu programu partnerskiego. Nie twierdzimy, że oferta ma najniższą cenę, jeśli nie została porównana i zweryfikowana.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Dokumenty:** [plan 90 dni](docs/PLAN-ROZWOJU.md) · [biznesowy stan wyjściowy](docs/BAZA-BIZNESOWA.md) · [Wydanie 02 — prosto](docs/WYDANIE-02-PROSTO.md) · [status techniczny](docs/STATUS-PROJEKTU.md) · [zasady bezpieczeństwa](docs/SECURITY-REVIEW.md).

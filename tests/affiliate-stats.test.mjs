@@ -72,3 +72,30 @@ test("report reconciliation rejects non-integer or invalid totals", () => {
   assert.equal(affiliateTotalsMatch(summary, 0.5), false);
   assert.equal(affiliateTotalsMatch(summary, 0), true);
 });
+
+test("attribution coverage distinguishes tracked origins from historical unknown clicks", () => {
+  const s = summarizeAffiliateSources([
+    { source_type: "outfit", outfit_slug: "a", clicks: 3 },
+    { source_type: "product", outfit_slug: null, clicks: 2 },
+    { source_type: "unknown", outfit_slug: null, clicks: 15 },
+  ]);
+  assert.equal(s.totalClicks, 20);
+  assert.equal(s.knownClicks, 5);
+  assert.equal(s.knownCoveragePercent, 25);
+  assert.equal(s.outfitShareOfKnown, 60);
+});
+
+test("zero clicks and historical-only clicks are not presented as outfit winners", () => {
+  const none = summarizeAffiliateSources([]);
+  assert.equal(none.totalClicks, 0);
+  assert.equal(none.knownCoveragePercent, null);
+  assert.equal(none.knownClicks, 0);
+
+  const historical = summarizeAffiliateSources([
+    { source_type: "unknown", outfit_slug: null, clicks: 34 },
+  ]);
+  assert.equal(historical.totalClicks, 34);
+  assert.equal(historical.knownCoveragePercent, 0);
+  assert.equal(historical.knownClicks, 0);
+  assert.deepEqual(historical.outfitRanking, []);
+});
