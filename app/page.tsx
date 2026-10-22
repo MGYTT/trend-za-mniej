@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { STYLE_GUIDES } from "@/lib/poradniki";
 import { slugifyCategory } from "@/lib/categories";
 import {
   getProducts,
@@ -124,6 +125,8 @@ export default async function Home() {
       />
 
       <DiscoveryShortcuts />
+
+      <EditorialGuides />
 
       <ProductSection
         id="najnowsze"
@@ -675,6 +678,43 @@ function DiscoveryLink({
         </span>
       </span>
     </Link>
+  );
+}
+
+/* ======================================================
+   AUTORSKIE PORADNIKI POWIĄZANE ZE STYLIZACJAMI
+====================================================== */
+
+function EditorialGuides() {
+  return (
+    <section aria-labelledby="home-editorial-guides" className="border-b border-stone-200 bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-rose-700">Inspiracje z konkretną poradą</p>
+            <h2 id="home-editorial-guides" className="mt-2 text-2xl font-black tracking-tight text-stone-950 sm:text-3xl">
+              Nie wiesz, co założyć?
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600">
+              Zacznij od okazji i budżetu. Wyjaśniamy, jak łączyć ubrania i co sprawdzić przed zakupem.
+            </p>
+          </div>
+          <Link href="/poradniki" className="inline-flex min-h-10 items-center font-black text-rose-700 hover:underline">
+            Wszystkie poradniki →
+          </Link>
+        </div>
+        <div className="mt-7 grid gap-4 md:grid-cols-3">
+          {STYLE_GUIDES.map((guide) => (
+            <Link key={guide.slug} href={"/poradniki/" + guide.slug}
+              className="group flex min-h-48 flex-col rounded-2xl border border-stone-200 bg-stone-50 p-6 transition hover:border-rose-300 hover:bg-rose-50">
+              <span className="text-xs font-black uppercase tracking-widest text-rose-700">{guide.category}</span>
+              <strong className="mt-3 text-lg font-black leading-snug text-stone-950 group-hover:text-rose-700">{guide.title}</strong>
+              <span className="mt-auto pt-5 text-sm font-black text-rose-700">Czytaj poradnik →</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

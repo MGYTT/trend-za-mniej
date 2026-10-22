@@ -16,6 +16,13 @@ const discoveryLinks = [
   },
   {
     label:
+      "Poradniki modowe",
+
+    href:
+      "/poradniki",
+  },
+  {
+    label:
       "Wszystkie okazje",
 
     href:

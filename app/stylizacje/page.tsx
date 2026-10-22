@@ -8,6 +8,7 @@ import { getProducts, formatPrice } from "@/lib/products";
 import { resolveLooks } from "@/lib/stylizacje";
 import { getSiteUrl } from "@/lib/site";
 import type { OutfitPreview } from "@/lib/outfit-filters";
+import { STYLE_GUIDES } from "@/lib/poradniki";
 
 export const revalidate = 60;
 
@@ -249,6 +250,28 @@ export default async function LooksPage() {
               Tak, możemy otrzymać prowizję za kwalifikowany zakup dokonany poprzez link partnera. Nie oznacza to, że każdy klik lub zakup generuje prowizję.
             </p>
           </details>
+        </div>
+      </section>
+      <section aria-labelledby="outfit-editorial-title" className="border-t border-stone-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+          <p className="text-xs font-black uppercase tracking-widest text-rose-700">Inspiracje i praktyczne wskazówki</p>
+          <h2 id="outfit-editorial-title" className="mt-2 text-3xl font-black tracking-tight">
+            Wybierz zestaw z większą pewnością
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600">
+            Nie musisz kupować wszystkiego. Przeczytaj, jak dobrać fasony,
+            skorzystać z ubrań, które już masz, i zweryfikować realny koszt zakupów.
+          </p>
+          <div className="mt-7 grid gap-4 md:grid-cols-3">
+            {STYLE_GUIDES.map((guide) => (
+              <Link key={guide.slug} href={"/poradniki/" + guide.slug}
+                className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-stone-50 p-5 transition hover:border-rose-200 hover:bg-rose-50">
+                <p className="text-xs font-bold uppercase tracking-wide text-rose-700">{guide.category}</p>
+                <h3 className="mt-2 text-lg font-black group-hover:text-rose-700">{guide.title}</h3>
+                <span className="mt-auto pt-5 text-sm font-black text-rose-700">Sprawdź poradnik →</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
       <SiteFooter />
