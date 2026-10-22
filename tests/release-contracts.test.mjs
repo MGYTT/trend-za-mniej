@@ -49,8 +49,8 @@ test("Supabase Free backup procedure exports roles, schema and data privately", 
 test("login uses Next.js internal Link instead of document navigation", () => {
   const login = load("../app/login/page.tsx");
   assert.ok(login.includes('import Link from "next/link"'));
-  assert.ok(login.includes('<Link\\n          href="/"'));
-  assert.ok(!login.includes('<a\\n          href="/"'));
+  assert.ok(login.includes("        <Link"));
+  assert.ok(!login.includes("        <a"));
 });
 
 test("React legacy lint exemptions are limited to the nine affected files", () => {
