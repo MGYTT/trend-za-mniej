@@ -61,3 +61,7 @@ Zabezpieczono rozpoznawanie pochodzenia kliknięć przed wielokrotnymi i sprzecz
 - Lokalny pełny Next.js build nadal niedostępny (brak pobranych zależności i możliwości sklonowania repozytorium ze środowiska uruchomieniowego).
 - W repozytorium dodano kontraktowe testy powiązań przycisków afiliacyjnych z trasą `/go` oraz migracją uprawnień.
 - **Nie wdrażać do produkcji** dopóki nie potwierdzimy kopii, testu jej odtworzenia, migracji testowych i pełnego `npm run verify:release`.
+
+## ESLint na Windows — 22.10.2026
+
+Użytkownik uruchomił pełną kontrolę; zatrzymała się na 15 błędach ESLint (14 × React `set-state-in-effect`, 1 × nawigacja `<a>` w loginie) i 22 ostrzeżeniach. Link do strony głównej zastąpiono `next/link`; dla 9 starszych komponentów zamieniono jedynie rangę wskazanej reguły na ostrzeżenie. Dokładny wykaz wyjątków i plan trwałej refaktoryzacji: [LINT-REVIEW-02.md](./LINT-REVIEW-02.md). Ta zmiana nie oznacza, że efekty React zostały naprawione. Wymagane ponowne `npm run verify:release` na Windows.
