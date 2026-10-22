@@ -137,7 +137,7 @@ export const STYLE_GUIDES: readonly StyleGuide[] = [
     category: "Mały budżet",
     lead: "Niski budżet nie oznacza, że trzeba polować na jak najwięcej przecenionych rzeczy. Często lepiej wybrać jedną ciekawą rzecz i neutralną bazę, a resztę skompletować z tego, co już posiadasz.",
     summary: "Jak ustalić potrzebne elementy, łączyć wzór z prostą bazą i nie pomylić sumy cen z pełnym kosztem zakupów.",
-    relatedLookSlugs: ["streetwear-do-100-zl", "casual-do-150-zl"],
+    relatedLookSlugs: ["streetwear-do-100-zl"],
     sections: [
       {
         id: "lista-potrzeb",
