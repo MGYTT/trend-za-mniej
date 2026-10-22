@@ -1,59 +1,43 @@
-# Kopia bezpieczeństwa i plan wdrożenia Wydania 02
+# Wydanie 02 — kopia przed migracją Supabase, bez Dockera
 
-Projekt Supabase `cpbyhabvmstevjyyrgpw` ma plan **Free**. Według dokumentacji Supabase automatyczne codzienne kopie są zapewniane w planach Pro/Team/Enterprise, a na Free zaleca się własny `supabase db dump`.
+**W projekcie Trend za Mniej nie używamy Dockera.** Strona nadal jest wdrażana przez GitHub i Vercel, a baza pozostaje w Supabase. Ten dokument dotyczy wyłącznie jednorazowego zabezpieczenia danych przed migracją.
 
-## Wymagana kopia (przed wykonaniem SQL)
+## Co jest już sprawdzone?
 
-1. Na zaufanym komputerze z Dockerem i Supabase CLI przygotuj folder **poza repozytorium**.
-2. Wejdź w [Supabase Dashboard → Connect](https://supabase.com/dashboard/project/cpbyhabvmstevjyyrgpw) i pobierz własny łańcuch połączenia z bazą. **Nie udostępniaj hasła ani connection string w GitHubie, czacie lub dokumentacji.**
-3. Zapisz tymczasowo connection string w zmiennej środowiskowej `SUPABASE_DB_URL` (bez umieszczania go w plikach repozytorium).
-4. Uruchom `bash scripts/backup-supabase-before-release.sh /bezpieczny/nowy-folder`.
-5. Kopia zawiera `roles.sql`, `schema.sql`, `data.sql` i `SHA256SUMS`. Przechowuj ją poza repozytorium, najlepiej także na osobnym dysku. Nie przepisuj jej do publicznego systemu kontroli wersji.
-6. Zweryfikuj, że da się **odtworzyć** ją w bazie testowej. Samo utworzenie plików bez sprawdzenia odtwarzania nie jest dowodem odtwarzalności. Backup logiczny nie obejmuje plików Storage API.
-7. Upewnij się, że w produkcji nie trwa inna migracja lub wdrożenie.
+- 22.10.2026: `npm run verify:release` na Windows — PASS (Next.js i TypeScript).
+- `npm audit --omit=dev` — 0 podatności zależności produkcyjnych.
+- Supabase projekt na planie Free: **nie ma potwierdzonej automatycznej codziennej kopii**.
+- Nie wykonano jeszcze migracji i nie wdrożono Wydania 02.
 
-Instrukcja źródłowa: [Supabase — Backup and Restore using the CLI](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore).
+## Kopia na Windows bez Dockera
 
-## Kolejność publikacji — po pozytywnych testach
+Do wykonania kopii kluczowych danych aplikacji wystarczą lokalne narzędzia klienta **PostgreSQL 17** — `pg_dump` oraz `pg_restore`, bez instalowania serwera PostgreSQL ani kontenerów. Można zainstalować same narzędzia Command Line Tools z [oficjalnej strony PostgreSQL](https://www.postgresql.org/download/windows/).
 
-1. Ręcznie: `npm ci && npm run verify:release` w kompletnym repozytorium.
-2. Zastosuj i sprawdź migrację w **bazie testowej**, wraz z uprawnieniami RLS. Zweryfikuj działanie triggera kolejki SEO po ograniczeniu `EXECUTE`.
-3. Potwierdź kopię danych i możliwość odtworzenia.
-4. Zastosuj zabezpieczenie `docs/sql/security-queue-lockdown.sql`, sprawdź `security-queue-postflight.sql`.
-5. Zastosuj `docs/sql/affiliate-click-attribution.sql`, sprawdź `affiliate-attribution-postflight.sql`.
-6. Porównaj 7- i 30-dniowe sumy kliknięć, przetestuj admin/non-admin/anon.
-7. Jedno scalenie `release/wydanie-02-analityka` do `main` i **jedno wdrożenie produkcyjne Vercel**. Bez GitHub Actions.
-8. Otwórz `/stylizacje`, strony produktów, `/go/[id]`, panel statystyk i sprawdź pełny przepływ.
+1. Otwórz PowerShell w katalogu projektu i pobierz zmiany: `git pull --ff-only`.
+2. Sprawdź dostępność narzędzi: `pg_dump --version` i `pg_restore --version`. Skrypt potrafi też znaleźć standardową instalację `C:\Program Files\PostgreSQL\17\bin`.
+3. W [Supabase Dashboard](https://supabase.com/dashboard/project/cpbyhabvmstevjyyrgpw) kliknij **Connect** i wybierz **Session pooler**. Zanotuj tylko hostname oraz nazwę użytkownika PostgreSQL; port musi wynosić **5432**, bazą jest `postgres`.
+4. Uruchom:
+   ```powershell
+   powershell -NoProfile -File .\scripts\backup-supabase-before-release.ps1
+   ```
+5. Skrypt poprosi o host, użytkownika oraz hasło (w ukrytym polu). **Nie wysyłaj hasła ani connection stringa do ChatGPT ani do GitHuba.**
+6. W nowym folderze `Documents/TrendZaMniej-PublicBackup-<data>` powstaną `public.backup`, `archive-contents.txt`, `public.backup.sha256`. Katalog znajduje się poza repozytorium, skrypt nie nadpisuje istniejącej kopii.
+7. Skrypt wymaga poprawnie odczytanego archiwum i potwierdzenia, że zawiera dane tabel `public.products` i `public.affiliate_clicks`. Sprawdzenie listy to **nie jest test odtworzenia**; przed zmianami bazy wymagamy odtworzenia w oddzielnym środowisku.
 
-## Gdy wdrożenie zawiedzie
+### Ważne ograniczenie
 
-- **Nie usuwaj nowych kolumn Supabase** tylko dlatego, że aplikacja się nie zbudowała. Migracja jest addytywna i starsza wersja aplikacji nie musi z niej korzystać.
-- Jeśli nowy build Vercel nie przejdzie, pozostaw wcześniejszy deployment produkcyjny. Jeśli nowa wersja działa niepoprawnie po publikacji, przywróć poprzedni poprawny deployment w Vercel i zbadaj logi.
-- Nie przywracaj starych uprawnień anonimowych do kolejki SEO jako rutynowej czynności naprawczej.
-- Jeśli potrzebna jest naprawa bazodanowa, korzystaj ze zweryfikowanej kopii i procedury odtwarzania, nie wykonuj w ciemno `DROP TABLE` czy `DROP COLUMN`.
+`pg_dump --schema=public` kopiuje strukturę i dane schematu `public`, w którym mamy produkty, kliknięcia, definicje funkcji oraz polityki RLS. **Nie jest to pełna kopia Supabase**: nie obejmuje tabel uwierzytelniania (`auth`), metadanych `storage`, samych plików Storage API ani wszystkich obiektów i ról zarządzanych przez Supabase. Przywrócenie `public` może wymagać istniejących zależności `auth` i rozszerzeń.
 
-## Status w dniu 22.10.2026
+Dla operacji poza schematem `public` należy osobno zapewnić strategię kopii i odzyskiwania. Nie wykonuj `pg_restore` na produkcji bez planu i weryfikacji. Nasze planowane migracje Wydania 02 obejmują jedynie obiekty w `public`.
 
-- Brak automatycznej kopii danych na planie Free.
-- Kopia i próba odtworzenia: **niepotwierdzone**, blokują produkcyjną migrację.
-- `npm run build`: **niewykonany** z powodu niedostępnych w środowisku zależności Next.js i braku dostępu do repozytorium przez Git.
-- GitHub Actions: **nieużywane**.
-- Vercel: **nie uruchamiać ponownego buildu**, dopóki testy, kopia i migracje testowe nie przejdą.
+Oficjalne wskazówki: [PostgreSQL pg_dump](https://www.postgresql.org/docs/17/app-pgdump.html), [PostgreSQL pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html), [Supabase — Database Backups](https://supabase.com/docs/guides/platform/backups).
 
-## Windows PowerShell (zalecane dla Twojego komputera)
+## Kolejność pozostałych kroków
 
-Przygotowano osobny skrypt `scripts/backup-supabase-before-release.ps1`. Wymaga działającego **Docker Desktop** oraz **Supabase CLI**. Dane połączenia podajesz do ukrytego monitu po uruchomieniu skryptu — **nie wysyłaj ich do ChatGPT**.
+1. Utworzyć kopię i sprawdzić możliwość jej odtworzenia w bezpiecznej bazie testowej.
+2. Sprawdzić tam migrację statystyk i zabezpieczenie `queue_search_index_path`, w tym działanie triggerów i RLS.
+3. Wykonać na produkcji zatwierdzone migracje i zapytania kontrolne.
+4. Wykonać **jeden merge do `main` i jeden deployment Vercel**, bez GitHub Actions.
+5. Sprawdzić strony stylizacji, produktów, przejścia do SHEIN, panel statystyk oraz raport uprawnień.
 
-W katalogu projektu:
-```powershell
-git pull --ff-only
-powershell -NoProfile -File .\scripts\backup-supabase-before-release.ps1
-```
-
-Skrypt zapisuje kopię w nowym folderze `Dokumenty/TrendZaMniej-Backup-<data>` poza repozytorium; odmawia zapisu do folderu repozytorium lub nadpisania istniejącej kopii. Jeśli lokalne zasady PowerShell blokują skrypt, sprawdź ustawienia ze zaufanym administratorem — nie zmieniaj globalnej polityki uruchamiania.
-
-W folderze muszą znaleźć się: `roles.sql`, `schema.sql`, `data.sql`, `SHA256SUMS.txt`. Potwierdź liczbę i rozmiary plików, nie wklejaj tutaj zawartości. Dalszy warunek: sprawdzenie możliwości przywrócenia bazy w izolowanym środowisku testowym.
-
-### Wyniki ręcznych testów aplikacji (22.10.2026)
-
-Użytkownik potwierdził, że `npm run verify:release` zakończyło się sukcesem na Windows, w tym `next build` Next.js 16.4.0, TypeScript oraz wygenerowanie 32 stron statycznych. `npm audit --omit=dev` zgłosiło **0 podatności w zależnościach produkcyjnych**. W logu pozostają ostrzeżenia Edge Runtime i `z-index`, które nie zablokowały kompilacji. Nie wykonujemy kolejnego builda Vercel, dopóki migracje i kopie nie są gotowe.
+Jeśli pełny backup albo test odtwarzania się nie uda, **nie wykonywać migracji produkcyjnej**. Poprzedni deployment Vercel zostaje nienaruszony.

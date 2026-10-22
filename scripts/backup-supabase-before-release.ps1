@@ -1,30 +1,41 @@
-# Supabase Free logical backup helper for Windows PowerShell 5.1+.
-# Does not change the database; never logs or stores the connection string.
-# Requires Supabase CLI and Docker Desktop running.
-param(
-  [string] $Destination = ""
-)
+# Kopia danych aplikacji Trend za Mniej (schema public), bez Dockera.
+# Wymaga jedynie narzędzi klienta PostgreSQL 17+: pg_dump i pg_restore.
+# Nie wykonuje INSERT/UPDATE/DELETE/DDL na produkcyjnej bazie.
+param([string]$Destination = "")
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
-  throw "Brak Supabase CLI. Zainstaluj je zgodnie z instrukcją Supabase."
+function Resolve-PgTool([string]$Name) {
+  $command = Get-Command $Name -ErrorAction SilentlyContinue
+  if ($null -ne $command) { return $command.Source }
+  $fallback = Join-Path $env:ProgramFiles ("PostgreSQL\17\bin\" + $Name + ".exe")
+  if (Test-Path -LiteralPath $fallback -PathType Leaf) { return $fallback }
+  throw ("Brak " + $Name + ". Potrzebne są narzędzia klienta PostgreSQL 17 (bez serwera i bez Dockera).")
 }
-if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-  throw "Brak Docker Desktop. Uruchom go przed utworzeniem kopii."
+
+$dumpExe = Resolve-PgTool "pg_dump"
+$restoreExe = Resolve-PgTool "pg_restore"
+$versionLine = (& $dumpExe --version) -join " "
+$majorMatch = [regex]::Match($versionLine, '(?i)PostgreSQL\)\s*(\d+)')
+if (-not $majorMatch.Success -or [int]$majorMatch.Groups[1].Value -lt 17) {
+  throw "pg_dump powinien mieć wersję 17 lub nowszą (serwer Supabase: PostgreSQL 17)."
 }
-& docker info --format '{{.ServerVersion}}' 1>$null 2>$null
-if ($LASTEXITCODE -ne 0) {
-  throw "Docker nie jest uruchomiony lub nie jest dostępny."
+
+$hostName = (Read-Host "Host z Supabase Dashboard > Connect (Session pooler)").Trim()
+$dbUser = (Read-Host "Użytkownik bazy z Connect (np. postgres.PROJECT_REF)").Trim()
+if ([string]::IsNullOrWhiteSpace($hostName) -or [string]::IsNullOrWhiteSpace($dbUser)) {
+  throw "Host i nazwa użytkownika są wymagane. NIE wklejaj tu pełnego connection stringa."
+}
+if ($hostName.Contains("://") -or $dbUser.Contains("://")) {
+  throw "Wpisz sam host i samego użytkownika, nie pełny connection string."
 }
 
 if (-not $Destination) {
   $Destination = Join-Path (Join-Path $env:USERPROFILE "Documents") (
-    "TrendZaMniej-Backup-" + (Get-Date -Format "yyyyMMdd-HHmmss")
+    "TrendZaMniej-PublicBackup-" + (Get-Date -Format "yyyyMMdd-HHmmss")
   )
 }
-
 $destinationPath = [IO.Path]::GetFullPath($Destination)
 $repoRoot = [IO.Path]::GetFullPath((Split-Path $PSScriptRoot -Parent))
 if (
@@ -34,59 +45,63 @@ if (
     [StringComparison]::OrdinalIgnoreCase
   )
 ) {
-  throw "Katalog kopii musi znajdować się POZA repozytorium GitHub."
+  throw "Kopia musi znajdować się POZA repozytorium GitHub."
 }
 if (Test-Path -LiteralPath $destinationPath) {
-  throw "Katalog kopii już istnieje. Podaj inny, nowy folder."
+  throw "Docelowy katalog już istnieje — nie nadpisuję istniejących kopii."
 }
 
-Write-Host "Zaraz poproszę o PEŁNY connection string bazy z Supabase Dashboard > Connect."
-Write-Host "Nie wklejaj go do GitHub, czatu, dokumentacji ani historii poleceń."
-$secret = Read-Host "Connection string (ukryty)" -AsSecureString
-$dbUrl = [System.Net.NetworkCredential]::new("", $secret).Password
-if (-not $dbUrl.StartsWith("postgres://") -and -not $dbUrl.StartsWith("postgresql://")) {
-  $dbUrl = ""
-  throw "To nie wygląda na connection string PostgreSQL."
+# Używamy zmiennych PG*, a nie hasła w argumentach procesu lub w historii poleceń.
+$vars = @("PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGSSLMODE", "PGCONNECT_TIMEOUT")
+$previous = @{}
+foreach ($key in $vars) {
+  $previous[$key] = [Environment]::GetEnvironmentVariable($key, "Process")
 }
-
+$password = $null
 try {
+  $password = Read-Host "Hasło bazy (ukryte, nie wysyłaj go do czatu)" -AsSecureString
+  [Environment]::SetEnvironmentVariable("PGHOST", $hostName, "Process")
+  [Environment]::SetEnvironmentVariable("PGPORT", "5432", "Process")
+  [Environment]::SetEnvironmentVariable("PGUSER", $dbUser, "Process")
+  [Environment]::SetEnvironmentVariable("PGDATABASE", "postgres", "Process")
+  [Environment]::SetEnvironmentVariable("PGPASSWORD", (
+    [System.Net.NetworkCredential]::new("", $password).Password
+  ), "Process")
+  [Environment]::SetEnvironmentVariable("PGSSLMODE", "require", "Process")
+  [Environment]::SetEnvironmentVariable("PGCONNECT_TIMEOUT", "15", "Process")
+
   New-Item -ItemType Directory -Path $destinationPath -ErrorAction Stop | Out-Null
-  $parts = @(
-    @{ Name = "roles.sql"; Args = @("--role-only") },
-    @{ Name = "schema.sql"; Args = @() },
-    @{ Name = "data.sql"; Args = @("--use-copy", "--data-only", "-x", "storage.buckets_vectors", "-x", "storage.vector_indexes") }
+  $archive = Join-Path $destinationPath "public.backup"
+  Write-Host "Tworzę kopię schematu public (produkty, kliknięcia, funkcje i polityki RLS)..."
+  & $dumpExe "--format=custom" "--schema=public" "--no-password" "--file=$archive"
+  if ($LASTEXITCODE -ne 0) { throw "pg_dump zakończył się błędem. Kopia NIE jest potwierdzona." }
+
+  $archiveInfo = Get-Item -LiteralPath $archive -ErrorAction Stop
+  if ($archiveInfo.Length -le 0) { throw "Archiwum jest puste." }
+
+  $contents = Join-Path $destinationPath "archive-contents.txt"
+  & $restoreExe "--list" $archive | Out-File -LiteralPath $contents -Encoding utf8
+  if ($LASTEXITCODE -ne 0) { throw "Nie udało się odczytać listy zawartości kopii." }
+
+  $toc = Get-Content -LiteralPath $contents -Raw
+  foreach ($table in @("products", "affiliate_clicks")) {
+    if ($toc -notmatch ("(?m)\bTABLE DATA\s+public\s+" + $table + "\b")) {
+      throw ("W kopii nie znaleziono danych tabeli public." + $table)
+    }
+  }
+
+  $checksum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+  [IO.File]::WriteAllText(
+    (Join-Path $destinationPath "public.backup.sha256"),
+    ($checksum + "  public.backup" + [Environment]::NewLine)
   )
-  foreach ($part in $parts) {
-    $output = Join-Path $destinationPath $part.Name
-    Write-Host ("Tworzę kopię: " + $part.Name)
-    $dumpArgs = @("db", "dump", "--db-url", $dbUrl, "-f", $output) + $part.Args
-    & supabase @dumpArgs
-    if ($LASTEXITCODE -ne 0) {
-      throw ("Błąd tworzenia " + $part.Name + ". Kopia może być niekompletna.")
-    }
-    $item = Get-Item -LiteralPath $output -ErrorAction Stop
-    if ($item.Length -le 0) {
-      throw ("Pusty plik kopii: " + $part.Name)
-    }
-  }
-
-  $hashLines = @()
-  foreach ($name in @("roles.sql", "schema.sql", "data.sql")) {
-    $path = Join-Path $destinationPath $name
-    $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
-    $hashLines += ($hash + "  " + $name)
-    $verified = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($verified -ne $hash) { throw ("Błąd sprawdzania integralności: " + $name) }
-  }
-  $manifest = Join-Path $destinationPath "SHA256SUMS.txt"
-  [IO.File]::WriteAllLines($manifest, [string[]]$hashLines)
-
-  Write-Host ""
-  Write-Host "Kopia logiczna zapisana w: $destinationPath"
-  Write-Host "Pliki: roles.sql, schema.sql, data.sql, SHA256SUMS.txt"
-  Write-Host "Zabezpiecz kopię poza komputerem i PRZETESTUJ ODTWARZANIE przed zmianami produkcyjnymi."
-  Write-Host "Pliki Storage API nie są częścią tego eksportu."
+  Write-Host "Archiwum jest czytelne, obie kluczowe tabele są na liście."
+  Write-Host "Kopia zapisana w: $destinationPath"
+  Write-Host "WAŻNE: to tylko public, nie pełny eksport Auth/Storage ani plików Storage API."
+  Write-Host "Przetestuj odtwarzanie do oddzielnej bazy przed migracją produkcyjną."
 } finally {
-  $dbUrl = ""
-  if ($null -ne $secret) { $secret.Dispose() }
+  foreach ($key in $vars) {
+    [Environment]::SetEnvironmentVariable($key, $previous[$key], "Process")
+  }
+  if ($null -ne $password) { $password.Dispose() }
 }

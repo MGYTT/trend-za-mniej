@@ -35,15 +35,18 @@ test("unreleased feature branches do not trigger automatic Vercel deployments", 
   assert.equal(config.git.deploymentEnabled["release/*"], false);
 });
 
-test("Supabase Free backup procedure exports roles, schema and data privately", () => {
-  const backup = load("../scripts/backup-supabase-before-release.sh");
-  assert.match(backup, /umask 077/);
-  assert.match(backup, /SUPABASE_DB_URL/);
-  assert.match(backup, /--role-only/);
-  assert.match(backup, /--data-only/);
-  assert.match(backup, /sha256sum -c/);
-  assert.match(backup, /chmod 600/);
-  assert.doesNotMatch(backup, /git add|git push/);
+test("PowerShell backup works without Docker and validates the public archive", () => {
+  const backup = load("../scripts/backup-supabase-before-release.ps1");
+  assert.match(backup, /Resolve-PgTool "pg_dump"/);
+  assert.match(backup, /Resolve-PgTool "pg_restore"/);
+  assert.match(backup, /--format=custom/);
+  assert.match(backup, /--schema=public/);
+  assert.match(backup, /PGPASSWORD/);
+  assert.match(backup, /Read-Host .* -AsSecureString/);
+  assert.match(backup, /--list/);
+  assert.match(backup, /Get-FileHash/);
+  assert.match(backup, /TABLE DATA/);
+  assert.doesNotMatch(backup, /& docker |& supabase db dump|git push/);
 });
 
 test("login uses Next.js internal Link instead of document navigation", () => {

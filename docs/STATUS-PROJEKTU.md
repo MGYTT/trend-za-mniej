@@ -57,7 +57,7 @@ Zabezpieczono rozpoznawanie pochodzenia kliknięć przed wielokrotnymi i sprzecz
 
 ## Blokady publikacji sprawdzone 22.10.2026
 
-- Baza jest na Supabase Free, brak potwierdzonej kopii pozwalającej odtworzyć produkcję. Przygotowano `scripts/backup-supabase-before-release.sh` oraz `docs/BACKUP-I-DEPLOY-02.md`, ale kopia nie została wykonana.
+- Baza jest na Supabase Free, brak potwierdzonej kopii pozwalającej odtworzyć produkcję. Przygotowano `scripts/backup-supabase-before-release.ps1` i `docs/BACKUP-I-DEPLOY-02.md` z wariantem PostgreSQL Client Tools bez Dockera, ale kopia nie została wykonana.
 - Lokalny pełny Next.js build nadal niedostępny (brak pobranych zależności i możliwości sklonowania repozytorium ze środowiska uruchomieniowego).
 - W repozytorium dodano kontraktowe testy powiązań przycisków afiliacyjnych z trasą `/go` oraz migracją uprawnień.
 - **Nie wdrażać do produkcji** dopóki nie potwierdzimy kopii, testu jej odtworzenia, migracji testowych i pełnego `npm run verify:release`.
@@ -70,5 +70,9 @@ Użytkownik uruchomił pełną kontrolę; zatrzymała się na 15 błędach ESLin
 
 - `npm run verify:release` — **PASS**, w tym `npm run build` (Next.js 16.4.0, TypeScript i generowanie 32 stron statycznych).
 - `npm audit --omit=dev` — **0 podatności zależności produkcyjnych**. Bez tego wniosku o pełnym bezpieczeństwie narzędzi deweloperskich.
-- Supabase Free: kopia bazy i test odtwarzania **nadal niepotwierdzone**. Dodano PowerShell `scripts/backup-supabase-before-release.ps1`, działający lokalnie po instalacji Supabase CLI i Docker Desktop.
+- Supabase Free: kopia bazy i test odtwarzania **nadal niepotwierdzone**. Dodano PowerShell `scripts/backup-supabase-before-release.ps1`, wymagający tylko klienta PostgreSQL 17 (`pg_dump`, `pg_restore`), bez Dockera.
 - Kolejka SEO nadal ma `EXECUTE` dla `anon`; poprawkę SQL wykonamy po testach i kopii.
+
+## Bez Dockera — korekta procedury
+
+Usunięto skrypt bash zależny od Docker/Supabase CLI; pozostawiono tylko PowerShell z natywnym klientem PostgreSQL dla schematu `public`. Kopia nie obejmuje Auth/Storage i wymaga osobnej próby odtworzenia. Projekt nie zmienia sposobu hostingu ani wdrażania.
