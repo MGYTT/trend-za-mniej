@@ -10,13 +10,13 @@ import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 300;
 export const metadata: Metadata = {
-  title: "Poradniki modowe – jak skompletować stylizację w budżecie",
+  title: "Poradniki modowe: stylizacje i zakupy z głową",
   description:
-    "Praktyczne poradniki: co założyć do pracy, na weekend i jak stworzyć stylizację do 100 zł. Fasony, rozmiary, budżet i sprawdzone zasady zakupów online.",
+    "Jak ubrać się do pracy, co założyć na weekend i jak zmieścić się w 100 zł? Praktyczne wskazówki o fasonach, rozmiarach i budżecie.",
   alternates: { canonical: "/poradniki" },
   openGraph: {
     type: "website",
-    title: "Poradniki modowe i pomysły na gotowe zestawy | Trend za Mniej",
+    title: "Poradniki modowe i gotowe stylizacje | Trend za Mniej",
     description: "Dowiedz się, jak wybierać ubrania rozsądnie i znaleźć stylizację odpowiednią do okazji oraz budżetu.",
     url: "/poradniki"
   }

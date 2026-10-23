@@ -12,14 +12,14 @@ import type { OutfitPreview } from "@/lib/outfit-filters";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Stylizacje damskie do 100, 150 i 200 zł – gotowe zestawy",
+  title: "Stylizacje damskie do 100, 150 i 200 zł",
   description:
-    "Gotowe stylizacje damskie na co dzień, do pracy i na weekend. Wybierz budżet, porównaj skład i sumę zapisanych cen oraz sprawdź poszczególne oferty w SHEIN.",
+    "Gotowe stylizacje damskie na co dzień, do pracy i na weekend. Poznaj skład i sumę cen zapisanych w katalogu. Aktualne oferty sprawdzaj w SHEIN.",
   alternates: { canonical: "/stylizacje" },
   openGraph: {
     type: "website",
-    title: "Gotowe stylizacje damskie na każdą okazję | Trend za Mniej",
-    description: "Pięć ręcznie dobranych zestawów z podanymi elementami i kosztem zapisanym w katalogu. Wybierz okazję i swój budżet.",
+    title: "Stylizacje damskie do 100, 150 i 200 zł | Trend za Mniej",
+    description: "Gotowe zestawy na co dzień, do pracy i na weekend. Wybierz okazję, poznaj skład i sumę zapisanych cen.",
     url: "/stylizacje",
   },
 };

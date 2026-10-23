@@ -2,10 +2,10 @@ export const SITE_NAME =
   "Trend za Mniej";
 
 export const SITE_DEFAULT_TITLE =
-  "Moda damska, ubrania i okazje SHEIN | Trend za Mniej";
+  "Stylizacje damskie i poradniki modowe | Trend za Mniej";
 
 export const SITE_DESCRIPTION =
-  "Trend za Mniej pomaga znaleźć modne ubrania, dodatki i okazje SHEIN. Wybrane produkty, ceny w chwili publikacji, kategorie i szybkie przejście do aktualnej oferty.";
+  "Gotowe stylizacje damskie do 100–200 zł, praktyczne poradniki i produkty SHEIN. Poznaj skład zestawów, porównaj budżety i sprawdź ceny u sprzedawcy.";
 
 export const SITE_LANGUAGE =
   "pl-PL";

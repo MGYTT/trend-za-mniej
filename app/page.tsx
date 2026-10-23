@@ -110,10 +110,10 @@ function Hero({
           </p>
 
           <h1 className="mt-4 max-w-[680px] text-balance text-[clamp(2.3rem,5vw,4.4rem)] font-black leading-[1.09] tracking-[-0.055em] text-stone-950 sm:mt-5">
-            Dobry styl.
+            Gotowe stylizacje.
 
             <span className="block text-rose-600">
-              Za mniej.
+              Moda za mniej.
             </span>
           </h1>
 

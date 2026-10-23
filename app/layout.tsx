@@ -141,7 +141,7 @@ export const metadata: Metadata = {
           630,
 
         alt:
-          "Trend za Mniej - moda damska, ubrania i okazje",
+          "Trend za Mniej – gotowe stylizacje damskie i poradniki modowe",
       },
     ],
   },
@@ -212,7 +212,7 @@ export default function RootLayout({
           SITE_NAME,
 
         alternateName:
-          "Trend za Mniej | Moda i okazje",
+          "TrendZaMniej",
 
         url:
           siteUrl,
@@ -274,7 +274,7 @@ export default function RootLayout({
           SITE_NAME,
 
         alternateName:
-          "Trend za Mniej | Moda i okazje",
+          "TrendZaMniej",
 
         description:
           SITE_DESCRIPTION,
