@@ -33,8 +33,8 @@ test("root brand and crawl metadata are consistent", () => {
   assert.match(layout, /template:\s*"%s \| Trend za Mniej"/);
   assert.match(layout, /SITE_DEFAULT_TITLE/);
   assert.match(layout, /SITE_DESCRIPTION/);
-  assert.match(layout, /type:\s*"WebSite"/);
-  assert.match(layout, /type:\s*"Organization"/);
+  assert.match(layout, /"@type":\s*"WebSite"/);
+  assert.match(layout, /"@type":\s*"Organization"/);
   assert.match(layout, /name:\s*SITE_NAME/);
   assert.match(layout, /"max-image-preview":\s*"large"/);
   assert.match(layout, /canonical:\s*"\/"/);
@@ -45,7 +45,7 @@ test("root brand and crawl metadata are consistent", () => {
 test("outfit and guide listing titles describe their distinct content", () => {
   assert.match(outfits, /title: "Stylizacje damskie do 100, 150 i 200 zł"/);
   assert.match(outfits, /canonical: "\/stylizacje"/);
-  assert.match(outfits, /ceny zapisanych w katalogu/i);
+  assert.match(outfits, /cen zapisanych w katalogu/i);
   assert.match(guides, /title: "Poradniki modowe: stylizacje i zakupy z głową"/);
   assert.match(guides, /canonical: "\/poradniki"/);
   assert.match(guideDetail, /canonical: "\/poradniki\/" \+ guide\.slug/);
