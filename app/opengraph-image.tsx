@@ -101,7 +101,7 @@ export default function Image() {
                 32,
             }}
           >
-            ✨ Moda • okazje • znaleziska
+            Stylizacje • poradniki • inspiracje
           </div>
 
           <div
@@ -134,7 +134,7 @@ export default function Image() {
                 "#e11d48",
             }}
           >
-            Modne rzeczy bez przepłacania
+            Gotowe stylizacje w Twoim budżecie
           </div>
 
           <div
@@ -148,7 +148,7 @@ export default function Image() {
                 "#57534e",
             }}
           >
-            Codziennie nowe modne perełki
+            Poznaj skład zestawów i wybieraj świadomie
           </div>
         </div>
       </div>

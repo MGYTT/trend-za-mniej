@@ -28,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       title: guide.seoTitle,
       description: guide.summary,
-      url: "/poradniki/" + guide.slug
+      url: "/poradniki/" + guide.slug,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630,
+        alt: "Trend za Mniej – poradniki i stylizacje" }]
     },
   };
 }
