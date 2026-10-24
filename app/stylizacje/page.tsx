@@ -96,7 +96,7 @@ export default async function LooksPage() {
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-stone-200 sm:text-lg">
               Nie musisz kompletować stroju od zera. Porównaj gotowe zestawy na co dzień,
-              do pracy i na weekend. Widzisz, co do siebie pasuje, co wchodzi w skład
+              do pracy, na weekend i na wieczór. Widzisz, co do siebie pasuje, co wchodzi w skład
               zestawu i ile wynosi suma cen zapisanych w naszym katalogu.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">

@@ -52,7 +52,14 @@ export default async function LookPage({ params }: Props) {
 
   const siteUrl = getSiteUrl();
   const url = siteUrl + "/stylizacje/" + look.slug;
-  const otherLooks = eligibleLooks.filter((item) => item.slug !== look.slug).slice(0, 3);
+  // Prefer alternatives for the same occasion, then a comparable catalog budget.
+  const otherLooks = eligibleLooks
+    .filter((item) => item.slug !== look.slug)
+    .sort((a, b) =>
+      Number(b.occasion === look.occasion) - Number(a.occasion === look.occasion) ||
+      Math.abs(a.total - look.total) - Math.abs(b.total - look.total)
+    )
+    .slice(0, 3);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -101,7 +108,7 @@ export default async function LookPage({ params }: Props) {
           <h1 className="mt-3 text-balance text-4xl font-black tracking-tight sm:text-6xl">{look.title}</h1>
           <p className="mt-5 text-base leading-8 text-stone-600 sm:text-lg">{look.intro}</p>
           <ul className="mt-6 flex flex-wrap gap-2 text-xs font-bold text-stone-700 sm:text-sm">
-            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">{look.products.length} elementy garderoby</li>
+            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">{look.products.length} {look.products.length === 2 ? "elementy" : "elementy"} garderoby</li>
             <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Na okazję: {look.occasion.toLowerCase()}</li>
             <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Budżet: do {formatPrice(look.maxBudget)}</li>
           </ul>
