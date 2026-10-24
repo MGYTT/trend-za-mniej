@@ -12,6 +12,8 @@ import {
   type OutfitSort,
 } from "@/lib/outfit-filters";
 
+const INITIAL_OUTFITS = 6;
+
 const priceFormatter = new Intl.NumberFormat("pl-PL", {
   style: "currency",
   currency: "PLN",
@@ -21,6 +23,7 @@ export default function OutfitExplorer({ looks }: { looks: OutfitPreview[] }) {
   const [budget, setBudget] = useState("all");
   const [occasion, setOccasion] = useState("all");
   const [sort, setSort] = useState<OutfitSort>("editorial");
+  const [expanded, setExpanded] = useState(false);
 
   const budgets = useMemo(() => availableBudgets(looks), [looks]);
   const occasions = useMemo(() => availableOccasions(looks), [looks]);
@@ -33,10 +36,14 @@ export default function OutfitExplorer({ looks }: { looks: OutfitPreview[] }) {
     [looks, budget, occasion, sort]
   );
   const isFiltered = budget !== "all" || occasion !== "all";
+  // With a filter or price sorting, show every matching option immediately.
+  const showAll = isFiltered || sort !== "editorial" || expanded;
+  const displayed = showAll ? visible : visible.slice(0, INITIAL_OUTFITS);
   const clear = () => {
     setBudget("all");
     setOccasion("all");
     setSort("editorial");
+    setExpanded(false);
   };
 
   return (
@@ -117,13 +124,14 @@ export default function OutfitExplorer({ looks }: { looks: OutfitPreview[] }) {
       <div className="mb-6 mt-9 flex flex-wrap items-end justify-between gap-3">
         <h3 className="text-2xl font-black tracking-tight text-stone-950">Gotowe zestawy dla Ciebie</h3>
         <p className="text-sm font-semibold text-stone-600" aria-live="polite" role="status">
-          {visible.length} z {looks.length} stylizacji
+          Pokazujesz {displayed.length} z {visible.length} pasujących stylizacji (łącznie {looks.length})
         </p>
       </div>
 
       {visible.length > 0 ? (
+        <>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((look) => (
+          {displayed.map((look) => (
             <article key={look.slug} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[26px] border border-stone-200 bg-white shadow-sm transition hover:border-rose-200 hover:shadow-lg">
               <Link
                 href={"/stylizacje/" + look.slug}
@@ -170,6 +178,15 @@ export default function OutfitExplorer({ looks }: { looks: OutfitPreview[] }) {
             </article>
           ))}
         </div>
+        {!showAll && visible.length > INITIAL_OUTFITS && (
+          <div className="mt-8 flex justify-center">
+            <button type="button" onClick={() => setExpanded(true)}
+              className="min-h-12 rounded-xl border border-stone-300 bg-white px-6 text-sm font-black text-stone-950 hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-600">
+              Pokaż pozostałe {visible.length - INITIAL_OUTFITS} stylizacje ↓
+            </button>
+          </div>
+        )}
+        </>
       ) : (
         <div className="rounded-3xl border border-stone-200 bg-white px-6 py-12 text-center">
           <h4 className="text-xl font-black">Brak zestawów w tym budżecie i na tę okazję</h4>

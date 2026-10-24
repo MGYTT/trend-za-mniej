@@ -52,7 +52,14 @@ export default async function LookPage({ params }: Props) {
 
   const siteUrl = getSiteUrl();
   const url = siteUrl + "/stylizacje/" + look.slug;
-  const otherLooks = eligibleLooks.filter((item) => item.slug !== look.slug).slice(0, 3);
+  // Prefer alternatives for the same occasion, then a comparable catalog budget.
+  const otherLooks = eligibleLooks
+    .filter((item) => item.slug !== look.slug)
+    .sort((a, b) =>
+      Number(b.occasion === look.occasion) - Number(a.occasion === look.occasion) ||
+      Math.abs(a.total - look.total) - Math.abs(b.total - look.total)
+    )
+    .slice(0, 3);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [

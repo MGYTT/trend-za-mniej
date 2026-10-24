@@ -8,16 +8,29 @@ const fixtures = [
   ["damska-koszula-na-co-dzien-o-luznym-kroju",60],["damskie-letnie-jeansy-z-prostymi-nogawkami",61.05],
   ["damski-top-bazowy-z-wstawkam",28.91],["damskie-zwezane-jeansy",72.60],["bezowy-luzny-krotki-trencz",87.12],
   ["damski-sweter-casualowy-w-kolorze",32.45],["damskie-jeansy-z-wzorem",66.55],
+  ["bezowy-dzianinowy-top-damski",37.17],
+  ["czarne-spodnie-damskie-z-szerokimi-nogawkami",27.93],
+  ["biala-bluza-damska-z-kapturem-attitoon",37],
+  ["spodnie-do-jogi-z-szerokimi-nogawkami",29.7],
+  ["jednokolorowy-casualowy-sweter-pullover",43.45],
+  ["inawly-koszula-damska-casualowa-w-jednolitym-kolorze",28.05],
+  ["damska-elegancka-mini-sukienka",73.22],
+  ["modne-wygodne-casualowe-damskie-botki-za-kostke",90.74],
 ].map(([slug,price],idx)=>({id:String(idx),slug,price,active:true}));
 
 function find(looks,slug){return looks.find(x=>x.slug===slug)}
 
-test("Wszystkie pięć zestawów mieści się w budżetach",()=>{
+test("Wszystkie dziesięć zestawów mieści się w budżetach",()=>{
  const looks=resolveLooks(fixtures);
- assert.equal(looks.length,5);
- assert.equal(looks.filter(x=>x.available).length,5);
+ assert.equal(looks.length,10);
+ assert.equal(looks.filter(x=>x.available).length,10);
  assert.equal(find(looks,"streetwear-do-100-zl").total,99);
  assert.equal(find(looks,"jesienny-look-do-200-zl").total,188.63);
+ assert.equal(find(looks,"minimalizm-bez-i-czern-do-100-zl").total,65.10);
+ assert.equal(find(looks,"wygodny-luz-do-100-zl").total,66.70);
+ assert.equal(find(looks,"dzianina-i-denim-do-150-zl").total,116.05);
+ assert.equal(find(looks,"smart-casual-koszula-do-150-zl").total,105.15);
+ assert.equal(find(looks,"czarna-mini-i-botki-do-200-zl").total,163.96);
  for(const l of looks) assert.ok(l.total<=l.maxBudget);
 });
 test("Wzrost ceny wyłącza przekroczony budżet",()=>{
@@ -32,7 +45,7 @@ test("Nieaktywny produkt wyłącza tylko powiązany zestaw",()=>{
  const looks=resolveLooks(changed);
  assert.equal(find(looks,"casual-do-150-zl").available,false);
  assert.equal(find(looks,"casual-do-150-zl").missing,1);
- assert.equal(looks.filter(x=>x.available).length,4);
+ assert.equal(looks.filter(x=>x.available).length,9);
 });
 test("Brak produktu ukrywa zestaw",()=>{
  const looks=resolveLooks(fixtures.filter(p=>p.slug!=="damskie-zwezane-jeansy"));
@@ -65,9 +78,9 @@ test("Odnośniki kategorii ignorują niedostępne zestawy", () => {
     ...p, category: p.slug.includes("jeansy") ? "Jeansy" : "Koszulki"
   }));
   const matches = getLooksForCategory(resolveLooks(categorized), "JEANSY");
-  assert.equal(matches.length, 3);
+  assert.equal(matches.length, 4);
   const inactive = categorized.map((p) => p.slug === "damskie-jeansy-z-wzorem" ? {...p,active:false} : p);
-  assert.equal(getLooksForCategory(resolveLooks(inactive), "jeansy").length, 2);
+  assert.equal(getLooksForCategory(resolveLooks(inactive), "jeansy").length, 3);
   assert.equal(getLooksForCategory(resolveLooks(categorized), "   ").length, 0);
 });
 
