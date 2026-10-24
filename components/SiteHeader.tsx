@@ -142,7 +142,7 @@ export default function SiteHeader() {
       {/* GÓRNY NAGŁÓWEK */}
 
       <header className="sticky top-0 z-50 border-b border-stone-200 bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-5 sm:px-6">
           <div className="min-w-0 shrink-0">
             <BrandLogo compact />
           </div>

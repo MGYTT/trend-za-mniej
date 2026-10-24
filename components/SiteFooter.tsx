@@ -28,7 +28,7 @@ export default function SiteFooter() {
 
   return (
     <footer className="border-t border-stone-200 bg-white text-stone-600">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-7xl px-6 py-10 sm:px-6 sm:py-12">
         <div className="grid gap-9 lg:grid-cols-[1.45fr_0.8fr_0.9fr] lg:gap-12">
           <div>
             <BrandLogo

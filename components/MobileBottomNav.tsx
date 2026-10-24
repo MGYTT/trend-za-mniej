@@ -42,7 +42,7 @@ export default function MobileBottomNav() {
   return (
     <nav aria-label="Szybka nawigacja mobilna"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 shadow-[0_-6px_24px_rgba(28,25,23,0.09)] backdrop-blur-xl lg:hidden">
-      <div className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-1.5 pt-1.5"
+      <div className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2.5 pt-1.5"
         style={{ paddingBottom: "max(0.45rem, env(safe-area-inset-bottom))" }}>
         {TABS.map((item) => {
           const active = activeTab(pathname, item.type);

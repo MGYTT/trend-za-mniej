@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run test:homepage-mobile && next build",
     "start": "next start",
     "lint": "eslint",
     "test:stylizacje": "node --experimental-strip-types --test tests/stylizacje.test.mjs tests/outfit-filters.test.mjs && node --test tests/stylizacje-growth.test.mjs",
@@ -14,7 +14,9 @@
     "test:google-seo": "node --experimental-strip-types --test tests/google-seo.test.mjs",
     "verify:google-seo": "npm run test:stylizacje && npm run test:poradniki && npm run test:google-seo && npm run lint && npm run build",
     "test:stylizacje-07": "node --experimental-strip-types --test tests/stylizacje-07.test.mjs",
-    "verify:stylizacje-07": "npm run test:stylizacje && npm run test:poradniki && npm run test:google-seo && npm run test:stylizacje-07 && npm run lint && npm run build"
+    "verify:stylizacje-07": "npm run test:stylizacje && npm run test:poradniki && npm run test:google-seo && npm run test:stylizacje-07 && npm run lint && npm run build",
+    "test:homepage-mobile": "node --test tests/homepage-mobile.test.mjs",
+    "verify:homepage-mobile": "npm run test:homepage-mobile && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
