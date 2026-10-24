@@ -30,6 +30,21 @@ export const LOOKS: readonly LookConfig[] = [
     productSlugs: ["damski-dopasowany-basic-t-shirt", "damskie-czarne-casualowe-spodnie"],
   },
   {
+    slug: "minimalizm-bez-i-czern-do-100-zl",
+    title: "Beż i czerń do 100 zł",
+    occasion: "Na co dzień",
+    style: "Minimalizm",
+    intro: "Beżowy dzianinowy top z krótkim rękawem i czarne spodnie z szeroką nogawką. Spokojne połączenie, do którego możesz dobrać buty i dodatki ze swojej szafy.",
+    tip: "Dopasuj proporcje: sprawdź długość topu i stan spodni. Przy szerokiej nogawce zweryfikuj długość do posiadanego obuwia.",
+    whyItWorks: [
+      "Gładki beżowy top jest łagodnym kontrastem do czarnych spodni i nie konkuruje z szerokim krojem nogawki.",
+      "Dwa neutralne kolory pozwalają uzupełnić komplet własnymi dodatkami, bez wymyślania osobnej palety całego stroju."
+    ],
+    excluded: "Buty, torba, okrycie i biżuteria nie należą do zestawu; suma nie obejmuje dostawy.",
+    maxBudget: 100,
+    productSlugs: ["bezowy-dzianinowy-top-damski", "czarne-spodnie-damskie-z-szerokimi-nogawkami"],
+  },
+  {
     slug: "do-pracy-do-150-zl",
     title: "Prosty zestaw do pracy do 150 zł",
     occasion: "Do pracy",
@@ -43,6 +58,21 @@ export const LOOKS: readonly LookConfig[] = [
     excluded: "Obuwie, okrycie wierzchnie i torba nie są wliczone do ceny.",
     maxBudget: 150,
     productSlugs: ["bluzka-damska-z-dlugim-rekawem", "damskie-eleganckie-casualowe-spodnie"],
+  },
+  {
+    slug: "wygodny-luz-do-100-zl",
+    title: "Wygodny luz do 100 zł",
+    occasion: "Na weekend",
+    style: "Sportowy casual",
+    intro: "Biała bluza z kapturem i spodnie o swobodnej, szerokiej nogawce. Propozycja na spokojny dzień, drogę na zajęcia lub odpoczynek, bez udawania stroju do intensywnego treningu.",
+    tip: "Zwróć uwagę na faktyczną długość bluzy i spodni oraz kolor wybranego wariantu. Nazwa spodni nie potwierdza przydatności do konkretnej aktywności sportowej.",
+    whyItWorks: [
+      "Prosta biała bluza stanowi jasną bazę, a luźniejsza dolna część nadaje zestawowi swobodny charakter.",
+      "Oba elementy możesz nosić niezależnie; przed zakupem sprawdź, czy spodnie mają oczekiwany kolor i skład materiału."
+    ],
+    excluded: "Obuwie sportowe, torba, kurtka i ewentualna dostawa są poza sumą zestawu.",
+    maxBudget: 100,
+    productSlugs: ["biala-bluza-damska-z-kapturem-attitoon", "spodnie-do-jogi-z-szerokimi-nogawkami"],
   },
   {
     slug: "weekend-do-150-zl",
@@ -60,6 +90,21 @@ export const LOOKS: readonly LookConfig[] = [
     productSlugs: ["damska-koszula-na-co-dzien-o-luznym-kroju", "damskie-letnie-jeansy-z-prostymi-nogawkami"],
   },
   {
+    slug: "dzianina-i-denim-do-150-zl",
+    title: "Dzianina i denim do 150 zł",
+    occasion: "Na chłodniejsze dni",
+    style: "Codzienny denim",
+    intro: "Jednokolorowy sweter typu pullover i jeansy o zwężanym kroju tworzą prostą bazę na chłodniejsze dni. Ostateczny efekt zależy od wybranego koloru i fasonu.",
+    tip: "Sprawdź skład i grubość swetra, odcień dostępnego wariantu oraz obwód i długość jeansów. Nie traktuj nazwy swetra jako gwarancji ocieplenia.",
+    whyItWorks: [
+      "Gładka góra uspokaja stylizację, a denim dodaje jej codziennego charakteru bez dodatkowych wzorów.",
+      "Sweter możesz łączyć z innymi spodniami, a jeansy z koszulą; zestaw nie wymaga zakupu nowej torby czy butów."
+    ],
+    excluded: "Buty, kurtka, torba i koszt dostawy nie są wliczone; odporność na chłód zależy od materiału.",
+    maxBudget: 150,
+    productSlugs: ["jednokolorowy-casualowy-sweter-pullover", "damskie-zwezane-jeansy"],
+  },
+  {
     slug: "jesienny-look-do-200-zl",
     title: "Zestaw z trenczem do 200 zł",
     occasion: "Na chłodniejsze dni",
@@ -73,6 +118,21 @@ export const LOOKS: readonly LookConfig[] = [
     excluded: "Obuwie, torba oraz dodatki nie są ujęte w sumie; trencz nie zastępuje kurtki zimowej.",
     maxBudget: 200,
     productSlugs: ["damski-top-bazowy-z-wstawkam", "damskie-zwezane-jeansy", "bezowy-luzny-krotki-trencz"],
+  },
+  {
+    slug: "smart-casual-koszula-do-150-zl",
+    title: "Koszula smart casual do 150 zł",
+    occasion: "Do pracy",
+    style: "Minimalistyczne biuro",
+    intro: "Gładka koszula z długim rękawem i czarne spodnie z prostą nogawką — spokojna dwuelementowa baza do pracy, w której obowiązuje swobodniejszy dress code.",
+    tip: "Sprawdź odcień i prześwitywanie koszuli, szerokość ramion oraz wymiary spodni. Odpowiedniość stroju zależy od zasad konkretnego miejsca pracy.",
+    whyItWorks: [
+      "Jednolita koszula i proste, czarne spodnie nie konkurują ze sobą wzorami, dlatego łatwo dopasować do nich własne obuwie.",
+      "Każdy z tych elementów może pracować w kilku zestawach, zamiast tworzyć jeden komplet kupowany na jedną okazję."
+    ],
+    excluded: "Nie uwzględniamy butów, marynarki, paska, torby ani kosztów dostawy.",
+    maxBudget: 150,
+    productSlugs: ["inawly-koszula-damska-casualowa-w-jednolitym-kolorze", "damskie-eleganckie-casualowe-spodnie"],
   },
   {
     slug: "streetwear-do-100-zl",
@@ -89,67 +149,7 @@ export const LOOKS: readonly LookConfig[] = [
     maxBudget: 100,
     productSlugs: ["damski-sweter-casualowy-w-kolorze", "damskie-jeansy-z-wzorem"],
   },
-    {
-    slug: "minimalizm-bez-i-czern-do-100-zl",
-    title: "Beż i czerń do 100 zł",
-    occasion: "Na co dzień",
-    style: "Minimalizm",
-    intro: "Beżowy dzianinowy top z krótkim rękawem i czarne spodnie z szeroką nogawką. Spokojne połączenie, do którego możesz dobrać buty i dodatki ze swojej szafy.",
-    tip: "Dopasuj proporcje: sprawdź długość topu i stan spodni. Przy szerokiej nogawce zweryfikuj długość do posiadanego obuwia.",
-    whyItWorks: [
-      "Gładki beżowy top jest łagodnym kontrastem do czarnych spodni i nie konkuruje z szerokim krojem nogawki.",
-      "Dwa neutralne kolory pozwalają uzupełnić komplet własnymi dodatkami, bez wymyślania osobnej palety całego stroju."
-    ],
-    excluded: "Buty, torba, okrycie i biżuteria nie należą do zestawu; suma nie obejmuje dostawy.",
-    maxBudget: 100,
-    productSlugs: ["bezowy-dzianinowy-top-damski", "czarne-spodnie-damskie-z-szerokimi-nogawkami"],
-  },
-    {
-    slug: "wygodny-luz-do-100-zl",
-    title: "Wygodny luz do 100 zł",
-    occasion: "Na weekend",
-    style: "Sportowy casual",
-    intro: "Biała bluza z kapturem i spodnie o swobodnej, szerokiej nogawce. Propozycja na spokojny dzień, drogę na zajęcia lub odpoczynek, bez udawania stroju do intensywnego treningu.",
-    tip: "Zwróć uwagę na faktyczną długość bluzy i spodni oraz kolor wybranego wariantu. Nazwa spodni nie potwierdza przydatności do konkretnej aktywności sportowej.",
-    whyItWorks: [
-      "Prosta biała bluza stanowi jasną bazę, a luźniejsza dolna część nadaje zestawowi swobodny charakter.",
-      "Oba elementy możesz nosić niezależnie; przed zakupem sprawdź, czy spodnie mają oczekiwany kolor i skład materiału."
-    ],
-    excluded: "Obuwie sportowe, torba, kurtka i ewentualna dostawa są poza sumą zestawu.",
-    maxBudget: 100,
-    productSlugs: ["biala-bluza-damska-z-kapturem-attitoon", "spodnie-do-jogi-z-szerokimi-nogawkami"],
-  },
-    {
-    slug: "dzianina-i-denim-do-150-zl",
-    title: "Dzianina i denim do 150 zł",
-    occasion: "Na chłodniejsze dni",
-    style: "Codzienny denim",
-    intro: "Jednokolorowy sweter typu pullover i jeansy o zwężanym kroju tworzą prostą bazę na chłodniejsze dni. Ostateczny efekt zależy od wybranego koloru i fasonu.",
-    tip: "Sprawdź skład i grubość swetra, odcień dostępnego wariantu oraz obwód i długość jeansów. Nie traktuj nazwy swetra jako gwarancji ocieplenia.",
-    whyItWorks: [
-      "Gładka góra uspokaja stylizację, a denim dodaje jej codziennego charakteru bez dodatkowych wzorów.",
-      "Sweter możesz łączyć z innymi spodniami, a jeansy z koszulą; zestaw nie wymaga zakupu nowej torby czy butów."
-    ],
-    excluded: "Buty, kurtka, torba i koszt dostawy nie są wliczone; odporność na chłód zależy od materiału.",
-    maxBudget: 150,
-    productSlugs: ["jednokolorowy-casualowy-sweter-pullover", "damskie-zwezane-jeansy"],
-  },
-    {
-    slug: "smart-casual-koszula-do-150-zl",
-    title: "Koszula smart casual do 150 zł",
-    occasion: "Do pracy",
-    style: "Minimalistyczne biuro",
-    intro: "Gładka koszula z długim rękawem i czarne spodnie z prostą nogawką — spokojna dwuelementowa baza do pracy, w której obowiązuje swobodniejszy dress code.",
-    tip: "Sprawdź odcień i prześwitywanie koszuli, szerokość ramion oraz wymiary spodni. Odpowiedniość stroju zależy od zasad konkretnego miejsca pracy.",
-    whyItWorks: [
-      "Jednolita koszula i proste, czarne spodnie nie konkurują ze sobą wzorami, dlatego łatwo dopasować do nich własne obuwie.",
-      "Każdy z tych elementów może pracować w kilku zestawach, zamiast tworzyć jeden komplet kupowany na jedną okazję."
-    ],
-    excluded: "Nie uwzględniamy butów, marynarki, paska, torby ani kosztów dostawy.",
-    maxBudget: 150,
-    productSlugs: ["inawly-koszula-damska-casualowa-w-jednolitym-kolorze", "damskie-eleganckie-casualowe-spodnie"],
-  },
-    {
+  {
     slug: "czarna-mini-i-botki-do-200-zl",
     title: "Czarna mini i botki do 200 zł",
     occasion: "Na wieczór",
@@ -164,6 +164,7 @@ export const LOOKS: readonly LookConfig[] = [
     maxBudget: 200,
     productSlugs: ["damska-elegancka-mini-sukienka", "modne-wygodne-casualowe-damskie-botki-za-kostke"],
   },
+
 ];
 
 export type ResolvedLook = LookConfig & {
