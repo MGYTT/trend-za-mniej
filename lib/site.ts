@@ -1,3 +1,6 @@
+export const CONTACT_EMAIL =
+  "trendzamniej@gmail.com";
+
 export const SITE_NAME =
   "Trend za Mniej";
 

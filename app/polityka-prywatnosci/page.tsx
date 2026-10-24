@@ -10,6 +10,7 @@ import InfoPageLayout, {
 } from "@/components/InfoPageLayout";
 
 import {
+  CONTACT_EMAIL,
   getSiteUrl,
   SITE_LANGUAGE,
   SITE_NAME,
@@ -50,9 +51,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   const contactEmail =
-    process.env
-      .NEXT_PUBLIC_CONTACT_EMAIL
-      ?.trim();
+    CONTACT_EMAIL;
 
   const legalName =
     process.env

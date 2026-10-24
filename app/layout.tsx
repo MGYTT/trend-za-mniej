@@ -10,6 +10,7 @@ import {
 import "./globals.css";
 
 import {
+  CONTACT_EMAIL,
   getSiteUrl,
   SITE_DEFAULT_TITLE,
   SITE_DESCRIPTION,
@@ -29,9 +30,7 @@ const pinterestVerification =
     .NEXT_PUBLIC_PINTEREST_SITE_VERIFICATION;
 
 const contactEmail =
-  process.env
-    .NEXT_PUBLIC_CONTACT_EMAIL
-    ?.trim();
+  CONTACT_EMAIL;
 
 export const viewport: Viewport = {
   themeColor: "#e11d48",
