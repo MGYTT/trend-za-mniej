@@ -29,7 +29,7 @@ export const STYLE_GUIDES: readonly StyleGuide[] = [
     category: "Do pracy",
     lead: "W pracy liczy się nie tylko wygląd, ale też wygoda przez kilka godzin. Dwa dobrze dobrane elementy mogą być bazą stroju, jeśli masz już odpowiednie buty i okrycie wierzchnie.",
     summary: "Prosty sposób na strój do pracy: od zasad ubioru przez dobór fasonu po sprawdzenie całkowitego kosztu i rozmiarów.",
-    relatedLookSlugs: ["do-pracy-do-150-zl", "casual-do-150-zl"],
+    relatedLookSlugs: ["do-pracy-do-150-zl", "smart-casual-koszula-do-150-zl", "casual-do-150-zl"],
     sections: [
       {
         id: "zasady-miejsca",
@@ -83,7 +83,7 @@ export const STYLE_GUIDES: readonly StyleGuide[] = [
     category: "Na weekend",
     lead: "Weekendowy strój może być prosty: wygodna koszula, jeansy i obuwie, które już masz. Zamiast kupować cały nowy komplet, sprawdź najpierw, czego rzeczywiście brakuje w Twojej szafie.",
     summary: "Jak dobrać luźną koszulę i jeansy, dopasować strój do pogody oraz ocenić prawdziwy koszt weekendowej stylizacji.",
-    relatedLookSlugs: ["weekend-do-150-zl", "streetwear-do-100-zl"],
+    relatedLookSlugs: ["weekend-do-150-zl", "wygodny-luz-do-100-zl", "streetwear-do-100-zl"],
     sections: [
       {
         id: "plan-dnia",
@@ -137,7 +137,7 @@ export const STYLE_GUIDES: readonly StyleGuide[] = [
     category: "Mały budżet",
     lead: "Niski budżet nie oznacza, że trzeba polować na jak najwięcej przecenionych rzeczy. Często lepiej wybrać jedną ciekawą rzecz i neutralną bazę, a resztę skompletować z tego, co już posiadasz.",
     summary: "Jak ustalić potrzebne elementy, łączyć wzór z prostą bazą i nie pomylić sumy cen z pełnym kosztem zakupów.",
-    relatedLookSlugs: ["streetwear-do-100-zl"],
+    relatedLookSlugs: ["streetwear-do-100-zl", "minimalizm-bez-i-czern-do-100-zl", "wygodny-luz-do-100-zl"],
     sections: [
       {
         id: "lista-potrzeb",
