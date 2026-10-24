@@ -19,9 +19,17 @@ const priceFormatter = new Intl.NumberFormat("pl-PL", {
   currency: "PLN",
 });
 
-export default function OutfitExplorer({ looks }: { looks: OutfitPreview[] }) {
-  const [budget, setBudget] = useState("all");
-  const [occasion, setOccasion] = useState("all");
+export default function OutfitExplorer({
+  looks,
+  initialBudget = "all",
+  initialOccasion = "all",
+}: {
+  looks: OutfitPreview[];
+  initialBudget?: string;
+  initialOccasion?: string;
+}) {
+  const [budget, setBudget] = useState(initialBudget);
+  const [occasion, setOccasion] = useState(initialOccasion);
   const [sort, setSort] = useState<OutfitSort>("editorial");
   const [expanded, setExpanded] = useState(false);
 

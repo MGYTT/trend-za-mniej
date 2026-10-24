@@ -24,7 +24,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function LooksPage() {
+type SearchParams = {
+  budzet?: string | string[];
+  okazja?: string | string[];
+};
+
+export default async function LooksPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const rawBudget = Array.isArray(params.budzet) ? params.budzet[0] : params.budzet;
+  const rawOccasion = Array.isArray(params.okazja) ? params.okazja[0] : params.okazja;
+
   const looks = resolveLooks(await getProducts()).filter((look) => look.available);
   const previews: OutfitPreview[] = looks.map((look) => ({
     slug: look.slug,
@@ -165,7 +178,11 @@ export default async function LooksPage() {
           </p>
         </div>
         {previews.length > 0 ? (
-          <OutfitExplorer looks={previews} />
+          <OutfitExplorer
+          looks={previews}
+          initialBudget={["100", "150", "200"].includes(rawBudget ?? "") ? rawBudget! : "all"}
+          initialOccasion={looks.some((look) => look.occasion === rawOccasion) ? rawOccasion! : "all"}
+        />
         ) : (
           <div className="rounded-3xl border border-stone-200 bg-white px-6 py-16 text-center">
             <h3 className="text-2xl font-black">Przygotowujemy nowe stylizacje</h3>
