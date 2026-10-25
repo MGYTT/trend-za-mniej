@@ -105,19 +105,19 @@ export default async function SheinPromotionsPage() {
             <span aria-current="page" className="text-rose-700">Promocje SHEIN</span>
           </nav>
 
-          <div className="mt-7 grid min-w-0 items-center gap-7 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-12">
+          <div className="mt-4 grid min-w-0 items-center gap-7 sm:mt-7 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-12">
             <div className="min-w-0">
-              <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-[11px] font-black uppercase leading-5 tracking-[0.12em] text-rose-700">
+              <p className="hidden max-w-full items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-[11px] font-black uppercase leading-5 tracking-[0.12em] text-rose-700 sm:inline-flex">
                 <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
                 Kody i kampanie w jednym miejscu
               </p>
-              <h1 id="promotion-hero-title" className="mt-5 max-w-3xl text-pretty text-[clamp(2.25rem,7.3vw,4.6rem)] font-black leading-[1.08] tracking-[-0.055em] text-stone-950">
+              <h1 id="promotion-hero-title" className="mt-1 max-w-3xl text-pretty text-[clamp(2.1rem,7.3vw,4.6rem)] font-black leading-[1.08] tracking-[-0.055em] text-stone-950 sm:mt-5">
                 Promocje SHEIN. <span className="block text-rose-600">Znajdź je szybciej.</span>
               </h1>
-              <p className="mt-4 max-w-xl text-[15px] leading-[1.8] text-stone-600 sm:text-lg">
-                Szukasz ubrań, kosmetyków albo kodu? Wybierz kategorię, skopiuj kod kampanii i sprawdź ofertę bez przekopywania się przez długie opisy.
+              <p className="mt-2 max-w-xl text-sm leading-6 text-stone-600 sm:mt-4 sm:text-lg sm:leading-8">
+                Wybierz kategorię lub wpisz kod. Skopiuj go i sprawdź warunki oferty w SHEIN — bez długiego szukania.
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-6">
                 <a href="#znajdz-promocje"
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 text-sm font-black text-white shadow-[0_10px_25px_rgba(225,29,72,0.16)] transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-400">
                   Znajdź promocję ↓
@@ -151,10 +151,10 @@ export default async function SheinPromotionsPage() {
 
       <section id="znajdz-promocje" aria-labelledby="search-promotions-title" className="scroll-mt-24">
         <div className="mx-auto max-w-7xl px-6 pb-12 pt-9 sm:px-8 sm:pb-16 sm:pt-12">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-rose-700">Bez zbędnego przewijania</p>
-              <h2 id="search-promotions-title" className="mt-2 text-pretty text-[clamp(1.7rem,5vw,2.3rem)] font-black leading-tight tracking-[-0.04em]">
+              <p className="hidden text-xs font-black uppercase tracking-[0.12em] text-rose-700 sm:block">Bez zbędnego przewijania</p>
+              <h2 id="search-promotions-title" className="text-pretty text-[clamp(1.5rem,5vw,2.3rem)] font-black leading-tight tracking-[-0.04em] sm:mt-2">
                 Której promocji szukasz?
               </h2>
             </div>

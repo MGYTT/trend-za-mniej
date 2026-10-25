@@ -2,7 +2,9 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -24,6 +26,8 @@ type CategoryOption = {
   id: Category;
   label: string;
 };
+
+type CodeFilter = "all" | "campaign" | "coupon";
 
 const CATEGORIES: CategoryOption[] = [
   { id: "all", label: "Wszystkie" },
@@ -130,6 +134,9 @@ function matchesCategory(
   promotion: SheinPromotion,
   category: Category
 ) {
+  // New-customer and sale campaigns can also be in beauty, fashion or accessories.
+  if (category === "new-users") return promotion.category === category || newUserPromotion(promotion);
+  if (category === "sale") return promotion.category === category || salePromotion(promotion);
   if (category !== "all" && promotion.category) return promotion.category === category;
   switch (category) {
     case "all":
@@ -205,50 +212,100 @@ export default function SheinPromotionsExplorer({
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category>("all");
+  const [codeFilter, setCodeFilter] = useState<CodeFilter>("all");
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
+  const pendingAnchorRef = useRef<string | null>(null);
   const [feedback, setFeedback] = useState<{ id: string; success: boolean } | null>(null);
+
+  const codeCounts = useMemo(() => ({
+    campaign: promotions.filter((promotion) => promotion.codeKind !== "coupon").length,
+    coupon: promotions.filter((promotion) => promotion.codeKind === "coupon").length,
+  }), [promotions]);
 
   const categoryCounts = useMemo(
     () => Object.fromEntries(
       CATEGORIES.map((item) => [
         item.id,
-        promotions.filter((promotion) => matchesCategory(promotion, item.id)).length,
+        promotions.filter((promotion) =>
+          matchesCategory(promotion, item.id) &&
+          (codeFilter === "all" ||
+            (codeFilter === "coupon" ? promotion.codeKind === "coupon" : promotion.codeKind !== "coupon"))
+        ).length,
       ])
     ) as Record<Category, number>,
-    [promotions]
+    [codeFilter, promotions]
   );
 
   const matches = useMemo(() => {
-    const search = normalize(query);
+    const terms = normalize(query).split(/\s+/).filter(Boolean);
     return ranked(promotions.filter((promotion) => {
       if (!matchesCategory(promotion, category)) return false;
-      if (!search) return true;
-      return normalize([
+      if (codeFilter === "coupon" && promotion.codeKind !== "coupon") return false;
+      if (codeFilter === "campaign" && promotion.codeKind === "coupon") return false;
+      if (terms.length === 0) return true;
+      const searchable = normalize([
         promotion.title,
         promotion.badge,
         promotion.description,
         promotion.code,
         promotion.note,
-      ].join(" ")).includes(search);
+      ].join(" "));
+      return terms.every((term) => searchable.includes(term));
     }));
-  }, [category, promotions, query]);
+  }, [category, codeFilter, promotions, query]);
 
   const displayed = matches.slice(0, visibleCount);
+
+  // Open a shared #campaign-id even if the item was initially hidden in later batches.
+  useEffect(() => {
+    const revealHash = () => {
+      const id = window.location.hash.slice(1);
+      const index = ranked(promotions).findIndex((promotion) => promotion.id === id);
+      if (index < 0) return;
+      pendingAnchorRef.current = id;
+      setCategory("all");
+      setCodeFilter("all");
+      setQuery("");
+      setVisibleCount(Math.max(INITIAL_VISIBLE, Math.ceil((index + 1) / STEP) * STEP));
+    };
+    revealHash();
+    window.addEventListener("hashchange", revealHash);
+    return () => window.removeEventListener("hashchange", revealHash);
+  }, [promotions]);
+
+  useEffect(() => {
+    if (!pendingAnchorRef.current) return;
+    const anchor = document.getElementById(pendingAnchorRef.current);
+    if (anchor) {
+      pendingAnchorRef.current = null;
+      anchor.scrollIntoView({ behavior: "auto", block: "start" });
+    }
+  }, [displayed]);
 
   function chooseCategory(next: Category) {
     setCategory(next);
     setVisibleCount(INITIAL_VISIBLE);
+    setFeedback(null);
+  }
+
+  function changeCodeFilter(next: CodeFilter) {
+    setCodeFilter(next);
+    setVisibleCount(INITIAL_VISIBLE);
+    setFeedback(null);
   }
 
   function changeQuery(next: string) {
     setQuery(next);
     setVisibleCount(INITIAL_VISIBLE);
+    setFeedback(null);
   }
 
   function clearFilters() {
     setQuery("");
     setCategory("all");
+    setCodeFilter("all");
     setVisibleCount(INITIAL_VISIBLE);
+    setFeedback(null);
   }
 
   async function copyCode(promotion: SheinPromotion) {
@@ -292,7 +349,7 @@ export default function SheinPromotionsExplorer({
             value={query}
             maxLength={100}
             onChange={(event) => changeQuery(event.target.value)}
-            placeholder="Np. sukienki, buty, beauty lub kod"
+            placeholder="Np. buty, kosmetyki, SHEGLAM lub kod"
             className="min-h-14 w-full min-w-0 rounded-2xl border border-stone-200 bg-stone-50 py-3 pl-12 pr-12 text-base font-medium text-stone-950 outline-none placeholder:text-stone-500 focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
           />
           {query && (
@@ -302,9 +359,26 @@ export default function SheinPromotionsExplorer({
             </button>
           )}
         </div>
+        {codeCounts.coupon > 0 && (
+          <div role="group" aria-label="Rodzaj kodu" className="mt-4 flex flex-wrap gap-2">
+            {([
+              { id: "all", label: "Wszystkie oferty", count: promotions.length },
+              { id: "campaign", label: "Kody kampanii", count: codeCounts.campaign },
+              { id: "coupon", label: "Kupony rabatowe", count: codeCounts.coupon },
+            ] as const).map((option) => (
+              <button type="button" key={option.id} aria-pressed={codeFilter === option.id}
+                onClick={() => changeCodeFilter(option.id)}
+                className={`min-h-11 rounded-xl border px-3 text-xs font-black transition focus-visible:outline-2 focus-visible:outline-rose-500 ${codeFilter === option.id
+                  ? "border-stone-950 bg-stone-950 text-white"
+                  : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"}`}>
+                {option.label} ({option.count})
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-black text-stone-900">Wybierz kategorię</p>
-          {(query || category !== "all") && (
+          {(query || category !== "all" || codeFilter !== "all") && (
             <button type="button" onClick={clearFilters}
               className="min-h-10 text-xs font-black text-rose-700 underline underline-offset-4 hover:text-rose-800">
               Wyczyść filtry
@@ -391,7 +465,8 @@ function PromotionCard({
   feedback: { id: string; success: boolean } | null;
   onCopy: () => void;
 }) {
-  const isNewUserCoupon = promotion.id === "kupon-60-nowi-uzytkownicy" || promotion.codeKind === "coupon";
+  const isNewUserCoupon = promotion.id === "kupon-60-nowi-uzytkownicy";
+  const isCoupon = promotion.codeKind === "coupon";
 
   return (
     <article id={promotion.id}
@@ -402,21 +477,23 @@ function PromotionCard({
             {promotion.badge}
           </span>
           <span className="text-[11px] font-bold text-stone-500">
-            {promotion.codeKind === "coupon" ? "Kupon — sprawdź warunki" : isNewUserCoupon ? "Oferta warunkowa dla nowych" : "Kod kampanii"}
+            {isCoupon ? "Kupon według opisu" : isNewUserCoupon ? "Oferta dla nowych" : "Kod kampanii"}
           </span>
         </div>
         <h4 className="mt-4 text-pretty text-xl font-black leading-snug tracking-[-0.035em] text-stone-950 sm:text-[22px]">
           {promotion.title}
         </h4>
         <p className="mt-2 text-xs leading-6 text-stone-600">
-          {isNewUserCoupon
-            ? "Warunki dla nowych klientów sprawdzisz w SHEIN."
-            : "Kod może służyć do znalezienia kampanii w SHEIN — nie musi obniżać ceny w koszyku."}
+          {isCoupon
+            ? "Kupon może zadziałać po spełnieniu warunków SHEIN. Nie weryfikujemy go na żywo."
+            : isNewUserCoupon
+              ? "Oferta dla nowych klientów. Sprawdź zasady i kwalifikację w SHEIN."
+              : "Kod kampanii służy do znalezienia oferty — nie musi obniżać ceny w koszyku."}
         </p>
 
         <div className="mt-auto pt-5">
           <label htmlFor={"campaign-code-" + promotion.id} className="mb-2 block text-xs font-black text-stone-600">
-            {isNewUserCoupon ? "Kod powiązany z ofertą" : "Kod do wyszukania w SHEIN"}
+            {isCoupon ? "Kupon do sprawdzenia w SHEIN" : isNewUserCoupon ? "Kod powiązany z ofertą" : "Kod do wyszukania w SHEIN"}
           </label>
           <div className="flex min-w-0 flex-wrap items-stretch gap-2">
             <input
@@ -435,6 +512,9 @@ function PromotionCard({
               {feedback?.success ? "✓ Skopiowano" : "Kopiuj"}
             </button>
           </div>
+          <span role="status" aria-live="polite" className="sr-only">
+            {feedback?.success ? "Kod został skopiowany." : ""}
+          </span>
           {feedback && !feedback.success && (
             <p role="status" className="mt-2 text-xs leading-5 text-rose-700">
               Kopiowanie zablokowane. Kod jest zaznaczony — możesz skopiować go ręcznie.

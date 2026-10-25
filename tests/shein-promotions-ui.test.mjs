@@ -42,7 +42,7 @@ test("search and categories appear immediately after concise hero", () => {
   assert.match(explorer, /id="shein-promotion-search"/);
   assert.match(explorer, /role="group" aria-label="Filtruj kampanie według kategorii"/);
   assert.match(explorer, /aria-pressed=\{category === item.id\}/);
-  assert.match(explorer, /const search = normalize\(query\)/);
+  assert.match(explorer, /const terms = normalize\(query\)/);
   assert.match(explorer, /promotions\.filter\(\(promotion\) =>/);
 });
 
@@ -86,4 +86,41 @@ test("new campaign UX preserves canonical and safe structured data", () => {
   for (const page of [listing, explorer]) {
     assert.doesNotMatch(page, /className="[^"\n>]*>/);
   }
+});
+
+
+test("mobile hero stays compact and finder precedes long descriptions", () => {
+  assert.match(listing, /hidden max-w-full items-center/);
+  assert.match(listing, /mt-1 max-w-3xl text-pretty/);
+  assert.match(listing, /Wybierz kategorię lub wpisz kod/);
+  assert.ok(listing.indexOf('<SheinPromotionsExplorer promotions={promotions}') < listing.indexOf('Kod kampanii czy kupon?'));
+});
+
+test("code kind from the admin controls coupon labels, avoiding fake verified discounts", () => {
+  assert.match(explorer, /const isCoupon = promotion\.codeKind === "coupon"/);
+  assert.match(explorer, /Kupon do sprawdzenia w SHEIN/);
+  assert.match(explorer, /Kupon według opisu/);
+  assert.match(explorer, /Kod do wyszukania w SHEIN/);
+  assert.match(explorer, /Kod został skopiowany/);
+});
+
+test("search handles multiple independent terms and filters campaign/coupon codes", () => {
+  assert.match(explorer, /const terms = normalize\(query\)\.split/);
+  assert.match(explorer, /terms.every\(\(term\) => searchable.includes\(term\)\)/);
+  assert.match(explorer, /setCodeFilter\(next\)/);
+  assert.match(explorer, /aria-pressed=\{codeFilter === option.id\}/);
+  assert.match(explorer, /codeCounts.coupon > 0/);
+  assert.match(explorer, /setFeedback\(null\)/);
+});
+
+test("links to hidden campaigns expand the list and find the right card", () => {
+  assert.match(explorer, /window.addEventListener\("hashchange", revealHash\)/);
+  assert.match(explorer, /pendingAnchorRef\.current = id/);
+  assert.match(explorer, /scrollIntoView\(\{ behavior: "auto", block: "start" \}\)/);
+  assert.match(explorer, /Math\.ceil\(\(index \+ 1\) \/ STEP\)/);
+});
+
+test("sale and new-customer filters include cross-category campaigns", () => {
+  assert.match(explorer, /promotion.category === category \|\| newUserPromotion\(promotion\)/);
+  assert.match(explorer, /promotion.category === category \|\| salePromotion\(promotion\)/);
 });
