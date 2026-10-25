@@ -107,5 +107,5 @@ test("JSX class attributes and navigation closing tags remain well-formed", () =
   for (const source of [shell, header]) {
     assert.doesNotMatch(source, /className="[^"\n>]*>/);
   }
-  assert.equal((tabs.match(/<BottomNavLink\\s/g) ?? []).length, 4);
+  assert.equal(tabs.split("<BottomNavLink").length - 1, 4);
 });
