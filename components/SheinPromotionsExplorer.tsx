@@ -135,15 +135,13 @@ function matchesCategory(
   category: Category
 ) {
   // New-customer and sale campaigns can also be in beauty, fashion or accessories.
-  if (category === "new-users") return promotion.category === category || newUserPromotion(promotion);
-  if (category === "sale") return promotion.category === category || salePromotion(promotion);
-  if (category !== "all" && promotion.category) return promotion.category === category;
+  if (category !== "all" && category !== "new-users" && category !== "sale" && promotion.category) return promotion.category === category;
   switch (category) {
     case "all":
       return true;
 
     case "new-users":
-      return newUserPromotion(promotion);
+      return promotion.category === category || newUserPromotion(promotion);
 
     case "fashion":
       return FASHION_IDS.has(promotion.id);
@@ -163,7 +161,7 @@ function matchesCategory(
       return KIDS_IDS.has(promotion.id);
 
     case "sale":
-      return salePromotion(promotion);
+      return promotion.category === category || salePromotion(promotion);
   }
 }
 
