@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import type {
   AdminRole,
@@ -74,6 +76,9 @@ export default function AdminMobileDashboard({
   duplicateConflicts,
   recentProducts,
 }: Props) {
+  const router = useRouter();
+  const [isRefreshing, startRefreshing] = useTransition();
+
   return (
     <div className="admin-mobile-dashboard lg:hidden">
       <section className="px-1 pb-1 pt-2">
@@ -111,8 +116,23 @@ export default function AdminMobileDashboard({
             </div>
           </div>
 
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-stone-950 text-lg font-black text-white shadow-sm">
-            T
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" disabled={isRefreshing}
+              onClick={() => startRefreshing(() => router.refresh())}
+              aria-label="Odśwież dane panelu"
+              title="Odśwież dane"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-[15px] border border-stone-200 bg-white text-stone-600 transition active:scale-95 disabled:opacity-50">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
+                fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 7v5h-5" />
+                <path d="M4 17v-5h5" />
+                <path d="M5.5 9a7 7 0 0 1 12-2L20 12" />
+                <path d="M18.5 15a7 7 0 0 1-12 2L4 12" />
+              </svg>
+            </button>
+            <div aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-stone-950 text-base font-black text-white shadow-sm">
+              T
+            </div>
           </div>
         </div>
       </section>
@@ -179,6 +199,61 @@ export default function AdminMobileDashboard({
           helper="wyróżnione"
           icon="featured"
         />
+      </section>
+
+      <section className="mt-5" aria-labelledby="admin-review-heading">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <h2 id="admin-review-heading" className="text-[13px] font-black uppercase tracking-[0.05em] text-stone-500">
+            Do przejrzenia
+          </h2>
+          <span className="text-xs font-semibold text-stone-500">
+            {hiddenProducts + duplicateConflicts} pozycji
+          </span>
+        </div>
+        <div className="admin-ios-group mt-2">
+          {hiddenProducts > 0 && (
+            <Link href="/admin?view=hidden#admin-offers" className="admin-ios-row">
+              <span className="admin-ios-row-icon bg-amber-50 text-amber-700">
+                <ShieldIcon />
+              </span>
+              <span className="admin-ios-row-copy">
+                <strong>Ukryte oferty</strong>
+                <small>Przejrzyj i zdecyduj, co opublikować</small>
+              </span>
+              <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-800">
+                {hiddenProducts}
+              </span>
+              <span aria-hidden="true" className="admin-ios-chevron">›</span>
+            </Link>
+          )}
+          {hiddenProducts > 0 && duplicateConflicts > 0 && <div className="admin-ios-divider" />}
+          {duplicateConflicts > 0 && (
+            <a href="#admin-duplicate-review" className="admin-ios-row">
+              <span className="admin-ios-row-icon bg-rose-50 text-rose-700">
+                <ShieldIcon />
+              </span>
+              <span className="admin-ios-row-copy">
+                <strong>Możliwe duplikaty</strong>
+                <small>Sprawdź konflikty w katalogu</small>
+              </span>
+              <span className="shrink-0 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700">
+                {duplicateConflicts}
+              </span>
+              <span aria-hidden="true" className="admin-ios-chevron">›</span>
+            </a>
+          )}
+          {hiddenProducts === 0 && duplicateConflicts === 0 && (
+            <div className="flex min-h-16 items-center gap-3 px-4 py-4">
+              <span className="admin-ios-row-icon bg-emerald-50 text-emerald-700">
+                <ShieldIcon />
+              </span>
+              <div>
+                <p className="text-sm font-black text-stone-900">Wszystko pod kontrolą</p>
+                <p className="mt-1 text-xs leading-5 text-stone-500">Brak ukrytych ofert i oznaczonych konfliktów.</p>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="mt-5">
@@ -286,7 +361,7 @@ export default function AdminMobileDashboard({
           action={
             <a
               href="#admin-offers"
-              className="text-[12px] font-bold text-rose-600"
+              className="inline-flex min-h-11 items-center rounded-xl px-3 text-[12px] font-bold text-rose-700" 
             >
               Wszystkie
             </a>
@@ -356,12 +431,12 @@ export default function AdminMobileDashboard({
                         )}
                       </p>
 
-                      <div className="mt-auto flex items-center gap-2 pt-1.5">
+                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
                         {product.canManage && (
                           <Link
                             href={`/admin/edytuj/${product.id}`}
                             prefetch
-                            className="text-[10px] font-black text-rose-600"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-50 px-3 text-xs font-black text-rose-700"
                           >
                             Edytuj
                           </Link>
@@ -370,16 +445,13 @@ export default function AdminMobileDashboard({
                         <Link
                           href={`/admin/social/${product.id}`}
                           prefetch
-                          className="text-[10px] font-black text-violet-600"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-violet-50 px-3 text-xs font-black text-violet-700"
                         >
                           Social
                         </Link>
                       </div>
                     </div>
 
-                    <span className="self-center text-xl text-stone-300">
-                      ›
-                    </span>
                   </article>
                 </div>
               )

@@ -36,10 +36,13 @@ export default async function AdminPage({
   searchParams:
     Promise<{
       notice?: string;
+      view?: string;
     }>;
 }) {
   const params =
     await searchParams;
+  const requestedView = params.view === "hidden" || params.view === "featured" || params.view === "active"
+    ? params.view : "all";
 
   const supabase =
     await createClient();
@@ -538,11 +541,13 @@ export default async function AdminPage({
             </div>
           </section>
 
+          <div id="admin-duplicate-review" className="scroll-mt-28">
           <DuplicateProtectionStatus
             initialSummary={
               duplicateSummary
             }
           />
+          </div>
 
           <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             <StatCard
@@ -625,6 +630,8 @@ export default async function AdminPage({
           className="scroll-mt-24"
         >
           <AdminProductList
+            key={requestedView}
+            initialStatus={requestedView}
             products={
               products
             }

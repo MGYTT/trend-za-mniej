@@ -81,6 +81,7 @@ type SortOption =
   | "name";
 
 type Props = {
+  initialStatus?: StatusFilter;
   products:
     AdminProduct[];
 
@@ -151,6 +152,7 @@ function formatDate(
 }
 
 export default function AdminProductList({
+  initialStatus = "all",
   products,
   currentUserId,
   currentRole,
@@ -224,7 +226,7 @@ export default function AdminProductList({
     setStatus,
   ] =
     useState<StatusFilter>(
-      "all"
+      initialStatus
     );
 
   const [
@@ -626,6 +628,7 @@ export default function AdminProductList({
                   product.name,
                   product.short_name,
                   product.category,
+                  product.slug,
                 ]
                   .join(
                     " "
@@ -913,10 +916,14 @@ export default function AdminProductList({
       <div className="mt-4 rounded-[20px] border border-stone-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
+            <label htmlFor="admin-product-search" className="sr-only">Szukaj produktu po nazwie, kategorii lub adresie</label>
             <SearchIcon />
 
             <input
+              id="admin-product-search"
               type="search"
+              enterKeyHint="search"
+              maxLength={120}
               value={
                 query
               }
@@ -928,9 +935,15 @@ export default function AdminProductList({
                     .value
                 )
               }
-              placeholder="Szukaj oferty..."
-              className="min-h-11 w-full rounded-xl border border-stone-200 bg-stone-50 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
+              placeholder="Nazwa, kategoria lub adres..."
+              className="min-h-12 w-full rounded-xl border border-stone-200 bg-stone-50 py-2.5 pl-10 pr-12 text-base outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
             />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} aria-label="Wyczyść wyszukiwanie produktów"
+                className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-xl text-stone-500 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-500">
+                ×
+              </button>
+            )}
           </div>
 
           <button
@@ -946,6 +959,7 @@ export default function AdminProductList({
             aria-expanded={
               filtersOpen
             }
+            aria-controls="admin-product-advanced-filters"
             className={[
               "flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-black transition lg:hidden",
               filtersOpen ||
@@ -1104,7 +1118,7 @@ export default function AdminProductList({
           </div>
         )}
 
-        <div
+        <div id="admin-product-advanced-filters"
           className={[
             "mt-3 gap-3 border-t border-stone-100 pt-3",
             filtersOpen
@@ -1185,7 +1199,7 @@ export default function AdminProductList({
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
-          <p className="text-xs text-stone-500">
+          <p role="status" aria-live="polite" className="text-xs text-stone-500">
             <strong className="font-black text-stone-900">
               {
                 filteredProducts.length
@@ -1195,6 +1209,7 @@ export default function AdminProductList({
             {
               localProducts.length
             }
+            {filteredProducts.length > visibleProducts.length ? ` · pokazano ${visibleProducts.length}` : ""}
           </p>
 
           {hasFilters && (
@@ -1203,7 +1218,7 @@ export default function AdminProductList({
               onClick={
                 clearFilters
               }
-              className="rounded-full px-3 py-1.5 text-xs font-black text-rose-600 transition hover:bg-rose-50"
+              className="min-h-11 rounded-full px-3 py-1.5 text-xs font-black text-rose-700 transition hover:bg-rose-50"
             >
               Wyczyść
             </button>
@@ -1567,8 +1582,9 @@ function StatusChip({
       onClick={
         onClick
       }
+      aria-pressed={active}
       className={[
-        "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black transition active:scale-[0.98]",
+        "inline-flex min-h-11 shrink-0 items-center rounded-full border px-3 py-1.5 text-[12px] font-black transition active:scale-[0.98]",
         active
           ? "border-rose-200 bg-rose-50 text-rose-700"
           : "border-stone-200 bg-white text-stone-500",

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:homepage-mobile && npm run test:homepage-discovery && npm run test:product-detail && npm run test:outfits-ui && npm run test:shein-promotions && npm run test:outfit-builder && npm run test:admin-ios-shell && next build",
+    "build": "npm run test:homepage-mobile && npm run test:homepage-discovery && npm run test:product-detail && npm run test:outfits-ui && npm run test:shein-promotions && npm run test:outfit-builder && npm run test:admin-ios-shell && npm run test:admin-daily-workflow && next build",
     "start": "next start",
     "lint": "eslint",
     "test:stylizacje": "node --experimental-strip-types --test tests/stylizacje.test.mjs tests/outfit-filters.test.mjs && node --test tests/stylizacje-growth.test.mjs",
@@ -27,7 +27,9 @@
     "verify:outfit-builder": "npm run test:outfit-builder && npm run lint && npm run build",
     "test:homepage-discovery": "node --test tests/homepage-discovery.test.mjs",
     "test:admin-ios-shell": "node --test tests/admin-ios-shell.test.mjs",
-    "verify:admin-ios-shell": "npm run test:admin-ios-shell && npm run lint && npm run build"
+    "verify:admin-ios-shell": "npm run test:admin-ios-shell && npm run lint && npm run build",
+    "test:admin-daily-workflow": "node --test tests/admin-daily-workflow.test.mjs",
+    "verify:admin-daily-workflow": "npm run test:admin-daily-workflow && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
