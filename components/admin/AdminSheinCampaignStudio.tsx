@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { SheinCampaignRow } from "@/lib/shein-campaigns";
+import type { SheinCampaignRow, CampaignClickCounts } from "@/lib/shein-campaigns";
 import { CAMPAIGN_CATEGORIES, type CampaignCategory, type CampaignInput } from "@/lib/shein-campaign-validation";
 
 const LABELS: Record<CampaignCategory, string> = {
@@ -39,14 +39,19 @@ function localDate() {
   }).format(new Date());
 }
 
-export default function AdminSheinCampaignStudio({ initialCampaigns }: {
+export default function AdminSheinCampaignStudio({
+  initialCampaigns, clickCounts, analyticsUnavailable,
+}: {
   initialCampaigns: SheinCampaignRow[];
+  clickCounts: CampaignClickCounts;
+  analyticsUnavailable: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<CampaignInput>({ ...EMPTY });
   const [editing, setEditing] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "published" | "draft" | "expired">("all");
+  const [analyticsDays, setAnalyticsDays] = useState<7 | 30>(30);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; success: boolean } | null>(null);
   const today = localDate();
@@ -55,6 +60,18 @@ export default function AdminSheinCampaignStudio({ initialCampaigns }: {
   const publishedCount = initialCampaigns.filter((row) => row.published && !expired(row)).length;
   const expiredCount = initialCampaigns.filter((row) => expired(row)).length;
   const drafts = initialCampaigns.filter((row) => !row.published).length;
+
+  const clicksFor = (id: string) => (
+    clickCounts[id]?.[analyticsDays === 7 ? "last7" : "last30"] ?? 0
+  );
+  const measuredTotal = Object.values(clickCounts).reduce(
+    (total, row) => total + (analyticsDays === 7 ? row.last7 : row.last30), 0
+  );
+  const topCampaigns = [...initialCampaigns]
+    .map((row) => ({ id: row.id, title: row.title, clicks: clicksFor(row.id) }))
+    .filter((row) => row.clicks > 0)
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, 3);
 
   const visible = (() => {
     const needle = query.trim().toLocaleLowerCase("pl");
@@ -123,6 +140,71 @@ export default function AdminSheinCampaignStudio({ initialCampaigns }: {
 
   return (
     <div className="mt-7 grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(340px,0.88fr)_minmax(0,1.12fr)]">
+      <section aria-labelledby="shein-campaign-insights-title"
+        className="min-w-0 rounded-[26px] border border-rose-100 bg-white p-5 shadow-sm sm:p-6 xl:col-span-2">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-rose-700">
+              Analityka kampanii
+            </p>
+            <h2 id="shein-campaign-insights-title" className="mt-2 text-xl font-black tracking-tight text-stone-950">
+              Które promocje przyciągają kliknięcia?
+            </h2>
+            <p className="mt-2 text-xs leading-6 text-stone-600">
+              Liczymy otwarcia linków do SHEIN od uruchomienia pomiaru.
+              To nie są zakupy, przychody ani liczba unikalnych osób.
+            </p>
+          </div>
+          <div role="group" aria-label="Zakres statystyk promocji"
+            className="inline-flex rounded-xl border border-stone-200 bg-stone-50 p-1">
+            {([7, 30] as const).map((days) => (
+              <button key={days} type="button" aria-pressed={analyticsDays === days}
+                onClick={() => setAnalyticsDays(days)}
+                className={`min-h-11 rounded-lg px-4 text-xs font-black transition ${analyticsDays === days
+                  ? "bg-rose-600 text-white shadow-sm" : "text-stone-700 hover:bg-rose-50"}`}>
+                {days} dni
+              </button>
+            ))}
+          </div>
+        </div>
+        {analyticsUnavailable ? (
+          <p role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-sm font-semibold text-amber-900">
+            Statystyki chwilowo niedostępne. Kampanie można nadal edytować i publikować.
+          </p>
+        ) : (
+          <div className="mt-5 grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="rounded-2xl bg-gradient-to-br from-rose-50 to-white p-5">
+              <p className="text-xs font-bold text-stone-600">Przejścia w ostatnich {analyticsDays} dniach</p>
+              <p className="mt-2 text-4xl font-black tabular-nums tracking-tight text-stone-950">
+                {measuredTotal.toLocaleString("pl-PL")}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-stone-500">
+                Od uruchomienia pomiaru · bez danych historycznych
+              </p>
+            </div>
+            <div className="rounded-2xl border border-stone-100 p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-stone-500">
+                Najczęściej otwierane kampanie
+              </p>
+              {topCampaigns.length === 0 ? (
+                <p className="mt-3 text-sm leading-6 text-stone-600">
+                  Brak zarejestrowanych przejść w wybranym okresie. Pierwsze wyniki pojawią się po kliknięciach odwiedzających.
+                </p>
+              ) : (
+                <ol className="mt-3 space-y-3">
+                  {topCampaigns.map((campaign, index) => (
+                    <li key={campaign.id} className="flex items-center gap-3 text-sm">
+                      <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-xs font-black text-rose-700">{index + 1}</span>
+                      <span className="min-w-0 flex-1 truncate font-bold text-stone-800">{campaign.title}</span>
+                      <span className="tabular-nums font-black text-rose-700">{campaign.clicks.toLocaleString("pl-PL")}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
       <section aria-labelledby="shein-campaign-list-title" className="min-w-0 rounded-[26px] border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -176,6 +258,11 @@ export default function AdminSheinCampaignStudio({ initialCampaigns }: {
                   <p className="line-clamp-2 text-sm font-black leading-6 text-stone-950">{row.title}</p>
                   <p className="mt-1 break-all font-mono text-xs font-black tracking-wide text-rose-700">{row.code}</p>
                   <p className="mt-1 text-xs text-stone-500">{LABELS[row.category as CampaignCategory] ?? "Inne"} · kolejność {row.sort_order}</p>
+                  {!analyticsUnavailable && (
+                    <p className="mt-2 text-xs font-black text-rose-700">
+                      {clicksFor(row.id).toLocaleString("pl-PL")} przejść · {analyticsDays} dni
+                    </p>
+                  )}
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${expired(row) ? "bg-stone-100 text-stone-600" : row.published ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
                   {expired(row) ? "Wygasła" : row.published ? "Widoczna" : "Szkic"}

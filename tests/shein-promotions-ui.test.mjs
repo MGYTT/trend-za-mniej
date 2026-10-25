@@ -71,7 +71,7 @@ test("all cards disclose code type and use existing affiliate URLs", () => {
   assert.match(explorer, /id=\{promotion\.id\}/);
   assert.match(explorer, /Kod do wyszukania w SHEIN/);
   assert.match(explorer, /Kod powiązany z ofertą/);
-  assert.match(explorer, /promotion\.affiliateUrl/);
+  assert.match(explorer, /href=\{"\/promocje-shein\/go\/" \+ encodeURIComponent\(promotion\.id\)\}/);
   assert.match(explorer, /rel="sponsored nofollow noopener noreferrer"/);
   assert.match(explorer, /target="_blank"/);
   assert.match(explorer, /Opis i warunki kampanii/);

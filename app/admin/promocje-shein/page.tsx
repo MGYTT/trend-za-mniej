@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSheinCampaignStudio from "@/components/admin/AdminSheinCampaignStudio";
 import { createClient } from "@/lib/supabase/server";
-import type { SheinCampaignRow } from "@/lib/shein-campaigns";
+import type { SheinCampaignRow, CampaignClickCounts } from "@/lib/shein-campaigns";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +33,31 @@ export default async function AdminSheinCampaignsPage() {
     );
   }
 
-  const { data, error: campaignsError } = await supabase
-    .from("shein_campaigns")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+  const [campaignsResult, weekResult, monthResult] = await Promise.all([
+    supabase.from("shein_campaigns").select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+    supabase.rpc("get_shein_campaign_click_stats", { p_days: 7 }),
+    supabase.rpc("get_shein_campaign_click_stats", { p_days: 30 }),
+  ]);
+  const campaignsError = campaignsResult.error;
+  const analyticsUnavailable = Boolean(weekResult.error || monthResult.error);
+  if (weekResult.error) console.error("SHEIN 7-day analytics:", weekResult.error.message);
+  if (monthResult.error) console.error("SHEIN 30-day analytics:", monthResult.error.message);
+
+  type StatRow = { campaign_id: string; clicks: number | string };
+  const clickCounts: CampaignClickCounts = {};
+  if (!analyticsUnavailable) {
+    for (const row of (weekResult.data ?? []) as StatRow[]) {
+      clickCounts[row.campaign_id] ??= { last7: 0, last30: 0 };
+      clickCounts[row.campaign_id].last7 = Number(row.clicks) || 0;
+    }
+    for (const row of (monthResult.data ?? []) as StatRow[]) {
+      clickCounts[row.campaign_id] ??= { last7: 0, last30: 0 };
+      clickCounts[row.campaign_id].last30 = Number(row.clicks) || 0;
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f7f8] pb-28 text-stone-950 lg:pb-8">
       <AdminHeader />
@@ -73,7 +93,11 @@ export default async function AdminSheinCampaignsPage() {
             Nie można pobrać kampanii z Supabase. Spróbuj ponownie później.
           </div>
         ) : (
-          <AdminSheinCampaignStudio initialCampaigns={(data ?? []) as SheinCampaignRow[]} />
+          <AdminSheinCampaignStudio
+            initialCampaigns={(campaignsResult.data ?? []) as SheinCampaignRow[]}
+            clickCounts={clickCounts}
+            analyticsUnavailable={analyticsUnavailable}
+          />
         )}
       </div>
     </main>

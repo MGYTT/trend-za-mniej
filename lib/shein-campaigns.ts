@@ -3,6 +3,8 @@ import type { SheinPromotion } from "@/lib/shein-promotions";
 import type { CampaignCategory } from "@/lib/shein-campaign-validation";
 import { SHEIN_PROMOTIONS_UPDATED_AT } from "@/lib/shein-promotions";
 
+export type CampaignClickCounts = Record<string, { last7: number; last30: number }>;
+
 export type SheinCampaignRow = {
   id: string; title: string; badge: string; description: string; code: string;
   affiliate_url: string; cta_label: string; note: string; category: CampaignCategory;
