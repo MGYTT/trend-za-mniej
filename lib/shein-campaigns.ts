@@ -1,10 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import type { SheinPromotion } from "@/lib/shein-promotions";
+import type { CampaignCategory } from "@/lib/shein-campaign-validation";
 import { SHEIN_PROMOTIONS_UPDATED_AT } from "@/lib/shein-promotions";
 
 export type SheinCampaignRow = {
   id: string; title: string; badge: string; description: string; code: string;
-  affiliate_url: string; cta_label: string; note: string; category: string;
+  affiliate_url: string; cta_label: string; note: string; category: CampaignCategory;
   code_kind: "campaign" | "coupon"; sort_order: number; published: boolean;
   valid_until: string | null; last_reviewed_at: string | null;
   created_at: string; updated_at: string;
