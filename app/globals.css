@@ -1784,6 +1784,35 @@ body.admin-social-studio-app {
   }
 }
 
+
+/* Wide desktop product forms: keep actions and live preview within the viewport.
+   Small-screen iOS forms retain their existing bottom action bars. */
+@media (min-width: 1280px) {
+  .admin-desktop-editor-sidebar {
+    max-height: calc(100dvh - 104px);
+    scrollbar-width: thin;
+    scrollbar-color: #e7e5e4 transparent;
+    overscroll-behavior-y: contain;
+    scroll-padding-top: 10px;
+  }
+
+  .admin-desktop-editor-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .admin-desktop-editor-sidebar::-webkit-scrollbar-thumb {
+    border-radius: 100px;
+    background: #e7e5e4;
+  }
+
+  .admin-form-shell input:focus-visible,
+  .admin-form-shell textarea:focus-visible,
+  .admin-form-shell select:focus-visible {
+    outline-color: #fb7185;
+    outline-offset: 2px;
+  }
+}
+
 /*
  * ============================================================
  * ADMIN iOS MOBILE SHELL — shared navigation and surfaces

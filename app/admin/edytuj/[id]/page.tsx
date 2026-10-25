@@ -18,6 +18,7 @@ import {
 } from "next/navigation";
 
 import AdminFormShell from "@/components/admin/AdminFormShell";
+import AdminDesktopFormNavigator from "@/components/admin/AdminDesktopFormNavigator";
 import AdminHeader from "@/components/admin/AdminHeader";
 import OfferQualityChecks from "@/components/admin/OfferQualityChecks";
 import ProductCategorySelect from "@/components/admin/ProductCategorySelect";
@@ -1583,7 +1584,7 @@ export default function EditProductPage() {
           </div>
         )}
 
-        <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px] xl:gap-7">
+        <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-7 2xl:grid-cols-[minmax(0,1fr)_390px]">
           <div className="min-w-0">
             <form
               id="edit-product-form"
@@ -1593,6 +1594,7 @@ export default function EditProductPage() {
               className="space-y-3"
             >
               <FormSection
+                id="edit-section-basic"
                 number="1"
                 title="Nazwa i opis"
                 description="Edytuj informacje prezentowane użytkownikowi."
@@ -1671,6 +1673,7 @@ export default function EditProductPage() {
               </FormSection>
 
               <FormSection
+                id="edit-section-price"
                 number="2"
                 title="Cena i kategoria"
                 description="Zaktualizuj cenę lub wybierz dokładniejszą kategorię."
@@ -1736,6 +1739,7 @@ export default function EditProductPage() {
               </FormSection>
 
               <FormSection
+                id="edit-section-image"
                 number="3"
                 title="Zdjęcie"
                 description="Zostaw obecne albo wybierz nowe."
@@ -1843,6 +1847,7 @@ export default function EditProductPage() {
               </FormSection>
 
               <FormSection
+                id="edit-section-link"
                 number="4"
                 title="Link i widoczność"
                 description="Kontroluj link, wyróżnienie i publikację."
@@ -1926,7 +1931,7 @@ export default function EditProductPage() {
                     saving ||
                     !hasChanges
                   }
-                  className="hidden min-h-12 w-full rounded-[14px] bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 lg:block"
+                  className="hidden min-h-12 w-full rounded-[14px] bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 lg:block xl:hidden"
                 >
                   {saving
                     ? "Zapisywanie..."
@@ -1967,8 +1972,22 @@ export default function EditProductPage() {
             </div>
           </div>
 
-          <aside className="hidden min-w-0 space-y-4 xl:block">
-            <div className="sticky top-5 space-y-4">
+          <aside className="hidden min-w-0 xl:block">
+            <div className="admin-desktop-editor-sidebar sticky top-20 space-y-4 overflow-y-auto pb-5">
+              <AdminDesktopFormNavigator
+                mode="edit"
+                formId="edit-product-form"
+                steps={[
+                  { id: "edit-section-basic", title: "Nazwa i opis", complete: changedSections.basic },
+                  { id: "edit-section-price", title: "Cena i kategoria", complete: changedSections.price },
+                  { id: "edit-section-image", title: "Zdjęcie produktu", complete: changedSections.image },
+                  { id: "edit-section-link", title: "Link i widoczność", complete: changedSections.publication },
+                ]}
+                busy={saving}
+                disabled={!hasChanges}
+                actionLabel="Zapisz zmiany"
+                busyLabel="Zapisywanie..."
+              />
               <ProductPreview
                 name={
                   form.name
@@ -2137,12 +2156,14 @@ function EditStatus({
 }
 
 function FormSection({
+  id,
   number,
   title,
   description,
   changed,
   children,
 }: {
+  id: string;
   number: string;
   title: string;
   description: string;
@@ -2150,7 +2171,7 @@ function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm">
+    <section id={id} className="scroll-mt-24 overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm">
       <div className="flex items-start gap-3 border-b border-stone-100 p-4 sm:p-5">
         <span
           className={[

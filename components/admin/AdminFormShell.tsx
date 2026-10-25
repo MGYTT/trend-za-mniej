@@ -23,8 +23,8 @@ export default function AdminFormShell({
   mobileBadge = null,
 }: Props) {
   return (
-    <section className="admin-form-shell mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
-      <div className="admin-form-heading mb-4 sm:mb-7">
+    <section className="admin-form-shell mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 xl:max-w-[1440px] xl:px-8 2xl:px-10">
+      <div className="admin-form-heading mb-4 sm:mb-7 xl:rounded-[26px] xl:border xl:border-rose-100 xl:bg-white xl:px-7 xl:py-6 xl:shadow-[0_8px_30px_rgba(136,19,55,0.04)]">
         <div className="hidden items-center gap-2 text-xs font-bold text-stone-400 sm:flex">
           <Link
             href="/admin"
@@ -57,7 +57,7 @@ export default function AdminFormShell({
               )}
             </div>
 
-            <h1 className="mt-2 text-[28px] font-black leading-none tracking-[-0.05em] text-stone-950 sm:mt-1 sm:text-4xl">
+            <h1 className="mt-2 text-[28px] font-black leading-none tracking-[-0.05em] text-stone-950 sm:mt-1 sm:text-4xl xl:text-[40px]">
               {title}
             </h1>
 

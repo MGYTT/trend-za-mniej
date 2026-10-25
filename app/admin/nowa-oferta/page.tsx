@@ -17,6 +17,7 @@ import {
 } from "next/navigation";
 
 import AdminFormShell from "@/components/admin/AdminFormShell";
+import AdminDesktopFormNavigator from "@/components/admin/AdminDesktopFormNavigator";
 import AdminHeader from "@/components/admin/AdminHeader";
 import OfferQualityChecks from "@/components/admin/OfferQualityChecks";
 import ProductCategorySelect from "@/components/admin/ProductCategorySelect";
@@ -2647,6 +2648,7 @@ export default function NewProductPage() {
           </div>
         )}
 
+        <div className="xl:hidden">
         <ProgressCard
           completedSections={
             completedSections
@@ -2655,6 +2657,7 @@ export default function NewProductPage() {
             completionPercent
           }
         />
+        </div>
 
         {error && (
           <div
@@ -2669,7 +2672,7 @@ export default function NewProductPage() {
           </div>
         )}
 
-        <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px] xl:gap-7">
+        <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-7 2xl:grid-cols-[minmax(0,1fr)_390px]">
           <div className="min-w-0">
             <QuickStartAssistant
               rawOffer={
@@ -3112,7 +3115,7 @@ export default function NewProductPage() {
                       .status ===
                       "blocked"
                   }
-                  className="hidden min-h-12 w-full rounded-[14px] bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 lg:block"
+                  className="hidden min-h-12 w-full rounded-[14px] bg-rose-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 lg:block xl:hidden"
                 >
                   {checking
                     ? "Sprawdzanie..."
@@ -3153,8 +3156,22 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          <aside className="hidden min-w-0 space-y-4 xl:block">
-            <div className="sticky top-5 space-y-4">
+          <aside className="hidden min-w-0 xl:block">
+            <div className="admin-desktop-editor-sidebar sticky top-20 space-y-4 overflow-y-auto pb-5">
+              <AdminDesktopFormNavigator
+                mode="create"
+                formId="new-product-form"
+                steps={[
+                  { id: "section-basic", title: "Nazwa i opis", complete: basicComplete },
+                  { id: "section-price", title: "Cena i kategoria", complete: priceComplete },
+                  { id: "section-image", title: "Zdjęcie produktu", complete: imageComplete },
+                  { id: "section-link", title: "Link afiliacyjny", complete: linkComplete },
+                ]}
+                busy={checking || loading}
+                disabled={duplicateCheck.status === "blocked"}
+                actionLabel="Sprawdź i publikuj"
+                busyLabel={checking ? "Sprawdzanie..." : "Zapisywanie..."}
+              />
               <ProductPreview
                 name={
                   form.name
