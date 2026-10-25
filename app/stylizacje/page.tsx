@@ -93,66 +93,78 @@ export default async function LooksPage({
       />
       <SiteHeader />
 
-      <div className="bg-stone-950 text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-16 lg:py-20">
+      <div className="relative overflow-hidden border-b border-rose-100 bg-[#fff8f7] text-stone-950">
+        <div className="mx-auto grid max-w-7xl min-w-0 items-center gap-9 px-6 py-11 sm:gap-10 sm:px-8 sm:py-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14 lg:py-20">
           <div>
-            <nav aria-label="Okruszki" className="flex items-center gap-2 text-xs text-stone-300">
-              <Link href="/" className="hover:text-white focus-visible:outline-2 focus-visible:outline-rose-300">Start</Link>
+            <nav aria-label="Okruszki" className="flex flex-wrap items-center gap-2 text-xs font-bold text-stone-600">
+              <Link href="/" className="hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-rose-300">Start</Link>
               <span aria-hidden="true">/</span>
-              <span aria-current="page" className="text-white">Stylizacje</span>
+              <span aria-current="page" className="text-rose-700">Stylizacje</span>
             </nav>
-            <p className="mt-10 text-xs font-extrabold uppercase tracking-[0.2em] text-rose-300">
-              Mniej szukania. Więcej pomysłów.
+            <p className="mt-8 inline-flex rounded-full border border-rose-200 bg-white px-4 py-2 text-[11px] font-black uppercase leading-5 tracking-[0.13em] text-rose-700 sm:mt-10">
+              Pomysły na look w Twoim budżecie
             </p>
-            <h1 className="mt-4 max-w-3xl text-balance text-[clamp(2.6rem,5.4vw,5rem)] font-black leading-[1.05] tracking-[-0.055em]">
-              Gotowe stylizacje damskie <span className="text-rose-300">w Twoim budżecie</span>
+            <h1 className="mt-6 max-w-3xl text-pretty text-[clamp(2.3rem,7.5vw,5rem)] font-black leading-[1.09] tracking-[-0.055em]">
+              Gotowe stylizacje. <span className="block text-rose-600">Twój styl za mniej.</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-stone-200 sm:text-lg">
-              Nie musisz kompletować stroju od zera. Porównaj gotowe zestawy na co dzień,
-              do pracy, na weekend i na wieczór. Widzisz, co do siebie pasuje, co wchodzi w skład
-              zestawu i ile wynosi suma cen zapisanych w naszym katalogu.
+            <p className="mt-5 max-w-2xl text-[15px] leading-[1.8] text-stone-600 sm:mt-6 sm:text-lg sm:leading-8">
+              Nie musisz kompletować stroju od zera. Przeglądaj gotowe połączenia ubrań na co dzień,
+              do pracy, na weekend i na wieczór. Zobacz zdjęcia elementów, poznaj cenę zestawu
+              zapisaną w katalogu i odkryj nowe inspiracje.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#wybierz-stylizacje" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-rose-500 px-6 text-sm font-black text-white transition hover:bg-rose-400 focus-visible:outline-2 focus-visible:outline-rose-300">
-                Wybierz zestaw ↓
+            <div className="mt-7 grid gap-3 min-[440px]:flex min-[440px]:flex-wrap">
+              <a href="#wybierz-stylizacje" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-rose-600 px-6 text-sm font-black text-white shadow-[0_10px_25px_rgba(225,29,72,0.15)] transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-400">
+                Odkryj stylizacje ↓
               </a>
-              <a href="#poradnik-stylizacji" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/30 px-6 text-sm font-bold text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-rose-300">
+              <a href="#poradnik-stylizacji" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-rose-200 bg-white px-6 text-sm font-bold text-rose-800 transition hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-300">
                 Jak dobrze wybrać?
               </a>
             </div>
-            <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-stone-300 sm:text-sm">
+            <ul className="mt-7 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold leading-6 text-stone-600 sm:text-sm">
               <li>✓ Budżety do 100–200 zł</li>
-              <li>✓ Prawdziwe produkty w zestawach</li>
-              <li>✓ Zakup osobno w SHEIN</li>
+              <li>✓ Produkty z katalogu</li>
+              <li>✓ Oferty osobno w SHEIN</li>
             </ul>
+            <div className="mt-7 flex flex-wrap gap-2" aria-label="Wybierz budżet stylizacji">
+              {[100, 150, 200].map((budget) => (
+                <Link
+                  key={budget}
+                  href={`/stylizacje?budzet=${budget}#wybierz-stylizacje`}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-rose-200 bg-white px-4 text-xs font-black text-rose-700 transition hover:border-rose-400 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-400"
+                >
+                  Do {budget} zł →
+                </Link>
+              ))}
+            </div>
           </div>
 
           {featured && (
-            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-white text-stone-950 shadow-2xl">
-              <div className="grid h-64 grid-cols-2 bg-stone-100 sm:h-80 lg:h-72 xl:h-80">
+            <div className="min-w-0 overflow-hidden rounded-[28px] border border-rose-100 bg-white text-stone-950 shadow-[0_22px_55px_rgba(136,19,55,0.12)] sm:rounded-[30px]">
+              <div className="grid h-56 grid-cols-2 gap-2 bg-rose-50 p-3 min-[400px]:h-64 sm:h-80 lg:h-72 xl:h-80">
                 {featured.products.slice(0, 2).map((product, index) => (
-                  <div key={product.id} className="relative overflow-hidden border-r border-stone-100 last:border-r-0">
+                  <div key={product.id} className="relative min-w-0 overflow-hidden rounded-[20px] bg-white">
                     <ProductPhoto
                       src={product.image}
                       alt={product.name}
-                      sizes="(max-width: 1023px) 48vw, 18vw"
+                      sizes="(max-width: 1023px) 44vw, 19vw"
+                      className="p-2"
                       priority={index === 0}
                     />
                   </div>
                 ))}
               </div>
               <div className="p-5 sm:p-6">
-                <p className="text-xs font-black uppercase tracking-widest text-rose-700">Zobacz zestaw z najniższą sumą cen</p>
+                <p className="text-xs font-black uppercase tracking-widest text-rose-700">Stylizacja na dobry początek</p>
                 <h2 className="mt-2 text-xl font-black tracking-tight sm:text-2xl">{featured.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-stone-600">
                   {featured.products.length} elementy · {featured.occasion.toLowerCase()} · bez kosztów dostawy
                 </p>
-                <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
                   <div>
                     <p className="text-xs text-stone-500">Suma cen w katalogu</p>
                     <p className="text-2xl font-black">{formatPrice(featured.total)}</p>
                   </div>
-                  <Link href={"/stylizacje/" + featured.slug} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-950 px-4 text-sm font-extrabold text-white transition hover:bg-stone-800">
+                  <Link href={"/stylizacje/" + featured.slug} className="inline-flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-5 text-sm font-extrabold text-white transition hover:bg-rose-700">
                     Zobacz zestaw →
                   </Link>
                 </div>
@@ -162,11 +174,11 @@ export default async function LooksPage({
         </div>
       </div>
 
-      <section id="wybierz-stylizacje" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="choose-title">
+      <section id="wybierz-stylizacje" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-12 sm:px-8 sm:py-16" aria-labelledby="choose-title">
         <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-widest text-rose-700">Znajdź coś dla siebie</p>
-            <h2 id="choose-title" className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+            <h2 id="choose-title" className="mt-2 text-pretty text-[clamp(1.75rem,5.2vw,2.4rem)] font-black leading-[1.14] tracking-[-0.04em]">
               Wybierz stylizację na swoją okazję
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
@@ -196,9 +208,9 @@ export default async function LooksPage({
 
       <section id="poradnik-stylizacji" aria-labelledby="guide-title"
         className="scroll-mt-24 border-y border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-11 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-widest text-rose-700">Potrzebujesz podpowiedzi?</p>
+            <p className="text-xs font-black uppercase tracking-widest text-rose-700">Twój styl, Twoje zasady</p>
             <h2 id="guide-title" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
               Nie wiesz, od czego zacząć?
             </h2>
@@ -214,10 +226,10 @@ export default async function LooksPage({
         </div>
       </section>
 
-      <section aria-labelledby="outfits-faq" className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
+      <section aria-labelledby="outfits-faq" className="mx-auto grid max-w-7xl gap-8 px-6 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
         <div>
           <p className="text-xs font-black uppercase tracking-widest text-rose-700">Przed zakupem</p>
-          <h2 id="outfits-faq" className="mt-3 text-3xl font-black tracking-tight">Ważne pytania o zestawy</h2>
+          <h2 id="outfits-faq" className="mt-3 text-[clamp(1.7rem,5vw,2.25rem)] font-black tracking-tight">Ważne pytania o zestawy</h2>
           <p className="mt-4 text-sm leading-7 text-stone-600">
             Przejrzystość jest ważniejsza niż obietnica najniższej ceny. Nie testujemy fizycznie każdej rzeczy i nie sprzedajemy produktów bezpośrednio.
           </p>
@@ -226,26 +238,26 @@ export default async function LooksPage({
           </Link>
         </div>
         <div className="space-y-3">
-          <details className="group rounded-2xl border border-stone-200 bg-white p-5">
-            <summary className="cursor-pointer font-black">Czy cena obejmuje całą stylizację?</summary>
+          <details className="group rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <summary className="cursor-pointer font-black leading-6 text-stone-950 marker:text-rose-600">Czy cena obejmuje całą stylizację?</summary>
             <p className="mt-3 text-sm leading-7 text-stone-600">
               Sumujemy ceny elementów podanych na karcie zestawu. Buty, torba, dodatki lub dostawa nie są wliczone, jeśli nie wymieniono ich w składzie. Każda podstrona wskazuje wyłączenia.
             </p>
           </details>
-          <details className="group rounded-2xl border border-stone-200 bg-white p-5">
-            <summary className="cursor-pointer font-black">Czy cena i rozmiary w SHEIN będą identyczne?</summary>
+          <details className="group rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <summary className="cursor-pointer font-black leading-6 text-stone-950 marker:text-rose-600">Czy cena i rozmiary w SHEIN będą identyczne?</summary>
             <p className="mt-3 text-sm leading-7 text-stone-600">
               Niekoniecznie. Ceny na naszej stronie są zapisane w katalogu i mogą różnić się od aktualnych ofert. Przed zakupem sprawdź cenę, kolor, rozmiar, koszty dostawy i warunki u sprzedawcy.
             </p>
           </details>
-          <details className="group rounded-2xl border border-stone-200 bg-white p-5">
-            <summary className="cursor-pointer font-black">Czy kupuję cały zestaw jednym kliknięciem?</summary>
+          <details className="group rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <summary className="cursor-pointer font-black leading-6 text-stone-950 marker:text-rose-600">Czy kupuję cały zestaw jednym kliknięciem?</summary>
             <p className="mt-3 text-sm leading-7 text-stone-600">
               Nie. To propozycja połączenia konkretnych elementów garderoby. Otwierasz oddzielnie każdą ofertę w SHEIN i samodzielnie wybierasz produkty.
             </p>
           </details>
-          <details className="group rounded-2xl border border-stone-200 bg-white p-5">
-            <summary className="cursor-pointer font-black">Czy linki są afiliacyjne?</summary>
+          <details className="group rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <summary className="cursor-pointer font-black leading-6 text-stone-950 marker:text-rose-600">Czy linki są afiliacyjne?</summary>
             <p className="mt-3 text-sm leading-7 text-stone-600">
               Tak, możemy otrzymać prowizję za kwalifikowany zakup dokonany poprzez link partnera. Nie oznacza to, że każdy klik lub zakup generuje prowizję.
             </p>

@@ -86,7 +86,7 @@ export default async function LookPage({ params }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
+    <main className="min-h-screen bg-[#faf8f7] text-stone-900">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -94,35 +94,80 @@ export default async function LookPage({ params }: Props) {
         }}
       />
       <SiteHeader />
-      <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16">
-        <nav aria-label="Okruszki" className="text-sm">
+      <article className="mx-auto max-w-7xl px-6 py-8 sm:px-8 sm:py-16">
+        <nav aria-label="Okruszki" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold leading-6 sm:text-sm">
           <Link href="/" className="text-stone-600 hover:text-rose-700">Start</Link>
-          <span aria-hidden="true" className="mx-2 text-stone-400">/</span>
+          <span aria-hidden="true" className="text-stone-400">/</span>
           <Link href="/stylizacje" className="font-bold text-rose-700 hover:underline">Stylizacje</Link>
-          <span aria-hidden="true" className="mx-2 text-stone-400">/</span>
-          <span className="text-stone-700">{look.title}</span>
+          <span aria-hidden="true" className="text-stone-400">/</span>
+          <span className="break-words text-stone-700">{look.title}</span>
         </nav>
 
-        <header className="mt-8 max-w-3xl">
-          <p className="text-xs font-extrabold uppercase tracking-widest text-rose-700">{look.occasion} · {look.style}</p>
-          <h1 className="mt-3 text-balance text-4xl font-black tracking-tight sm:text-6xl">{look.title}</h1>
-          <p className="mt-5 text-base leading-8 text-stone-600 sm:text-lg">{look.intro}</p>
-          <ul className="mt-6 flex flex-wrap gap-2 text-xs font-bold text-stone-700 sm:text-sm">
-            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">{look.products.length} elementy garderoby</li>
-            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Na okazję: {look.occasion.toLowerCase()}</li>
-            <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Budżet: do {formatPrice(look.maxBudget)}</li>
-          </ul>
-          <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 p-5">
-            <p className="text-sm font-bold text-rose-900">Suma cen {look.products.length} elementów zapisanych w katalogu</p>
-            <p className="mt-1 text-3xl font-black text-stone-950">{formatPrice(look.total)}</p>
-            <p className="mt-2 text-xs leading-5 text-stone-600">Do założonego limitu {formatPrice(look.maxBudget)}. Bez dostawy; aktualną cenę sprawdź w sklepie.</p>
+        <header className="mt-8 grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-12">
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase leading-5 tracking-[0.15em] text-rose-700">
+              {look.occasion} · {look.style}
+            </p>
+            <h1 className="mt-3 text-pretty text-[clamp(2rem,6.7vw,3.8rem)] font-black leading-[1.09] tracking-[-0.05em] text-stone-950">
+              {look.title}
+            </h1>
+            <p className="mt-5 max-w-2xl text-[15px] leading-[1.8] text-stone-600 sm:text-lg">
+              {look.intro}
+            </p>
+            <ul className="mt-6 flex flex-wrap gap-2 text-xs font-bold text-stone-700 sm:text-sm">
+              <li className="rounded-full border border-rose-100 bg-rose-50 px-4 py-2">{look.products.length} elementy zestawu</li>
+              <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Na okazję: {look.occasion.toLowerCase()}</li>
+              <li className="rounded-full border border-stone-200 bg-white px-4 py-2">Budżet do {formatPrice(look.maxBudget)}</li>
+            </ul>
+            <div className="mt-7 rounded-[26px] border border-rose-200 bg-white p-5 shadow-[0_14px_38px_rgba(136,19,55,0.07)] sm:p-6">
+              <p className="text-xs font-black uppercase tracking-[0.11em] text-rose-700">
+                Suma cen {look.products.length} elementów zapisanych w katalogu
+              </p>
+              <p className="mt-2 text-[clamp(2rem,7vw,3rem)] font-black leading-tight tracking-[-0.05em] text-stone-950">
+                {formatPrice(look.total)}
+              </p>
+              <p className="mt-3 text-xs leading-6 text-stone-600">
+                Zapisane ceny bez dostawy i elementów niewymienionych w składzie.
+                Aktualne kwoty i dostępność potwierdź w SHEIN.
+              </p>
+              <a
+                href="#sklad-stylizacji"
+                className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl bg-rose-600 px-4 text-center text-sm font-black text-white shadow-sm transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-500"
+              >
+                Zobacz skład i oferty ↓
+              </a>
+            </div>
           </div>
-          <a href="#sklad-stylizacji" className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-stone-950 px-5 text-sm font-black text-white transition hover:bg-stone-800">
-            Zobacz ceny i oferty wszystkich elementów ↓
-          </a>
+          <div className="min-w-0 overflow-hidden rounded-[28px] border border-rose-100 bg-white shadow-[0_16px_45px_rgba(28,25,23,0.07)]">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
+              <span className="text-[11px] font-black uppercase tracking-wider text-rose-700">Zobacz elementy looku</span>
+              <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700">Do {look.maxBudget} zł</span>
+            </div>
+            <div className="grid h-[225px] grid-cols-2 gap-2 bg-rose-50 p-3 min-[400px]:h-[300px] sm:h-[360px] lg:h-[300px]">
+              {look.products.slice(0, 2).map((product, index) => (
+                <Link
+                  key={product.id}
+                  href={"/produkt/" + product.slug}
+                  aria-label={"Zobacz produkt: " + product.name}
+                  className="group relative min-w-0 overflow-hidden rounded-[20px] bg-white focus-visible:outline-2 focus-visible:outline-rose-500"
+                >
+                  <ProductPhoto
+                    src={product.image}
+                    alt={product.name}
+                    sizes="(max-width: 639px) 42vw, (max-width: 1023px) 42vw, 19vw"
+                    priority={index === 0}
+                    className="p-3 transition duration-500 motion-safe:group-hover:scale-105"
+                  />
+                </Link>
+              ))}
+            </div>
+            <p className="px-5 py-4 text-xs leading-6 text-stone-500">
+              Kompozycja z produktów dostępnych w naszym katalogu. Kolory i rozmiary sprawdź w sklepie.
+            </p>
+          </div>
         </header>
 
-        <section id="sklad-stylizacji" aria-labelledby="outfit-items-title" className="mt-12 scroll-mt-24">
+        <section id="sklad-stylizacji" aria-labelledby="outfit-items-title" className="mt-12 scroll-mt-24 lg:mt-16">
           <div className="max-w-3xl">
             <h2 id="outfit-items-title" className="text-2xl font-black tracking-tight sm:text-3xl">
               Co wchodzi w skład stylizacji?
@@ -133,31 +178,31 @@ export default async function LookPage({ params }: Props) {
               jest partnerski; kliknięcie nie oznacza zakupu.
             </p>
           </div>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {look.products.map((product) => (
-              <article key={product.id} className="flex h-full flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+              <article key={product.id} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[26px] border border-stone-200 bg-white shadow-[0_8px_28px_rgba(28,25,23,0.05)] transition hover:border-rose-200 hover:shadow-lg">
                 <Link href={"/produkt/" + product.slug} className="block focus-visible:outline-2 focus-visible:outline-rose-600" aria-label={"Szczegóły: " + product.name}>
-                  <div className="relative aspect-[4/5] bg-stone-100">
-                    <ProductPhoto src={product.image} alt={product.name} sizes="(max-width: 639px) 95vw, (max-width: 1023px) 46vw, 30vw" />
+                  <div className="relative aspect-[5/4] bg-gradient-to-br from-rose-50 to-stone-100 sm:aspect-[4/5]">
+                    <ProductPhoto src={product.image} alt={product.name} sizes="(max-width: 639px) 87vw, (max-width: 1279px) 43vw, 28vw" className="p-4 transition-transform duration-500 motion-safe:group-hover:scale-[1.025]" />
                   </div>
                 </Link>
-                <div className="flex flex-1 flex-col p-5">
+                <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
                   <p className="text-xs font-extrabold uppercase tracking-wide text-rose-700">{product.category}</p>
-                  <h3 className="mt-2 line-clamp-3 text-lg font-black leading-snug text-stone-950">{product.shortName || product.name}</h3>
-                  <p className="mt-auto pt-4 text-2xl font-black tracking-tight">{formatPrice(product.price)}</p>
-                  <p className="mt-1 text-xs text-stone-500">Cena zapisana przy publikacji</p>
-                  <div className="mt-4 grid grid-cols-1 gap-2">
+                  <h3 className="mt-2 line-clamp-3 text-lg font-black leading-snug tracking-tight text-stone-950">{product.shortName || product.name}</h3>
+                  <p className="mt-auto pt-5 text-2xl font-black tracking-tight text-stone-950">{formatPrice(product.price)}</p>
+                  <p className="mt-1 text-xs leading-5 text-stone-500">Cena zapisana przy publikacji · bez dostawy</p>
+                  <div className="mt-5 grid grid-cols-1 gap-2">
                     <a
                       href={"/go/" + product.id + "?origin=outfit&look=" + encodeURIComponent(look.slug)}
                       target="_blank"
                       rel="sponsored nofollow noopener noreferrer"
-                      className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-extrabold text-white hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-600"
+                      className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-center text-sm font-extrabold leading-6 text-white shadow-sm transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-600"
                     >
                       Sprawdź aktualną ofertę w SHEIN ↗
                     </a>
                     <Link
                       href={"/produkt/" + product.slug}
-                      className="flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-4 text-sm font-bold text-stone-700 hover:bg-stone-50"
+                      className="flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-4 text-center text-sm font-bold text-stone-700 hover:border-rose-200 hover:bg-rose-50"
                     >
                       Szczegóły produktu
                     </Link>
@@ -168,7 +213,7 @@ export default async function LookPage({ params }: Props) {
           </div>
         </section>
 
-        <section aria-labelledby="why-this-outfit" className="mt-12 max-w-5xl rounded-3xl border border-stone-200 bg-white p-6 sm:p-8">
+        <section aria-labelledby="why-this-outfit" className="mt-12 max-w-5xl rounded-[26px] border border-stone-200 bg-white p-6 sm:p-8">
           <p className="text-xs font-black uppercase tracking-widest text-rose-700">Pomoc w wyborze</p>
           <h2 id="why-this-outfit" className="mt-2 text-2xl font-black tracking-tight">
             Dlaczego te elementy do siebie pasują?
@@ -185,7 +230,7 @@ export default async function LookPage({ params }: Props) {
           <p className="mt-2 text-sm leading-7 text-stone-600">{look.excluded}</p>
         </section>
 
-        <aside className="mt-6 max-w-5xl rounded-3xl border border-stone-200 bg-white p-6 sm:p-8">
+        <aside className="mt-6 max-w-5xl rounded-[26px] border border-rose-100 bg-rose-50/70 p-6 sm:p-8">
           <h2 className="text-xl font-black">Wskazówka przed zakupem</h2>
           <p className="mt-3 leading-7 text-stone-700">{look.tip}</p>
           <p className="mt-4 text-sm leading-6 text-stone-600">
@@ -235,15 +280,29 @@ export default async function LookPage({ params }: Props) {
                 <Link
                   key={other.slug}
                   href={"/stylizacje/" + other.slug}
-                  className="flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-rose-600"
+                  className="group flex min-w-0 flex-col overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-rose-600 motion-reduce:transform-none"
                 >
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-rose-700">{other.occasion}</p>
-                    <h3 className="mt-2 text-lg font-black">{other.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-stone-600">{other.intro}</p>
+                  <div className="grid h-36 grid-cols-2 gap-2 bg-rose-50 p-2">
+                    {other.products.slice(0, 2).map((product) => (
+                      <div key={product.id} className="relative min-w-0 overflow-hidden rounded-2xl bg-white">
+                        <ProductPhoto
+                          src={product.image}
+                          alt={product.name}
+                          sizes="(max-width: 639px) 42vw, (max-width: 1023px) 22vw, 16vw"
+                          className="p-2 transition-transform duration-500 motion-safe:group-hover:scale-105"
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <div className="mt-4 border-t border-stone-100 pt-4 font-black text-rose-700">
-                    {formatPrice(other.total)} · Zobacz zestaw →
+                  <div className="flex flex-1 flex-col p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-rose-700">{other.occasion}</p>
+                    <h3 className="mt-2 text-lg font-black leading-snug text-stone-950">{other.title}</h3>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-600">{other.intro}</p>
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-4 sm:mt-5">
+                      <strong className="text-xl font-black tracking-tight text-stone-950">{formatPrice(other.total)}</strong>
+                      <span className="text-sm font-black text-rose-700">Zobacz zestaw →</span>
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-stone-500">Suma zapisanych cen, bez dostawy</p>
                   </div>
                 </Link>
               ))}
