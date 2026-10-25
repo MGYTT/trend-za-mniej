@@ -19,7 +19,7 @@ import {
 } from "@/lib/site";
 
 import { getProducts } from "@/lib/products";
-import { resolveLooks } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { STYLE_GUIDES } from "@/lib/poradniki";
 
 export const revalidate =
@@ -356,7 +356,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // Only include published, complete outfits that still fit their budgets.
-  const lookPages: MetadataRoute.Sitemap = resolveLooks(await getProducts())
+  const lookPages: MetadataRoute.Sitemap = (await getAllResolvedLooks(await getProducts()))
     .filter((look) => look.available)
     .map((look) => ({ url: `${siteUrl}/stylizacje/${look.slug}` }));
 

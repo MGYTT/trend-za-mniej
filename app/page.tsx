@@ -2,7 +2,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import HomeLanding from "@/components/HomeLanding";
 import { getProducts, getFeaturedProducts, type Product } from "@/lib/products";
-import { resolveLooks } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 
 export const revalidate = 60;
 
@@ -21,7 +21,7 @@ export default async function Home() {
     getFeaturedProducts(),
   ]);
   // Lead with parts of complete looks, not an unrelated random product.
-  const looks = resolveLooks(allProducts).filter((look) => look.available);
+  const looks = (await getAllResolvedLooks(allProducts)).filter((look) => look.available);
   const selectedProducts = uniqueById([
     ...looks.flatMap((look) => look.products),
     ...featuredProducts,

@@ -5,7 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 import OutfitExplorer from "@/components/OutfitExplorer";
 import ProductPhoto from "@/components/ProductPhoto";
 import { getProducts, formatPrice } from "@/lib/products";
-import { resolveLooks } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { getSiteUrl } from "@/lib/site";
 import type { OutfitPreview } from "@/lib/outfit-filters";
 
@@ -38,7 +38,7 @@ export default async function LooksPage({
   const rawBudget = Array.isArray(params.budzet) ? params.budzet[0] : params.budzet;
   const rawOccasion = Array.isArray(params.okazja) ? params.okazja[0] : params.okazja;
 
-  const looks = resolveLooks(await getProducts()).filter((look) => look.available);
+  const looks = (await getAllResolvedLooks(await getProducts())).filter((look) => look.available);
   const previews: OutfitPreview[] = looks.map((look) => ({
     slug: look.slug,
     title: look.title,

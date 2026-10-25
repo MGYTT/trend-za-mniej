@@ -10,7 +10,7 @@ const resolver = source("../lib/stylizacje.ts");
 const redirect = source("../app/go/[id]/route.ts");
 
 test("listing shows available real outfits and stable SEO", () => {
-  assert.match(listing, /resolveLooks\(await getProducts\(\)\)\.filter\(\(look\) => look\.available\)/);
+  assert.match(listing, /getAllResolvedLooks/);
   assert.match(listing, /alternates: \{ canonical: "\/stylizacje" \}/);
   assert.match(listing, /numberOfItems: looks\.length/);
   assert.match(listing, /"BreadcrumbList"/);
@@ -48,7 +48,7 @@ test("outfit previews are photographic with factual saved catalog totals", () =>
 });
 
 test("detail hero uses real products, price totals and distinct links", () => {
-  assert.match(detail, /resolveLooks\(await getProducts\(\)\)\.filter\(\(item\) => item\.available\)/);
+  assert.match(detail, /getAllResolvedLooks/);
   assert.match(detail, /if \(!look\) notFound\(\)/);
   assert.match(detail, /look\.products\.slice\(0, 2\)\.map/);
   assert.match(detail, /priority=\{index === 0\}/);

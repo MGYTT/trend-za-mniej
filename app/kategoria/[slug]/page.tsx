@@ -27,7 +27,8 @@ import {
   SITE_NAME,
 } from "@/lib/site";
 import { formatPrice } from "@/lib/products";
-import { getLooksForCategory, resolveLooks } from "@/lib/stylizacje";
+import { getLooksForCategory } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 
 type CategoryPageProps = {
   params: Promise<{
@@ -169,7 +170,7 @@ export default async function CategoryPage({
   ]);
 
   const categoryLooks = getLooksForCategory(
-    resolveLooks(allProducts),
+    await getAllResolvedLooks(allProducts),
     category.name
   ).slice(0, 3);
 

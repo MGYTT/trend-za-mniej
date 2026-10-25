@@ -46,7 +46,7 @@ test("outfit offers have sponsored links and retain optional attribution paramet
 });
 
 test("outfit cannot show missing or over-budget products", () => {
-  assert.match(detail, /resolveLooks\(await getProducts\(\)\)\.filter\(\(item\) => item\.available\)/);
+  assert.match(detail, /getAllResolvedLooks/);
   assert.match(detail, /if \(!look\) notFound\(\)/);
   assert.match(detail, /look\.excluded/);
   assert.match(detail, /look\.whyItWorks/);

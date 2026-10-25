@@ -197,6 +197,13 @@ export default function AdminMobileDashboard({
           <div className="admin-ios-divider" />
 
           <QuickRow
+            href="/admin/stylizacje"
+            icon="offers"
+            title="Kreator stylizacji"
+            description="Zestawy, podgląd i publikowanie"
+          />
+          <div className="admin-ios-divider" />
+          <QuickRow
             href="/admin/tiktok"
             icon="tiktok"
             title="TikTok"

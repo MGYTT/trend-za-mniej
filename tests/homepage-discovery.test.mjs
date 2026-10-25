@@ -18,7 +18,7 @@ test("homepage links to real budget and occasion filters", () => {
 });
 
 test("homepage uses valid looks and only catalog products", () => {
-  assert.match(index, /resolveLooks\(allProducts\)\.filter\(\(look\) => look\.available\)/);
+  assert.match(index, /getAllResolvedLooks\(allProducts\)/);
   assert.match(index, /uniqueById/);
   assert.match(home, /look\.total/);
   assert.match(home, /bez dostawy/);

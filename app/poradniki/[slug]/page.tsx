@@ -6,7 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import ProductPhoto from "@/components/ProductPhoto";
 import { getProducts, formatPrice } from "@/lib/products";
 import { STYLE_GUIDES, getGuideBySlug } from "@/lib/poradniki";
-import { resolveLooks } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 300;
@@ -39,7 +39,7 @@ export default async function GuidePage({ params }: Props) {
   const { slug } = await params;
   const guide = getGuideBySlug(slug);
   if (!guide) notFound();
-  const availableLooks = resolveLooks(await getProducts()).filter((look) =>
+  const availableLooks = (await getAllResolvedLooks(await getProducts())).filter((look) =>
     look.available && guide.relatedLookSlugs.includes(look.slug)
   );
   const siteUrl = getSiteUrl();

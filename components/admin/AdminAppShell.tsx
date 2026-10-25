@@ -741,6 +741,14 @@ function MoreSheet({
             <div className="admin-ios-divider" />
 
             <AppMenuLink
+              href="/admin/stylizacje"
+              icon="offers"
+              title="Kreator stylizacji"
+              description="Buduj, zapisuj i publikuj zestawy"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
+            <AppMenuLink
               href="/admin/seo"
               icon="seo"
               title="SEO Quality"

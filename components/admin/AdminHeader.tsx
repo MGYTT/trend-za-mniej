@@ -579,6 +579,15 @@ function AccountMenu({
           </Link>
 
           <Link
+            href="/admin/stylizacje"
+            prefetch
+            onClick={onClose}
+            className="admin-account-row"
+          >
+            Kreator stylizacji
+            <span>›</span>
+          </Link>
+          <Link
             href="/admin/seo"
             prefetch
             onClick={

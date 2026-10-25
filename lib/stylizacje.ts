@@ -179,9 +179,9 @@ export type ResolvedLook = LookConfig & {
  * Resolves outfit configurations against current active catalog records.
  * Do not expose inactive, incomplete or over-budget outfits in navigation.
  */
-export function resolveLooks(products: Product[]): ResolvedLook[] {
+export function resolveLooks(products: Product[], definitions: readonly LookConfig[] = LOOKS): ResolvedLook[] {
   const lookup = new Map(products.filter((p) => p.active).map((p) => [p.slug, p]));
-  return LOOKS.map((look) => {
+  return definitions.map((look) => {
     const found = look.productSlugs.map((slug) => lookup.get(slug));
     const selected = found.filter((p): p is Product => Boolean(p));
     const validPrices = selected.every(

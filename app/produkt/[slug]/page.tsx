@@ -10,7 +10,8 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { slugifyCategory } from "@/lib/categories";
 import { getCurrentSlugForOldProductSlug } from "@/lib/product-redirect";
-import { getLooksForProduct, resolveLooks } from "@/lib/stylizacje";
+import { getLooksForProduct } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import {
   formatPrice,
   getProductBySlug,
@@ -264,7 +265,7 @@ export default async function ProductPage({
 
   // Show only complete outfits containing this active product.
   const matchingLooks = getLooksForProduct(
-    resolveLooks(allProducts),
+    await getAllResolvedLooks(allProducts),
     product.slug
   ).slice(0, 3);
 

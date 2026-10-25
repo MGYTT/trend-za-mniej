@@ -5,7 +5,8 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ProductPhoto from "@/components/ProductPhoto";
 import { getProducts, formatPrice } from "@/lib/products";
-import { LOOKS, resolveLooks } from "@/lib/stylizacje";
+import { LOOKS } from "@/lib/stylizacje";
+import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { getSiteUrl } from "@/lib/site";
 import { getGuidesForLook } from "@/lib/poradniki";
 
@@ -18,7 +19,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const look = resolveLooks(await getProducts()).find((item) => item.slug === slug);
+  const look = (await getAllResolvedLooks(await getProducts())).find((item) => item.slug === slug);
   if (!look?.available) {
     return { title: "Stylizacja niedostępna", robots: { index: false, follow: false } };
   }
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LookPage({ params }: Props) {
   const { slug } = await params;
-  const eligibleLooks = resolveLooks(await getProducts()).filter((item) => item.available);
+  const eligibleLooks = (await getAllResolvedLooks(await getProducts())).filter((item) => item.available);
   const look = eligibleLooks.find((item) => item.slug === slug);
   if (!look) notFound();
 
