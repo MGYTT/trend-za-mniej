@@ -471,6 +471,7 @@ function MobileBottomNavigation({
     pathname.startsWith("/admin/tiktok") ||
     pathname.startsWith("/admin/seo") ||
     pathname.startsWith("/admin/statystyki") ||
+    pathname.startsWith("/admin/promocje-shein") ||
     pathname.startsWith("/admin/widocznosc") ||
     pathname.startsWith("/admin/zespol");
 
@@ -727,6 +728,14 @@ function MoreSheet({
               icon="offers"
               title="Kreator stylizacji"
               description="Buduj, zapisuj i publikuj zestawy"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
+            <AppMenuLink
+              href="/admin/promocje-shein"
+              icon="offers"
+              title="Promocje SHEIN"
+              description="Kody, kampanie i publikacja"
               onClick={onClose}
             />
             <div className="admin-ios-divider" />

@@ -14,6 +14,9 @@ export type SheinPromotion = {
   ctaLabel: string;
 
   note: string;
+  category?: "new-users" | "fashion" | "beauty" | "accessories" | "home" | "kids" | "sale";
+  codeKind?: "campaign" | "coupon";
+  sortOrder?: number;
 };
 
 export const SHEIN_PROMOTIONS_UPDATED_AT =

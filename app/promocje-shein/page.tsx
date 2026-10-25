@@ -3,7 +3,7 @@ import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SheinPromotionsExplorer from "@/components/SheinPromotionsExplorer";
-import { SHEIN_PROMOTIONS, SHEIN_PROMOTIONS_UPDATED_AT } from "@/lib/shein-promotions";
+import { getPublishedSheinCampaigns } from "@/lib/shein-campaigns";
 import { getSiteUrl, SITE_LANGUAGE, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -47,7 +47,10 @@ const FAQ = [
   },
 ] as const;
 
-export default function SheinPromotionsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SheinPromotionsPage() {
+  const { promotions, updatedAt, unavailable } = await getPublishedSheinCampaigns();
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/promocje-shein`;
   const updatedAtLabel = new Intl.DateTimeFormat("pl-PL", {
@@ -55,7 +58,7 @@ export default function SheinPromotionsPage() {
     month: "long",
     year: "numeric",
     timeZone: "Europe/Warsaw",
-  }).format(new Date(SHEIN_PROMOTIONS_UPDATED_AT));
+  }).format(new Date(updatedAt));
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -67,7 +70,7 @@ export default function SheinPromotionsPage() {
         name: "Promocje SHEIN i kody kampanii",
         description: "Zestawienie kodów do wyszukiwania kampanii i ofert SHEIN.",
         inLanguage: SITE_LANGUAGE,
-        dateModified: SHEIN_PROMOTIONS_UPDATED_AT,
+        dateModified: updatedAt,
         isPartOf: { "@id": `${siteUrl}/#website` },
         breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
       },
@@ -120,7 +123,7 @@ export default function SheinPromotionsPage() {
                   Znajdź promocję ↓
                 </a>
                 <span className="text-xs font-semibold text-stone-600">
-                  {SHEIN_PROMOTIONS.length} kampanii w katalogu
+                  {promotions.length} kampanii w katalogu
                 </span>
               </div>
             </div>
@@ -156,10 +159,15 @@ export default function SheinPromotionsPage() {
               </h2>
             </div>
             <p className="text-xs leading-6 text-stone-500">
-              Wpisy zaktualizowano <time dateTime={SHEIN_PROMOTIONS_UPDATED_AT}>{updatedAtLabel}</time>
+              Wpisy zaktualizowano <time dateTime={updatedAt}>{updatedAtLabel}</time>
             </p>
           </div>
-          <SheinPromotionsExplorer promotions={SHEIN_PROMOTIONS} />
+          {unavailable && (
+             <div role="alert" className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-900">
+               Lista kampanii jest chwilowo niedostępna. Spróbuj ponownie później.
+             </div>
+           )}
+           <SheinPromotionsExplorer promotions={promotions} />
           <p className="mt-7 rounded-2xl border border-rose-100 bg-white px-5 py-4 text-xs leading-6 text-stone-600">
             <strong className="text-stone-900">Ważne:</strong> kody z katalogu nie są weryfikowane w czasie rzeczywistym.
             Większość to oznaczenia kampanii, a nie kupony do koszyka. Ceny, ważność i warunki sprawdzaj bezpośrednio w SHEIN.

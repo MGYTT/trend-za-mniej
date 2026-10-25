@@ -279,6 +279,13 @@ export default function AdminMobileDashboard({
           />
           <div className="admin-ios-divider" />
           <QuickRow
+            href="/admin/promocje-shein"
+            icon="offers"
+            title="Promocje SHEIN"
+            description="Aktualizuj kody i kampanie"
+          />
+          <div className="admin-ios-divider" />
+          <QuickRow
             href="/admin/tiktok"
             icon="tiktok"
             title="TikTok"

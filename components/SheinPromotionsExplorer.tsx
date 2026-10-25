@@ -130,6 +130,7 @@ function matchesCategory(
   promotion: SheinPromotion,
   category: Category
 ) {
+  if (category !== "all" && promotion.category) return promotion.category === category;
   switch (category) {
     case "all":
       return true;
@@ -173,9 +174,9 @@ const PREFERRED_IDS = [
 
 const ranked = (items: SheinPromotion[]) =>
   [...items].sort((a, b) => {
-    const aRank = PREFERRED_IDS.indexOf(a.id);
-    const bRank = PREFERRED_IDS.indexOf(b.id);
-    return (aRank < 0 ? 999 : aRank) - (bRank < 0 ? 999 : bRank);
+    const aRank = a.sortOrder ?? (PREFERRED_IDS.indexOf(a.id) < 0 ? 999 : PREFERRED_IDS.indexOf(a.id));
+    const bRank = b.sortOrder ?? (PREFERRED_IDS.indexOf(b.id) < 0 ? 999 : PREFERRED_IDS.indexOf(b.id));
+    return aRank - bRank;
   });
 
 function SearchIcon() {
@@ -390,7 +391,7 @@ function PromotionCard({
   feedback: { id: string; success: boolean } | null;
   onCopy: () => void;
 }) {
-  const isNewUserCoupon = promotion.id === "kupon-60-nowi-uzytkownicy";
+  const isNewUserCoupon = promotion.id === "kupon-60-nowi-uzytkownicy" || promotion.codeKind === "coupon";
 
   return (
     <article id={promotion.id}
@@ -401,7 +402,7 @@ function PromotionCard({
             {promotion.badge}
           </span>
           <span className="text-[11px] font-bold text-stone-500">
-            {isNewUserCoupon ? "Oferta warunkowa dla nowych" : "Kod kampanii"}
+            {promotion.codeKind === "coupon" ? "Kupon — sprawdź warunki" : isNewUserCoupon ? "Oferta warunkowa dla nowych" : "Kod kampanii"}
           </span>
         </div>
         <h4 className="mt-4 text-pretty text-xl font-black leading-snug tracking-[-0.035em] text-stone-950 sm:text-[22px]">
@@ -455,7 +456,7 @@ function PromotionCard({
             rel="sponsored nofollow noopener noreferrer"
             className="mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-center text-sm font-black leading-6 text-white shadow-[0_8px_20px_rgba(225,29,72,0.16)] transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-400"
           >
-            Sprawdź ofertę w SHEIN <ExternalIcon />
+            {promotion.ctaLabel} <ExternalIcon />
           </a>
           <p className="mt-2 text-center text-[11px] leading-5 text-stone-500">
             Link afiliacyjny · nowa karta · warunki w SHEIN

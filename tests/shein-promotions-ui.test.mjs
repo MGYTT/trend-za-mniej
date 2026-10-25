@@ -25,7 +25,8 @@ test("campaign catalog contains unique actionable codes and plausible HTTPS SHEI
 
 test("campaign update time stays honest and not represented as live verification", () => {
   assert.ok(Number.isFinite(new Date(SHEIN_PROMOTIONS_UPDATED_AT).getTime()));
-  assert.match(listing, /dateModified: SHEIN_PROMOTIONS_UPDATED_AT/);
+  assert.match(listing, /dateModified: updatedAt/);
+  assert.match(listing, /getPublishedSheinCampaigns/);
   assert.match(listing, /Wpisy zaktualizowano/);
   assert.match(listing, /nie są weryfikowane w czasie rzeczywistym/);
   assert.match(listing, /Większość to oznaczenia kampanii/);
@@ -35,7 +36,7 @@ test("campaign update time stays honest and not represented as live verification
 
 test("search and categories appear immediately after concise hero", () => {
   assert.ok(listing.indexOf('id="znajdz-promocje"') < listing.indexOf("Krótka pomoc"));
-  assert.match(listing, /<SheinPromotionsExplorer promotions=\{SHEIN_PROMOTIONS\}/);
+  assert.match(listing, /<SheinPromotionsExplorer promotions=\{promotions\}/);
   assert.match(listing, /max-w-7xl px-6 pb-9 pt-7 sm:px-8/);
   assert.match(listing, /<h1 id="promotion-hero-title"/);
   assert.match(explorer, /id="shein-promotion-search"/);

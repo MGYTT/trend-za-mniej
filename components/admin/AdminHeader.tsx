@@ -151,6 +151,7 @@ function getMobileTitle(
   }
 
   if (pathname.startsWith("/admin/stylizacje")) return "Stylizacje";
+  if (pathname.startsWith("/admin/promocje-shein")) return "Promocje SHEIN";
   if (pathname.startsWith("/admin/widocznosc")) return "Widoczność";
 
   if (
@@ -618,6 +619,15 @@ function AccountMenu({
             className="admin-account-row"
           >
             Kreator stylizacji
+            <span>›</span>
+          </Link>
+          <Link
+            href="/admin/promocje-shein"
+            prefetch
+            onClick={onClose}
+            className="admin-account-row"
+          >
+            Menedżer promocji SHEIN
             <span>›</span>
           </Link>
           <Link
