@@ -1693,15 +1693,176 @@ body.admin-social-studio-app {
   }
 }
 
+/*
+ * ============================================================
+ * ADMIN iOS MOBILE SHELL — shared navigation and surfaces
+ * Scoped below desktop breakpoint; editing workflows remain immersive.
+ * ============================================================
+ */
 @media (max-width: 1023px) {
-  body.has-mobile-bottom-nav {
-    padding-bottom:
-      calc(
-        4.75rem +
-        env(
-          safe-area-inset-bottom
-        )
-      );
+  /* Only the root reserves space for the glass tab bar. */
+
+  .admin-app-root {
+    --admin-content-gutter: 20px;
+    min-width: 0;
+  }
+
+  .admin-app-root main > .mx-auto {
+    padding-inline: var(--admin-content-gutter);
+  }
+
+  .admin-topbar {
+    background: rgba(250, 250, 253, 0.86);
+    border-bottom-color: rgba(60, 60, 67, 0.09);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    backdrop-filter: saturate(1.45) blur(22px);
+    -webkit-backdrop-filter: saturate(1.45) blur(22px);
+  }
+
+  /* Explicit flex is required: align-items alone did not lay out the bar. */
+  .admin-mobile-topbar {
+    display: flex;
+    min-height: 64px;
+    gap: 0;
+    padding-inline: 16px;
+  }
+
+  .admin-mobile-back,
+  .admin-mobile-brand,
+  .admin-mobile-profile,
+  .admin-mobile-create {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+  }
+
+  .admin-mobile-create {
+    background: #fff0f3;
+    color: #be123c;
+    border: 1px solid rgba(225, 29, 72, 0.09);
+    transition: background 140ms ease, transform 140ms ease;
+  }
+
+  .admin-mobile-create:active {
+    background: #ffe4e9;
+    transform: scale(0.95);
+  }
+
+  .admin-mobile-profile {
+    border-color: rgba(60, 60, 67, 0.11);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .admin-tabbar-wrap {
+    padding: 8px max(12px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    background: linear-gradient(to top, rgba(242,242,247,0.96), rgba(242,242,247,0.0));
+  }
+
+  .admin-ios-tabbar {
+    height: 72px;
+    max-width: 560px;
+    padding: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 12px 32px rgba(28, 25, 23, 0.13), 0 1px 2px rgba(28, 25, 23, 0.04);
+    backdrop-filter: saturate(1.6) blur(22px);
+    -webkit-backdrop-filter: saturate(1.6) blur(22px);
+  }
+
+  .admin-tabbar-item {
+    position: relative;
+    min-width: 0;
+    min-height: 60px;
+    gap: 4px;
+    padding: 4px 1px;
+    border-radius: 18px;
+    color: #63636b;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.25;
+    transition: color 150ms ease, background-color 150ms ease, transform 120ms ease;
+  }
+
+  .admin-tabbar-item.is-active {
+    background: #fff0f3;
+    color: #be123c;
+  }
+
+  .admin-tabbar-item svg {
+    flex-shrink: 0;
+  }
+
+  .admin-ios-group {
+    border-color: rgba(60, 60, 67, 0.09);
+    border-radius: 20px;
+    box-shadow: 0 2px 12px rgba(31, 25, 35, 0.025);
+  }
+
+  .admin-ios-row {
+    min-height: 66px;
+    padding: 12px 16px;
+  }
+
+  .admin-sheet-section-label {
+    padding-inline: 17px;
+    margin: 3px 0 -5px;
+    color: #6d6d77;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .admin-ios-sheet {
+    max-height: min(88dvh, calc(100dvh - env(safe-area-inset-top) - 12px));
+    border-radius: 30px 30px 0 0;
+    overscroll-behavior: contain;
+  }
+
+  .admin-sheet-close {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+  }
+
+  .admin-account-sheet {
+    top: calc(72px + env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    max-height: calc(100dvh - 94px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .admin-tabbar-item:focus-visible,
+  .admin-mobile-topbar a:focus-visible,
+  .admin-mobile-topbar button:focus-visible,
+  .admin-sheet-close:focus-visible,
+  .admin-ios-row:focus-visible {
+    outline: 3px solid rgba(190, 18, 60, 0.85);
+    outline-offset: 2px;
+  }
+
+  /* iOS Safari zooms the whole page when an input has a smaller font. */
+  body.admin-app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  body.admin-app-shell select,
+  body.admin-app-shell textarea {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 359px) {
+  .admin-ios-tabbar {
+    padding: 4px 3px;
+  }
+  .admin-tabbar-item {
+    font-size: 9px;
   }
 }
 

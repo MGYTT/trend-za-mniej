@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -68,6 +69,9 @@ export default function AdminAppShell({
     setIsIOS,
   ] =
     useState(false);
+
+  const [activeHash, setActiveHash] = useState("");
+  const moreSheetRef = useRef<HTMLDivElement>(null);
 
   const immersiveRoute =
     useMemo(
@@ -221,14 +225,6 @@ export default function AdminAppShell({
       );
 
       if (
-        !immersiveRoute
-      ) {
-        body.classList.add(
-          "has-mobile-bottom-nav"
-        );
-      }
-
-      if (
         pathname ===
         "/admin/nowa-oferta"
       ) {
@@ -260,10 +256,6 @@ export default function AdminAppShell({
       return () => {
         body.classList.remove(
           "admin-app-shell"
-        );
-
-        body.classList.remove(
-          "has-mobile-bottom-nav"
         );
 
         body.classList.remove(
@@ -308,46 +300,67 @@ export default function AdminAppShell({
         return;
       }
 
-      const previousOverflow =
-        document.body.style
-          .overflow;
+      const previousOverflow = document.body.style.overflow;
+      const previousFocus = document.activeElement as HTMLElement | null;
+      const dialog = moreSheetRef.current;
+      document.body.style.overflow = "hidden";
+      dialog?.focus();
 
-      document.body.style.overflow =
-        "hidden";
-
-      function handleKeyDown(
-        event:
-          KeyboardEvent
-      ) {
-        if (
-          event.key ===
-          "Escape"
-        ) {
-          setMoreOpen(
-            false
-          );
+      function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setMoreOpen(false);
+          return;
+        }
+        if (event.key !== "Tab" || !dialog) return;
+        const focusables = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((element) => element.getClientRects().length > 0);
+        if (!focusables.length) {
+          event.preventDefault();
+          dialog.focus();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (!dialog.contains(document.activeElement)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+          return;
+        }
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
         }
       }
 
-      window.addEventListener(
-        "keydown",
-        handleKeyDown
-      );
-
+      window.addEventListener("keydown", handleKeyDown);
       return () => {
-        document.body.style.overflow =
-          previousOverflow;
-
-        window.removeEventListener(
-          "keydown",
-          handleKeyDown
-        );
+        document.body.style.overflow = previousOverflow;
+        window.removeEventListener("keydown", handleKeyDown);
+        previousFocus?.focus();
       };
     },
     [
       moreOpen,
     ]
   );
+
+  useEffect(() => {
+    const syncHash = () => setActiveHash(window.location.hash);
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    window.addEventListener("popstate", syncHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHash);
+      window.removeEventListener("popstate", syncHash);
+    };
+  }, [pathname]);
 
   async function installApp() {
     if (
@@ -388,7 +401,7 @@ export default function AdminAppShell({
         "admin-app-root min-h-screen",
         immersiveRoute
           ? ""
-          : "pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0",
+          : "pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-0",
       ].join(
         " "
       )}
@@ -397,9 +410,10 @@ export default function AdminAppShell({
 
       {!immersiveRoute && (
         <MobileBottomNavigation
-          pathname={
-            pathname
-          }
+          pathname={pathname}
+          activeHash={activeHash}
+          onHashChange={setActiveHash}
+          moreOpen={moreOpen}
           onMore={() =>
             setMoreOpen(
               true
@@ -411,6 +425,7 @@ export default function AdminAppShell({
       {!immersiveRoute &&
         moreOpen && (
         <MoreSheet
+          dialogRef={moreSheetRef}
           standalone={
             standalone
           }
@@ -436,103 +451,67 @@ export default function AdminAppShell({
 
 function MobileBottomNavigation({
   pathname,
+  activeHash,
+  onHashChange,
+  moreOpen,
   onMore,
 }: {
   pathname: string;
-
-  onMore:
-    () => void;
+  activeHash: string;
+  onHashChange: (value: string) => void;
+  moreOpen: boolean;
+  onMore: () => void;
 }) {
+  const onDashboard = pathname === "/admin";
+  const offersActive = onDashboard && activeHash === "#admin-offers";
   const moreActive =
-    pathname.startsWith(
-      "/admin/tiktok"
-    ) ||
-    pathname.startsWith(
-      "/admin/seo"
-    ) ||
-    pathname.startsWith(
-      "/admin/zespol"
-    );
+    moreOpen ||
+    pathname.startsWith("/admin/tiktok") ||
+    pathname.startsWith("/admin/seo") ||
+    pathname.startsWith("/admin/statystyki") ||
+    pathname.startsWith("/admin/widocznosc") ||
+    pathname.startsWith("/admin/zespol");
 
   return (
     <div className="admin-tabbar-wrap lg:hidden">
-      <nav
-        aria-label="Nawigacja aplikacji administratora"
-        className="admin-ios-tabbar"
-      >
+      <nav aria-label="Nawigacja aplikacji administratora" className="admin-ios-tabbar">
         <BottomNavLink
           href="/admin"
           label="Panel"
           icon="home"
-          active={
-            pathname ===
-            "/admin"
-          }
+          active={onDashboard && !offersActive}
+          onClick={() => onHashChange("")}
         />
-
+        <BottomNavLink
+          href="/admin#admin-offers"
+          label="Oferty"
+          icon="offers"
+          active={offersActive}
+          onClick={() => onHashChange("#admin-offers")}
+        />
+        <BottomNavLink
+          href="/admin/stylizacje"
+          label="Stylizacje"
+          icon="looks"
+          active={pathname.startsWith("/admin/stylizacje")}
+        />
         <BottomNavLink
           href="/admin/social"
           label="Social"
           icon="social"
-          active={
-            pathname.startsWith(
-              "/admin/social"
-            )
-          }
+          active={pathname.startsWith("/admin/social")}
         />
-
-        <Link
-          href="/admin/nowa-oferta"
-          prefetch
-          aria-label="Dodaj ofertę"
-          className="admin-add-tab"
-        >
-          <span className="admin-add-tab-icon">
-            <PlusIcon />
-          </span>
-
-          <span className="admin-add-tab-label">
-            Dodaj
-          </span>
-        </Link>
-
-        <BottomNavLink
-          href="/admin/statystyki"
-          label="Statystyki"
-          icon="stats"
-          active={
-            pathname.startsWith(
-              "/admin/statystyki"
-            )
-          }
-        />
-
         <button
           type="button"
-          onClick={
-            onMore
-          }
-          aria-current={
-            moreActive
-              ? "page"
-              : undefined
-          }
-          className={[
-            "admin-tabbar-item",
-            moreActive
-              ? "is-active"
-              : "",
-          ].join(
-            " "
-          )}
+          onClick={onMore}
+          aria-expanded={moreOpen}
+          aria-haspopup="dialog"
+          aria-controls="admin-more-sheet"
+          aria-label="Otwórz pozostałe narzędzia"
+          className={["admin-tabbar-item", moreActive ? "is-active" : ""].join(" ")}
         >
-          <BottomIcon
-            type="more"
-          />
-
-          <span>
-            Więcej
-          </span>
+          <BottomIcon type="more" />
+          <span>Więcej</span>
         </button>
       </nav>
     </div>
@@ -540,61 +519,37 @@ function MobileBottomNavigation({
 }
 
 function BottomNavLink({
-  href,
-  label,
-  icon,
-  active,
+  href, label, icon, active, onClick,
 }: {
   href: string;
   label: string;
-
-  icon:
-    | "home"
-    | "social"
-    | "stats";
-
+  icon: "home" | "social" | "offers" | "looks";
   active: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Link
-      href={
-        href
-      }
+      href={href}
       prefetch
-      aria-current={
-        active
-          ? "page"
-          : undefined
-      }
-      className={[
-        "admin-tabbar-item",
-        active
-          ? "is-active"
-          : "",
-      ].join(
-        " "
-      )}
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={["admin-tabbar-item", active ? "is-active" : ""].join(" ")}
     >
-      <BottomIcon
-        type={
-          icon
-        }
-      />
-
-      <span>
-        {label}
-      </span>
+      <BottomIcon type={icon} />
+      <span>{label}</span>
     </Link>
   );
 }
 
 function MoreSheet({
+  dialogRef,
   standalone,
   isIOS,
   installHelpOpen,
   onInstall,
   onClose,
 }: {
+  dialogRef: React.RefObject<HTMLDivElement | null>;
   standalone: boolean;
   isIOS: boolean;
   installHelpOpen: boolean;
@@ -616,7 +571,15 @@ function MoreSheet({
         className="admin-sheet-backdrop lg:hidden"
       />
 
-      <div className="admin-ios-sheet lg:hidden">
+      <div
+          id="admin-more-sheet"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-more-title"
+          tabIndex={-1}
+          className="admin-ios-sheet lg:hidden"
+        >
         <div className="admin-sheet-handle" />
 
         <div className="admin-sheet-header">
@@ -625,7 +588,7 @@ function MoreSheet({
               Trend Admin
             </p>
 
-            <h2 className="admin-sheet-title">
+            <h2 id="admin-more-title" className="admin-sheet-title">
               Więcej
             </h2>
           </div>
@@ -727,7 +690,24 @@ function MoreSheet({
             </section>
           )}
 
+          <p className="admin-sheet-section-label">Narzędzia</p>
           <section className="admin-ios-group">
+            <AppMenuLink
+              href="/admin/nowa-oferta"
+              icon="add"
+              title="Nowa oferta"
+              description="Dodaj produkt do katalogu"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
+            <AppMenuLink
+              href="/admin/statystyki"
+              icon="stats"
+              title="Statystyki"
+              description="Kliknięcia i wyniki produktów"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
             <AppMenuLink
               href="/admin/tiktok"
               icon="tiktok"
@@ -796,6 +776,7 @@ function MoreSheet({
             />
           </section>
 
+          <p className="admin-sheet-section-label">Konto</p>
           <section className="admin-ios-group">
             <form
               action="/auth/signout"
@@ -843,6 +824,8 @@ function AppMenuLink({
   icon:
     | "tiktok"
     | "seo"
+    | "add"
+    | "stats"
     | "offers"
     | "team"
     | "website";
@@ -894,6 +877,12 @@ function AppMenuLink({
         ) : icon ===
           "seo" ? (
           <SeoIcon />
+        ) : icon ===
+          "add" ? (
+          <PlusIcon />
+        ) : icon ===
+          "stats" ? (
+          <BottomIcon type="stats" />
         ) : icon ===
           "team" ? (
           <TeamIcon />
@@ -951,6 +940,8 @@ function BottomIcon({
     | "home"
     | "social"
     | "stats"
+    | "offers"
+    | "looks"
     | "more";
 }) {
   if (
@@ -1005,6 +996,20 @@ function BottomIcon({
           cy="18"
           r="1"
         />
+      </svg>
+    );
+  }
+
+  if (type === "offers") {
+    return <OffersIcon />;
+  }
+
+  if (type === "looks") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M9 4h6l2 4 3 2-2 10H6L4 10l3-2 2-4Z" />
+        <path d="M9 4v4l3 2 3-2V4" />
+        <path d="M8 15h8" />
       </svg>
     );
   }

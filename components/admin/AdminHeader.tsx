@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -149,6 +150,9 @@ function getMobileTitle(
     return "Social";
   }
 
+  if (pathname.startsWith("/admin/stylizacje")) return "Stylizacje";
+  if (pathname.startsWith("/admin/widocznosc")) return "Widoczność";
+
   if (
     pathname.startsWith(
       "/admin/tiktok"
@@ -202,6 +206,7 @@ function getBackHref(
 export default function AdminHeader() {
   const pathname =
     usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const [
     menuOpen,
@@ -211,10 +216,10 @@ export default function AdminHeader() {
       false
     );
 
-  const mobileTitle =
-    getMobileTitle(
-      pathname
-    );
+  const mobileTitle = getMobileTitle(pathname);
+  const showQuickAdd = pathname !== "/admin/nowa-oferta" &&
+    !pathname.startsWith("/admin/edytuj/") &&
+    !/^\/admin\/social\/[^/]+$/.test(pathname);
 
   const showBack =
     pathname !==
@@ -239,40 +244,48 @@ export default function AdminHeader() {
         return;
       }
 
-      const previousOverflow =
-        document.body.style
-          .overflow;
+      const previousOverflow = document.body.style.overflow;
+      const previousFocus = document.activeElement as HTMLElement | null;
+      const dialog = menuRef.current;
+      document.body.style.overflow = "hidden";
+      dialog?.focus();
 
-      document.body.style.overflow =
-        "hidden";
-
-      function handleKeyDown(
-        event:
-          KeyboardEvent
-      ) {
-        if (
-          event.key ===
-          "Escape"
-        ) {
-          setMenuOpen(
-            false
-          );
+      function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setMenuOpen(false);
+          return;
+        }
+        if (event.key !== "Tab" || !dialog) return;
+        const focusables = Array.from(
+          dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+        ).filter((element) => element.getClientRects().length > 0);
+        if (!focusables.length) {
+          event.preventDefault();
+          dialog.focus();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (!dialog.contains(document.activeElement)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+          return;
+        }
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
         }
       }
 
-      window.addEventListener(
-        "keydown",
-        handleKeyDown
-      );
-
+      window.addEventListener("keydown", handleKeyDown);
       return () => {
-        document.body.style.overflow =
-          previousOverflow;
-
-        window.removeEventListener(
-          "keydown",
-          handleKeyDown
-        );
+        document.body.style.overflow = previousOverflow;
+        window.removeEventListener("keydown", handleKeyDown);
+        previousFocus?.focus();
       };
     },
     [
@@ -356,7 +369,7 @@ export default function AdminHeader() {
     <>
       <header className="admin-topbar">
         <div className="admin-mobile-topbar lg:hidden">
-          <div className="flex w-[54px] items-center justify-start">
+          <div className="flex w-[92px] items-center justify-start">
             {showBack ? (
               <Link
                 href={
@@ -397,7 +410,18 @@ export default function AdminHeader() {
             </p>
           </div>
 
-          <div className="flex w-[54px] justify-end">
+          <div className="flex w-[92px] items-center justify-end gap-1">
+            {showQuickAdd && (
+              <Link
+                href="/admin/nowa-oferta"
+                prefetch
+                aria-label="Dodaj nową ofertę"
+                title="Dodaj ofertę"
+                className="admin-mobile-create"
+              >
+                <PlusHeaderIcon />
+              </Link>
+            )}
             <button
               type="button"
               onClick={() =>
@@ -412,6 +436,8 @@ export default function AdminHeader() {
                 menuOpen
               }
               aria-label="Konto administratora"
+              aria-haspopup="dialog"
+              aria-controls="admin-account-sheet"
               className="admin-mobile-profile"
             >
               <ProfileIcon />
@@ -515,6 +541,7 @@ export default function AdminHeader() {
 
       {menuOpen && (
         <AccountMenu
+          menuRef={menuRef}
           onClose={() =>
             setMenuOpen(
               false
@@ -527,8 +554,10 @@ export default function AdminHeader() {
 }
 
 function AccountMenu({
+  menuRef,
   onClose,
 }: {
+  menuRef: React.RefObject<HTMLDivElement | null>;
   onClose:
     () => void;
 }) {
@@ -543,7 +572,7 @@ function AccountMenu({
         className="fixed inset-0 z-[90] bg-stone-950/25 backdrop-blur-[2px]"
       />
 
-      <div className="admin-account-sheet">
+      <div id="admin-account-sheet" ref={menuRef} role="dialog" aria-modal="true" aria-label="Konto administratora" tabIndex={-1} className="admin-account-sheet">
         <div className="mx-auto h-1.5 w-10 rounded-full bg-stone-300 lg:hidden" />
 
         <div className="flex items-center gap-3 px-4 pb-3 pt-4 lg:pt-3">
@@ -665,6 +694,14 @@ function AccountMenu({
         </div>
       </div>
     </>
+  );
+}
+
+function PlusHeaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
   );
 }
 
