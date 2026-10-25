@@ -81,7 +81,7 @@ export default async function StatisticsPage({
         "admins"
       )
       .select(
-        "user_id"
+        "user_id,role"
       )
       .eq(
         "user_id",
@@ -300,6 +300,14 @@ export default async function StatisticsPage({
             </div>
           </div>
         </section>
+
+        {adminData.role === "owner" && (
+          <Link href="/admin/skutecznosc"
+            className="mt-4 flex min-h-16 flex-wrap items-center justify-between gap-3 rounded-[20px] border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-black text-rose-800 transition hover:bg-rose-100">
+            <span>Porównaj produkty, stylizacje i promocje SHEIN w jednym raporcie</span>
+            <span aria-hidden="true">Zobacz skuteczność →</span>
+          </Link>
+        )}
 
         <section className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard

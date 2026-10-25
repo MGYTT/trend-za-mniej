@@ -471,6 +471,7 @@ function MobileBottomNavigation({
     pathname.startsWith("/admin/tiktok") ||
     pathname.startsWith("/admin/seo") ||
     pathname.startsWith("/admin/statystyki") ||
+    pathname.startsWith("/admin/skutecznosc") ||
     pathname.startsWith("/admin/promocje-shein") ||
     pathname.startsWith("/admin/widocznosc") ||
     pathname.startsWith("/admin/zespol");
@@ -708,6 +709,14 @@ function MoreSheet({
               icon="stats"
               title="Statystyki"
               description="Kliknięcia i wyniki produktów"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
+            <AppMenuLink
+              href="/admin/skutecznosc"
+              icon="stats"
+              title="Skuteczność kanałów"
+              description="Produkty, stylizacje i promocje"
               onClick={onClose}
             />
             <div className="admin-ios-divider" />

@@ -27,6 +27,7 @@ const groups: { title: string; items: NavItem[] }[] = [
     title: "Wyniki i ustawienia",
     items: [
       { label: "Statystyki", href: "/admin/statystyki", path: "M3 21V12M9 21V5M15 21v-9M21 21H2" },
+      { label: "Skuteczność kanałów", href: "/admin/skutecznosc", path: "M3 18l6-6 4 3 8-9M3 6v4M3 18v3M9 12v9M15 15v6M21 6v15" },
       { label: "SEO Quality", href: "/admin/seo", path: "M16 10a6 6 0 1 1-12 0 6 6 0 0 1 12 0Zm-1 5 5 5M8 10l2 2 3-4" },
       { label: "Widoczność Google", href: "/admin/widocznosc", path: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18" },
       { label: "Zespół", href: "/admin/zespol", path: "M12 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM3 20v-2a6 6 0 0 1 12 0v2M17 6a3 3 0 0 1 0 6M18 14c2 1 3 3 3 6" },
