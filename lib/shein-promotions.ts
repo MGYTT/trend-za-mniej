@@ -20,7 +20,7 @@ export type SheinPromotion = {
 };
 
 export const SHEIN_PROMOTIONS_UPDATED_AT =
-  "2026-10-08T00:00:00+02:00";
+  "2026-10-25T00:00:00+02:00";
 
 export const SHEIN_PROMOTIONS:
   SheinPromotion[] = [
@@ -41,7 +41,7 @@ export const SHEIN_PROMOTIONS:
       "446ZNTY",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxs0mpouek",
+      "https://onelink.shein.com/58/666a9q9i4z2o",
 
     ctaLabel:
       "Zobacz wybrane produkty",
@@ -67,7 +67,7 @@ export const SHEIN_PROMOTIONS:
       "SBNSL5D",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxt059pts1",
+      "https://onelink.shein.com/58/666avxd0rw8x",
 
     ctaLabel:
       "Sprawdź kupon 60%",
@@ -93,7 +93,7 @@ export const SHEIN_PROMOTIONS:
       "779656K",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxtbzgbcmd",
+      "https://onelink.shein.com/58/666aw977hms3",
 
     ctaLabel:
       "Zobacz TOP 500",
@@ -119,7 +119,7 @@ export const SHEIN_PROMOTIONS:
       "7722P4J",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxtpso6jmc",
+      "https://onelink.shein.com/58/666awn0f7wo8",
 
     ctaLabel:
       "Sprawdź produkty do 4,99 zł",
@@ -145,7 +145,7 @@ export const SHEIN_PROMOTIONS:
       "5MPUS5S",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxu5kx0veq",
+      "https://onelink.shein.com/58/666awyulycct",
 
     ctaLabel:
       "Odkryj nowe trendy",
@@ -171,7 +171,7 @@ export const SHEIN_PROMOTIONS:
       "UBUX5BG",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxux7ckxxe",
+      "https://onelink.shein.com/58/666ax8prgiig",
 
     ctaLabel:
       "Zobacz bestsellery dla kobiet",
@@ -197,7 +197,7 @@ export const SHEIN_PROMOTIONS:
       "6ZDJHSE",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxvczlhdnh",
+      "https://onelink.shein.com/58/666axoi0dnhm",
 
     ctaLabel:
       "Sprawdź wybory dnia",
@@ -223,7 +223,7 @@ export const SHEIN_PROMOTIONS:
       "2T92449",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxvqstbvbi",
+      "https://onelink.shein.com/58/666axyd5ymob",
 
     ctaLabel:
       "Zobacz biżuterię i dodatki",
@@ -249,7 +249,7 @@ export const SHEIN_PROMOTIONS:
       "Q2V335K",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxw4m14yjf",
+      "https://onelink.shein.com/58/666ayc6dr0g4",
 
     ctaLabel:
       "Zobacz torebki i buty",
@@ -275,7 +275,7 @@ export const SHEIN_PROMOTIONS:
       "ED4Z4VZ",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxwif8xcbi",
+      "https://onelink.shein.com/58/666ayo0kg1lv",
 
     ctaLabel:
       "Zobacz promocje nowego sezonu",
@@ -301,7 +301,7 @@ export const SHEIN_PROMOTIONS:
       "T265289",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxy9k8gzk1",
+      "https://onelink.shein.com/58/666ayzur3o5q",
 
     ctaLabel:
       "Zobacz największe hity",
@@ -327,7 +327,7 @@ export const SHEIN_PROMOTIONS:
       "L55664Q",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxylef6q51",
+      "https://onelink.shein.com/58/666az9pwn8u8",
 
     ctaLabel:
       "Zobacz bestsellery dla dzieci",
@@ -353,7 +353,7 @@ export const SHEIN_PROMOTIONS:
       "PZJB5YN",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxz35p7x2x",
+      "https://onelink.shein.com/58/666azlk3ave8",
 
     ctaLabel:
       "Zobacz odzież nocną i bieliznę",
@@ -379,7 +379,7 @@ export const SHEIN_PROMOTIONS:
       "52F5444",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxzixy4czr",
+      "https://onelink.shein.com/58/666azxe9zwiq",
 
     ctaLabel:
       "Zobacz kosmetyki",
@@ -405,7 +405,7 @@ export const SHEIN_PROMOTIONS:
       "472J599",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fxzyq70ss4",
+      "https://onelink.shein.com/58/666b098goxov",
 
     ctaLabel:
       "Zobacz wyprzedaż SHEGLAM",
@@ -431,7 +431,7 @@ export const SHEIN_PROMOTIONS:
       "WUJ5W3X",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy0cjer2pp",
+      "https://onelink.shein.com/58/666b0l2nbuxg",
 
     ctaLabel:
       "Zobacz sportowe bestsellery",
@@ -457,7 +457,7 @@ export const SHEIN_PROMOTIONS:
       "5754Z2D",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy164vfwan",
+      "https://onelink.shein.com/58/666b0uxsxjeb",
 
     ctaLabel:
       "Odkryj wakacyjną kolekcję",
@@ -483,7 +483,7 @@ export const SHEIN_PROMOTIONS:
       "SCK77XC",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy1lx4bms3",
+      "https://onelink.shein.com/58/666b22chdc9t",
 
     ctaLabel:
       "Zobacz promocje beauty",
@@ -509,7 +509,7 @@ export const SHEIN_PROMOTIONS:
       "D764235",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy1xrb0o0v",
+      "https://onelink.shein.com/58/666b2e6o1o5n",
 
     ctaLabel:
       "Zobacz wyprzedaż EMERY ROSE",
@@ -535,7 +535,7 @@ export const SHEIN_PROMOTIONS:
       "K6GX83K",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy2djjx3qa",
+      "https://onelink.shein.com/58/666b2q0us3uv",
 
     ctaLabel:
       "Zobacz kolekcję ANEWSTA",
@@ -561,7 +561,7 @@ export const SHEIN_PROMOTIONS:
       "QJCMYE4",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy2tbsvnef",
+      "https://onelink.shein.com/58/666b31v1ebut",
 
     ctaLabel:
       "Zobacz produkty do kuchni",
@@ -587,7 +587,7 @@ export const SHEIN_PROMOTIONS:
       "U554645",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy3750o1ak",
+      "https://onelink.shein.com/58/666b3nkdnmum",
 
     ctaLabel:
       "Zobacz SHEIN CURVE",
@@ -613,7 +613,7 @@ export const SHEIN_PROMOTIONS:
       "5M33636",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy3ky8dlyc",
+      "https://onelink.shein.com/58/666b3zekddbl",
 
     ctaLabel:
       "Odkryj SHEIN Lifestyle",
@@ -639,7 +639,7 @@ export const SHEIN_PROMOTIONS:
       "Y6QE64T",
 
     affiliateUrl:
-      "https://onelink.shein.com/56/64fy40qhcuvy",
+      "https://onelink.shein.com/58/666b4n2xpbnx",
 
     ctaLabel:
       "Zobacz zabawki antystresowe",
