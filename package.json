@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:homepage-mobile && npm run test:product-detail && npm run test:outfits-ui && next build",
+    "build": "npm run test:homepage-mobile && npm run test:product-detail && npm run test:outfits-ui && npm run test:shein-promotions && next build",
     "start": "next start",
     "lint": "eslint",
     "test:stylizacje": "node --experimental-strip-types --test tests/stylizacje.test.mjs tests/outfit-filters.test.mjs && node --test tests/stylizacje-growth.test.mjs",
@@ -20,7 +20,9 @@
     "test:product-detail": "node --test tests/product-detail.test.mjs",
     "verify:product-detail": "npm run test:product-detail && npm run lint && npm run build",
     "test:outfits-ui": "node --test tests/outfits-ui.test.mjs",
-    "verify:outfits-ui": "npm run test:outfits-ui && npm run lint && npm run build"
+    "verify:outfits-ui": "npm run test:outfits-ui && npm run lint && npm run build",
+    "test:shein-promotions": "node --experimental-strip-types --test tests/shein-promotions-ui.test.mjs",
+    "verify:shein-promotions": "npm run test:shein-promotions && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
