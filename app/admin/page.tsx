@@ -472,156 +472,126 @@ export default async function AdminPage({
         />
 
         <div className="hidden lg:block">
-          <section className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.15em] text-rose-600">
-                  Centrum zarządzania
+          <section aria-labelledby="desktop-dashboard-title" className="admin-desktop-workspace-hero rounded-[28px] p-7 2xl:p-9">
+            <div className="relative flex flex-wrap items-center justify-between gap-6">
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-rose-700">
+                  Centrum zarządzania · Trend za Mniej
                 </p>
-
-                <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
-                  Panel administratora
+                <h1 id="desktop-dashboard-title" className="mt-3 text-[clamp(1.9rem,3vw,2.8rem)] font-black leading-[1.1] tracking-[-0.055em] text-stone-950">
+                  Dzień dobry, {displayName}
                 </h1>
-
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span
-                    className={[
-                      "rounded-full px-3 py-1 text-[10px] font-black",
-                      currentRole ===
-                      "owner"
-                        ? "bg-amber-50 text-amber-800"
-                        : "bg-blue-50 text-blue-700",
-                    ].join(
-                      " "
-                    )}
-                  >
-                    {currentRole ===
-                    "owner"
-                      ? "👑 Właściciel"
-                      : "Administrator"}
+                <p className="mt-3 max-w-xl text-sm leading-7 text-stone-600">
+                  Twoje oferty, stylizacje i wyniki w jednym miejscu. Zacznij od tego, co wymaga uwagi.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-extrabold">
+                  <span className="rounded-full border border-white bg-white px-3 py-1.5 text-rose-700 shadow-sm">
+                    {currentRole === "owner" ? "Właściciel" : "Administrator"}
                   </span>
-
                   {ownerModeActive && (
-                    <span className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black text-green-700">
-                      ✓ Własność ofert
-                      aktywna
+                    <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-800">
+                      Kontrola własności ofert aktywna
                     </span>
                   )}
                 </div>
-
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
-                  Publikuj oferty,
-                  kontroluj ich
-                  widoczność
-                  i zarządzaj produktami
-                  zgodnie z przypisanym
-                  właścicielem.
-                </p>
               </div>
-
-              <div className="grid grid-cols-2 gap-2 sm:flex">
-                <Link
-                  href="/admin/nowa-oferta"
-                  className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 sm:px-6"
-                >
-                  <span className="mr-1.5 text-lg">
-                    +
-                  </span>
-
-                  Dodaj ofertę
+              <div className="flex flex-wrap gap-3">
+                <Link href="/admin/nowa-oferta"
+                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-rose-600 px-5 text-sm font-black text-white shadow-[0_10px_26px_rgba(225,29,72,0.18)] transition hover:bg-rose-700">
+                  + Dodaj ofertę
                 </Link>
-
-                <Link
-                  href="/admin/zespol"
-                  className="flex min-h-12 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-black text-stone-700 transition hover:border-rose-200 hover:text-rose-700 sm:px-6"
-                >
-                  Zespół
+                <Link href="/admin/stylizacje"
+                  className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-rose-200 bg-white px-5 text-sm font-black text-rose-800 transition hover:bg-rose-50">
+                  Kreator stylizacji →
                 </Link>
               </div>
             </div>
           </section>
 
-          <div id="admin-duplicate-review" className="scroll-mt-28">
-          <DuplicateProtectionStatus
-            initialSummary={
-              duplicateSummary
-            }
-          />
-          </div>
-
-          <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            <StatCard
-              icon="box"
-              title="Wszystkie"
-              value={
-                products.length
-              }
-            />
-
-            <StatCard
-              icon="active"
-              title="Aktywne"
-              value={
-                activeProducts
-              }
-            />
-
-            <StatCard
-              icon="hidden"
-              title="Ukryte"
-              value={
-                hiddenProducts
-              }
-            />
-
-            <StatCard
-              icon="hot"
-              title="Gorące"
-              value={
-                featuredProducts
-              }
-            />
-
-            <StatCard
-              icon="click"
-              title="Kliknięcia"
-              value={
-                totalClicks
-              }
-              subtitle="łącznie"
-            />
-
-            <StatCard
-              icon="today"
-              title="Dzisiaj"
-              value={
-                todayClicks
-              }
-              subtitle="kliknięć"
-            />
+          <section aria-labelledby="desktop-kpis" className="mt-7">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h2 id="desktop-kpis" className="text-base font-black tracking-tight text-stone-950">Przegląd serwisu</h2>
+              <Link href="/admin/statystyki" className="inline-flex min-h-10 items-center text-xs font-black text-rose-700 hover:underline">
+                Pełne statystyki →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
+              <StatCard icon="box" title="Wszystkie" value={products.length} />
+              <StatCard icon="active" title="Aktywne" value={activeProducts} />
+              <StatCard icon="hidden" title="Ukryte" value={hiddenProducts} />
+              <StatCard icon="hot" title="Wyróżnione" value={featuredProducts} />
+              <StatCard icon="click" title="Kliknięcia" value={totalClicks} subtitle="łącznie" />
+              <StatCard icon="today" title="Dzisiaj" value={todayClicks} subtitle="kliknięć" />
+            </div>
           </section>
 
-          <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <QuickAction
-              href="/admin/nowa-oferta"
-              icon="add"
-              title="Nowa oferta"
-              description="Dodaj produkt"
-            />
+          <div className="mt-7 grid items-start gap-5 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+            <section aria-labelledby="desktop-tasks" className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm xl:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.13em] text-rose-700">Twój dzień</p>
+                  <h2 id="desktop-tasks" className="mt-1 text-xl font-black tracking-tight text-stone-950">Do przejrzenia</h2>
+                </div>
+                <span className="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-black text-stone-600">
+                  {hiddenProducts + duplicateSummary.conflicts} pozycji
+                </span>
+              </div>
+              <div className="mt-4 grid gap-2">
+                {hiddenProducts > 0 && (
+                  <Link href="/admin?view=hidden#admin-offers"
+                    className="admin-desktop-dashboard-task flex min-h-16 items-center gap-4 rounded-2xl border border-stone-200 bg-[#fcfbfb] px-4 py-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-lg text-amber-700" aria-hidden="true">◌</span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm font-black text-stone-950">Ukryte oferty</strong>
+                      <small className="mt-1 block text-xs leading-5 text-stone-500">Sprawdź produkty przed publikacją</small>
+                    </span>
+                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-black text-amber-800">{hiddenProducts}</span>
+                    <span aria-hidden="true" className="text-lg text-stone-400">›</span>
+                  </Link>
+                )}
+                {duplicateSummary.conflicts > 0 && (
+                  <a href="#admin-duplicate-review"
+                    className="admin-desktop-dashboard-task flex min-h-16 items-center gap-4 rounded-2xl border border-stone-200 bg-[#fcfbfb] px-4 py-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-lg text-rose-700" aria-hidden="true">!</span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm font-black text-stone-950">Możliwe duplikaty</strong>
+                      <small className="mt-1 block text-xs leading-5 text-stone-500">Przejrzyj oznaczone konflikty</small>
+                    </span>
+                    <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700">{duplicateSummary.conflicts}</span>
+                    <span aria-hidden="true" className="text-lg text-stone-400">›</span>
+                  </a>
+                )}
+                {hiddenProducts === 0 && duplicateSummary.conflicts === 0 && (
+                  <div className="flex min-h-20 items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-4 py-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-emerald-700" aria-hidden="true">✓</span>
+                    <p className="text-sm font-bold leading-6 text-stone-700">Nie ma ukrytych ofert ani oznaczonych konfliktów.</p>
+                  </div>
+                )}
+              </div>
+              <Link href="/admin?view=all#admin-offers" className="mt-4 inline-flex min-h-10 items-center text-xs font-black text-rose-700 hover:underline">
+                Przejdź do katalogu →
+              </Link>
+            </section>
 
-            <QuickAction
-              href="/admin/statystyki"
-              icon="stats"
-              title="Analityka"
-              description="Sprawdź wyniki"
-            />
+            <section aria-labelledby="desktop-tools" className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm xl:p-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.13em] text-rose-700">Skróty</p>
+                <h2 id="desktop-tools" className="mt-1 text-xl font-black tracking-tight text-stone-950">Najczęstsze działania</h2>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 2xl:grid-cols-1">
+                <QuickAction href="/admin/nowa-oferta" icon="add" title="Nowa oferta" description="Dodaj produkt do katalogu" />
+                <QuickAction href="/admin/statystyki" icon="stats" title="Analityka" description="Przegląd kliknięć afiliacyjnych" />
+                <QuickAction href="/admin/zespol" icon="team" title="Zespół" description="Role i właściciele ofert" />
+              </div>
+            </section>
+          </div>
 
-            <QuickAction
-              href="/admin/zespol"
-              icon="team"
-              title="Zespół"
-              description="Role i właściciele"
-            />
+          <section id="admin-duplicate-review" aria-label="Kontrola jakości katalogu" className="mt-7 scroll-mt-28">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-black tracking-tight text-stone-950">Kontrola jakości katalogu</h2>
+              <span className="text-xs text-stone-500">Diagnostyka i możliwe duplikaty</span>
+            </div>
+            <DuplicateProtectionStatus initialSummary={duplicateSummary} />
           </section>
         </div>
 

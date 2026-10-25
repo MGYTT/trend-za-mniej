@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -161,6 +162,7 @@ export default function AdminProductList({
 }: Props) {
   const router =
     useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const [
     isRefreshing,
@@ -380,6 +382,21 @@ export default function AdminProductList({
       supabase,
     ]
   );
+
+  // The / shortcut focuses the catalog only on desktop and never while editing text.
+  useEffect(() => {
+    function focusCatalog(event: KeyboardEvent) {
+      if (event.key !== "/" || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (window.innerWidth < 1024) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+      document.getElementById("admin-offers")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    window.addEventListener("keydown", focusCatalog);
+    return () => window.removeEventListener("keydown", focusCatalog);
+  }, []);
 
   /*
    * Po zmianie filtrów wracamy
@@ -921,6 +938,7 @@ export default function AdminProductList({
 
             <input
               id="admin-product-search"
+              ref={searchRef}
               type="search"
               enterKeyHint="search"
               maxLength={120}
@@ -938,6 +956,11 @@ export default function AdminProductList({
               placeholder="Nazwa, kategoria lub adres..."
               className="min-h-12 w-full rounded-xl border border-stone-200 bg-stone-50 py-2.5 pl-10 pr-12 text-base outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
             />
+            {!query && (
+              <kbd aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-stone-200 bg-white px-2 py-1 text-xs font-black text-stone-400 lg:block">
+                /
+              </kbd>
+            )}
             {query && (
               <button type="button" onClick={() => setQuery("")} aria-label="Wyczyść wyszukiwanie produktów"
                 className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-xl text-stone-500 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-500">
@@ -1269,9 +1292,9 @@ export default function AdminProductList({
                     key={
                       product.id
                     }
-                    className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm transition-colors lg:hover:border-rose-200"
                   >
-                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[120px_minmax(0,1fr)_210px]">
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:grid-cols-[105px_minmax(0,1fr)_210px]">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-[14px] bg-stone-100">
                         <img
                           src={

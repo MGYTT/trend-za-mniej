@@ -445,8 +445,12 @@ export default function AdminHeader() {
           </div>
         </div>
 
-        <div className="mx-auto hidden min-h-[62px] max-w-7xl items-center justify-between gap-3 px-6 lg:flex">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="mx-auto hidden min-h-[62px] max-w-7xl items-center justify-between gap-3 px-6 lg:flex xl:max-w-none xl:px-8">
+          <div className="hidden min-w-0 flex-col justify-center xl:flex">
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-rose-600">Trend Admin / Zarządzanie</p>
+            <p className="mt-1 truncate text-[15px] font-black tracking-tight text-stone-900">{mobileTitle}</p>
+          </div>
+          <div className="flex min-w-0 items-center gap-3 xl:hidden">
             <BrandLogo
               href="/admin"
               compact
@@ -459,7 +463,7 @@ export default function AdminHeader() {
 
           <nav
             aria-label="Nawigacja administratora"
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 xl:hidden"
           >
             {navigation.map(
               (

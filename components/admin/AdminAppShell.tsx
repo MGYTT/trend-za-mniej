@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AdminDesktopSidebar from "@/components/admin/AdminDesktopSidebar";
 
 import {
   type ReactNode,
@@ -398,7 +399,7 @@ export default function AdminAppShell({
   return (
     <div
       className={[
-        "admin-app-root min-h-screen",
+        "admin-app-root min-h-screen min-w-0 xl:pl-[252px]",
         immersiveRoute
           ? ""
           : "pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-0",
@@ -406,6 +407,7 @@ export default function AdminAppShell({
         " "
       )}
     >
+      <AdminDesktopSidebar />
       {children}
 
       {!immersiveRoute && (

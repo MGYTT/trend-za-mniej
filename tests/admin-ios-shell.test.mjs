@@ -52,7 +52,7 @@ test("mobile header has correct titles, a quick create action and account access
   assert.match(header, /aria-label="Konto administratora"/);
   assert.match(header, /showQuickAdd/);
   assert.match(newStyles, /\.admin-mobile-topbar\s*\{\s*display: flex/);
-  assert.match(header, /className="mx-auto hidden min-h-\[62px\].*lg:flex"/);
+  assert.match(header, /className="mx-auto hidden min-h-\[62px\].*lg:flex/);
 });
 
 test("immersive offer and social editing still suppress the bottom navigation", () => {
