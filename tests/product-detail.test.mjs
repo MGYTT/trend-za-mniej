@@ -50,7 +50,7 @@ test("mobile purchase CTA remains visible and accessible without overlap", () =>
 
 test("related looks show real products, outfit totals and no invented bundles", () => {
   assert.match(page, /getLooksForProduct\(/);
-  assert.match(page, /resolveLooks\(allProducts\)/);
+  assert.match(page, /getAllResolvedLooks\(allProducts\)/);
   assert.match(page, /look\.products\.slice\(0, 2\)\.map/);
   assert.match(page, /<ProductPhoto\s+src=\{lookProduct\.image\}/);
   assert.match(page, /formatPrice\(look\.total\)/);
