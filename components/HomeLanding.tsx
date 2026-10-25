@@ -300,10 +300,11 @@ function Guides() {
       <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8 sm:py-16">
         <SectionHeading id="home-guides-title" label="Poradniki" title="Nie wiesz, od czego zacząć?" description="Praktyczne wskazówki o fasonach, rozmiarach i łączeniu ubrań, zanim wybierzesz ofertę." href="/poradniki" linkLabel="Wszystkie poradniki" />
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {STYLE_GUIDES.slice(0, 3).map((guide) => (
+          {STYLE_GUIDES.filter((guide) => ["jak-dobrac-rozmiar-ubran-przez-internet", "jak-skompletowac-stylizacje-do-100-zl", "jak-laczyc-kolory-ubran-w-stylizacji"].includes(guide.slug)).map((guide) => (
             <Link key={guide.slug} href={`/poradniki/${guide.slug}`} className="group flex min-h-[205px] flex-col rounded-2xl border border-stone-200 bg-white p-6 transition hover:border-rose-300 hover:shadow-md focus-visible:outline-4 focus-visible:outline-rose-300">
-              <span className="text-xs font-black uppercase tracking-wider text-rose-700">{guide.category}</span>
+              <span className="text-xs font-black uppercase tracking-wider text-rose-700">{guide.category} · ok. {guide.readMinutes} min</span>
               <strong className="mt-3 text-lg font-black leading-snug text-stone-950 group-hover:text-rose-700">{guide.title}</strong>
+              <span className="mt-3 line-clamp-2 text-sm leading-6 text-stone-600">{guide.quickAnswer}</span>
               <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-black text-rose-700">Czytaj poradnik <Arrow /></span>
             </Link>
           ))}

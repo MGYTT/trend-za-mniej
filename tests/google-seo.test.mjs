@@ -6,6 +6,7 @@ import { SITE_NAME, SITE_DEFAULT_TITLE, SITE_DESCRIPTION } from "../lib/site.ts"
 const load = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const layout = load("../app/layout.tsx");
 const home = load("../app/page.tsx");
+const landing = load("../components/HomeLanding.tsx");
 const outfits = load("../app/stylizacje/page.tsx");
 const guides = load("../app/poradniki/page.tsx");
 const guideDetail = load("../app/poradniki/[slug]/page.tsx");
@@ -23,8 +24,10 @@ test("distinctive, truthful home result without duplicated brand name", () => {
   assert.match(SITE_DESCRIPTION, /100–200 zł/);
   assert.match(SITE_DESCRIPTION, /sprawdź ceny u sprzedawcy/);
   assert.doesNotMatch(SITE_DESCRIPTION, /gwarantuj|najtańsz|codziennie nowe/i);
-  assert.match(home, /Gotowe stylizacje\./);
-  assert.match(home, /Moda za mniej\./);
+  assert.match(home, /<HomeLanding looks=\{looks\} products=\{selectedProducts\} \/>/);
+  assert.match(landing, /function Hero/);
+  assert.match(landing, /Twój styl\. Twój budżet\./);
+  assert.match(landing, /function Guides\(\)/);
   assert.doesNotMatch(home, /Codziennie nowe modne perełki/);
 });
 
@@ -46,7 +49,7 @@ test("outfit and guide listing titles describe their distinct content", () => {
   assert.match(outfits, /title: "Stylizacje damskie do 100, 150 i 200 zł"/);
   assert.match(outfits, /canonical: "\/stylizacje"/);
   assert.match(outfits, /cen zapisanych w katalogu/i);
-  assert.match(guides, /title: "Poradniki modowe: stylizacje i zakupy z głową"/);
+  assert.match(guides, /title: "Poradniki modowe: rozmiary, stylizacje i zakupy z głową"/);
   assert.match(guides, /canonical: "\/poradniki"/);
   assert.match(guideDetail, /canonical: "\/poradniki\/" \+ guide\.slug/);
   assert.match(guideDetail, /images: \[\{ url: "\/opengraph-image"/);

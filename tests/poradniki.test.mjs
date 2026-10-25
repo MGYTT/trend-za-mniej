@@ -9,13 +9,14 @@ const listing = read("../app/poradniki/page.tsx");
 const detail = read("../app/poradniki/[slug]/page.tsx");
 const sitemap = read("../app/sitemap.ts");
 const home = read("../app/page.tsx");
+const landing = read("../components/HomeLanding.tsx");
 const outfits = read("../app/stylizacje/page.tsx");
 const outfitDetail = read("../app/stylizacje/[slug]/page.tsx");
 const footer = read("../components/SiteFooter.tsx");
 const lookBySlug = new Map(LOOKS.map((look) => [look.slug, look]));
 
-test("three editorial guides, unique public slugs", () => {
-  assert.equal(STYLE_GUIDES.length, 3);
+test("six editorial guides, unique public slugs and useful quick answers", () => {
+  assert.equal(STYLE_GUIDES.length, 6);
   assert.equal(new Set(STYLE_GUIDES.map((guide) => guide.slug)).size, STYLE_GUIDES.length);
   for (const guide of STYLE_GUIDES) {
     assert.match(guide.slug, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -23,6 +24,11 @@ test("three editorial guides, unique public slugs", () => {
     assert.ok(guide.title.length > 35);
     assert.ok(guide.summary.length > 70);
     assert.ok(guide.lead.length > 120);
+    assert.ok(guide.quickAnswer.length > 110);
+    assert.equal(guide.quickSteps.length, 3);
+    assert.ok(guide.quickSteps.every((step) => step.length > 20));
+    assert.ok(guide.readMinutes >= 3 && guide.readMinutes <= 8);
+    assert.ok(["Budżet", "Zakupy online", "Styl", "Okazje"].includes(guide.topic));
     assert.equal(guide.sections.length, 3);
     assert.equal(guide.checklist.length, 5);
     assert.ok(new Set(guide.sections.map((section) => section.id)).size === 3);
@@ -36,7 +42,10 @@ test("three editorial guides, unique public slugs", () => {
 
 test("only existing outfit configurations within each guide budget", () => {
   for (const guide of STYLE_GUIDES) {
-    assert.ok(guide.relatedLookSlugs.length >= 1);
+    // The original outfit-related guides retain their existing links.
+    if (["jak-ubrac-sie-do-pracy-do-150-zl", "co-zalozyc-na-weekend-do-150-zl", "jak-skompletowac-stylizacje-do-100-zl"].includes(guide.slug)) {
+      assert.ok(guide.relatedLookSlugs.length >= 1);
+    }
     assert.equal(new Set(guide.relatedLookSlugs).size, guide.relatedLookSlugs.length);
     const budget = /do-(100|150)-zl/.exec(guide.slug);
     for (const outfitSlug of guide.relatedLookSlugs) {
@@ -68,9 +77,13 @@ test("editorials hide unavailable looks and explain saved prices", () => {
   assert.match(detail, /getProducts\(\)/);
   assert.match(detail, /formatPrice\(look\.total\)/);
   assert.match(detail, /ceny to sumy zapisane/i);
+  assert.match(detail, /GuideChecklist/);
+  assert.match(detail, /GuideBudgetPlanner/);
+  assert.match(detail, /Krótka odpowiedź/);
+  assert.match(detail, /Plan w trzech krokach/);
   assert.match(detail, /suma zapisanych cen, bez dostawy/i);
   assert.match(detail, /Bez fizycznych testów produktów/);
-  assert.match(listing, /udawania, że przetestowaliśmy każdą rzecz/i);
+  assert.match(listing, /nie wykonaliśmy/i);
   assert.match(detail, /\/afiliacja/);
   assert.doesNotMatch(detail, /href=\{product\.affiliateUrl\}/);
 });
@@ -78,6 +91,8 @@ test("editorials hide unavailable looks and explain saved prices", () => {
 test("index and sitemap expose the guide hub and all editorial pages", () => {
   assert.match(listing, /canonical: "\/poradniki"/);
   assert.match(listing, /"ItemList"/);
+  assert.match(listing, /"CollectionPage"/);
+  assert.match(listing, /<GuideExplorer guides=\{cards\}/);
   assert.match(listing, /numberOfItems: STYLE_GUIDES\.length/);
   assert.match(sitemap, /\/poradniki/);
   assert.match(sitemap, /STYLE_GUIDES\.map\(\(guide\) =>/);
@@ -85,8 +100,9 @@ test("index and sitemap expose the guide hub and all editorial pages", () => {
 });
 
 test("home, footer, and outfits link to guides", () => {
-  assert.match(home, /<EditorialGuides \/>/);
-  assert.match(home, /href=\{"\/poradniki\/" \+ guide\.slug\}/);
+  assert.match(home, /<HomeLanding looks=\{looks\} products=\{selectedProducts\} \/>/);
+  assert.match(landing, /function Guides\(\)/);
+  assert.match(landing, /href=\{\`\/poradniki\/\$\{guide\.slug\}\`\}/);
   assert.match(footer, /"\/poradniki"/);
   assert.match(outfits, /href="\/poradniki"/);
   assert.match(outfitDetail, /getGuidesForLook\(look\.slug\)/);
