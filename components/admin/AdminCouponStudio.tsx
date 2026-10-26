@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ExtensionOfferInput } from "@/lib/extension-offer-validation";
+import type { StoreRecord } from "@/lib/stores";
 
 export type ExtensionOfferRow = {
-  id: string; store_name: string; store_domains: string[];
+  id: string; store_name: string; store_domains: string[]; store_slug: string | null;
   title: string; description: string;
   offer_type: ExtensionOfferInput["offerType"]; code: string | null;
   page_path: string; published: boolean; valid_until: string | null;
@@ -14,14 +15,14 @@ export type ExtensionOfferRow = {
 
 type Form = Omit<ExtensionOfferInput, "storeDomains"> & { storeDomains: string };
 const EMPTY: Form = {
-  id: null, storeName: "", storeDomains: "", title: "", description: "",
+  id: null, storeName: "", storeSlug: null, storeDomains: "", title: "", description: "",
   offerType: "coupon", code: "", pagePath: "/kody-rabatowe",
   published: false, verified: false, validUntil: null,
 };
 
 const classes = "mt-1.5 min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none";
 
-export default function AdminCouponStudio({ initialOffers }: { initialOffers: ExtensionOfferRow[] }) {
+export default function AdminCouponStudio({ initialOffers, stores }: { initialOffers: ExtensionOfferRow[]; stores: StoreRecord[] }) {
   const router = useRouter();
   const [form, setForm] = useState<Form>({ ...EMPTY });
   const [editing, setEditing] = useState(false);
@@ -38,7 +39,7 @@ export default function AdminCouponStudio({ initialOffers }: { initialOffers: Ex
   function edit(row: ExtensionOfferRow) {
     setEditing(true);
     setForm({
-      id: row.id, storeName: row.store_name,
+      id: row.id, storeName: row.store_name, storeSlug: row.store_slug,
       storeDomains: row.store_domains.join(", "), title: row.title,
       description: row.description, offerType: row.offer_type,
       code: row.code, pagePath: row.page_path,
@@ -122,12 +123,22 @@ export default function AdminCouponStudio({ initialOffers }: { initialOffers: Ex
         <h2 className="text-xl font-black">{editing ? "Edytuj promocję" : "Dodaj promocję"}</h2>
         <p className="mt-2 text-xs leading-6 text-stone-600">Nie wpisuj wymyślonych kodów. Link do zewnętrznego sklepu pozostaje zarządzany na stronie, nie we wtyczce.</p>
         <div className="mt-5 grid gap-4">
+          <label className="text-xs font-black">Wybierz sklep z katalogu
+            <select className={classes} value={form.storeSlug || ""} onChange={e => {
+              const row = stores.find(s => s.slug === e.target.value);
+              setForm(old => ({ ...old, storeSlug: row?.slug || null,
+                storeName: row?.name || "", storeDomains: row?.domains.join(", ") || "" }));
+            }}>
+              <option value="">— Wybierz sklep —</option>
+              {stores.map(s => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+            </select>
+          </label>
           <label className="text-xs font-black">Sklep
-            <input className={classes} value={form.storeName} maxLength={120}
+            <input className={classes} value={form.storeName} disabled maxLength={120}
               onChange={(e) => patch("storeName", e.target.value)} placeholder="Nazwa sklepu" />
           </label>
           <label className="text-xs font-black">Domeny (oddziel przecinkiem)
-            <input className={classes} value={form.storeDomains}
+            <input className={classes} value={form.storeDomains} disabled
               onChange={(e) => patch("storeDomains", e.target.value)} placeholder="sklep.pl, sklep.com" />
           </label>
           <label className="text-xs font-black">Tytuł

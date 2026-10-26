@@ -1,6 +1,7 @@
 export type ExtensionOfferInput = {
   id: string | null;
   storeName: string;
+  storeSlug: string | null;
   storeDomains: string[];
   title: string;
   description: string;
@@ -32,6 +33,8 @@ export function validateExtensionOffer(raw: unknown):
   const id = o.id === null || o.id === undefined || o.id === "" ? null : str("id");
   if (id !== null && !UUID.test(id)) return { error: "Nieprawidłowe ID oferty." };
   const storeName = str("storeName");
+  const storeSlug = str("storeSlug") || null;
+  if (storeSlug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(storeSlug)) return { error: "Nieprawidłowy identyfikator sklepu." };
   const title = str("title");
   const description = str("description");
   if (storeName.length < 2 || storeName.length > 120) return { error: "Nazwa sklepu: 2–120 znaków." };
@@ -59,12 +62,13 @@ export function validateExtensionOffer(raw: unknown):
     return { error: "Nieprawidłowa data ważności." };
   if (typeof o.published !== "boolean" || typeof o.verified !== "boolean")
     return { error: "Nieprawidłowe pola publikacji lub weryfikacji." };
+  if (o.published && !storeSlug) return { error: "Wybierz zapisany sklep przed publikacją." };
   if (o.published && !o.verified)
     return { error: "Przed publikacją potwierdź sprawdzenie oferty i warunków." };
   if (o.published && validUntil && validUntil < new Date().toISOString().slice(0, 10))
     return { error: "Nie publikuj wygasłej oferty." };
   return { value: {
-    id, storeName, storeDomains, title, description,
+    id, storeName, storeSlug, storeDomains, title, description,
     offerType: offerType as ExtensionOfferInput["offerType"],
     code: offerType === "promotion" ? null : code,
     pagePath, published: o.published, verified: o.verified, validUntil,

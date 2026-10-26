@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminCouponStudio from "@/components/admin/AdminCouponStudio";
+import AdminStoreStudio from "@/components/admin/AdminStoreStudio";
+import type { StoreRecord } from "@/lib/stores";
 import { createClient } from "@/lib/supabase/server";
 import type { ExtensionOfferRow } from "@/components/admin/AdminCouponStudio";
 
@@ -34,6 +36,7 @@ export default async function AdminCouponPage() {
 }
 
 async function OfferManager({ supabase }: { supabase: Awaited<ReturnType<typeof createClient>> }) {
+  const storeResult = await supabase.from("extension_stores").select("*").order("name").limit(300);
   const { data, error } = await supabase.from("extension_offers")
     .select("*").order("created_at", { ascending: false }).limit(500);
   if (error) return (
@@ -41,5 +44,7 @@ async function OfferManager({ supabase }: { supabase: Awaited<ReturnType<typeof 
       Nie można pobrać kodów. Sprawdź, czy migracja tabeli extension_offers została wykonana.
     </p>
   );
-  return <AdminCouponStudio initialOffers={(data || []) as ExtensionOfferRow[]} />;
+  if (storeResult.error) return <p role="alert" className="mt-6 text-sm text-red-700">Błąd pobierania sklepów. Sprawdź migrację.</p>;
+  const stores = (storeResult.data || []) as StoreRecord[];
+  return <><AdminStoreStudio stores={stores} /><div className="mt-10 border-t border-stone-200 pt-8"><h2 className="text-2xl font-black">Kody dla sklepów</h2><AdminCouponStudio initialOffers={(data || []) as ExtensionOfferRow[]} stores={stores} /></div></>;
 }

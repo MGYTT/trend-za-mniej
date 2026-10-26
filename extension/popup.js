@@ -2,7 +2,7 @@ import { filterOffers, matchesStore, trustedSiteLink } from "./logic.mjs";
 
 const API = "https://trendzamniej.pl/api/extension/offers";
 const $ = (id) => document.getElementById(id);
-const state = { host: "", offers: [], search: "", type: "all" };
+const state = { host: "", offers: [], stores: [], search: "", type: "all" };
 const today = new Intl.DateTimeFormat("sv-SE", {
   timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit",
 }).format(new Date());
@@ -70,15 +70,24 @@ async function load() {
     const response = await fetch(API, { signal: controller.signal, cache: "no-store" });
     if (!response.ok) throw new Error("API " + response.status);
     const data = await response.json();
-    if (data.version !== 1 || !Array.isArray(data.offers)) throw new Error("Invalid API");
+    if (![1,2].includes(data.version) || !Array.isArray(data.offers)) throw new Error("Invalid API");
+    state.stores = Array.isArray(data.stores) ? data.stores : [];
     state.offers = data.offers;
     $("status").textContent = "";
   } catch {
     $("status").textContent = "Nie można teraz pobrać promocji. Sprawdź połączenie lub spróbuj ponownie później.";
     state.offers = [];
   } finally { clearTimeout(id); }
-  if (state.host && state.offers.some((o) => matchesStore(state.host, o.domains))) {
-    $("context").textContent = "Znaleziono promocje pasujące do " + state.host;
+  const store = state.stores.find(s => matchesStore(state.host, s.domains));
+  if (store) {
+    $("context").textContent = store.name + ": " + store.offerCount + " ofert · Cashback nieaktywny";
+    const url = trustedSiteLink(store.pageUrl);
+    if (url) {
+      const link = $("store-link");
+      link.href = url;
+      link.hidden = false;
+      link.textContent = "Zobacz wszystkie promocje " + store.name + " →";
+    }
   }
   render();
 }
