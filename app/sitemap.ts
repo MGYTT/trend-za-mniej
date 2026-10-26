@@ -21,6 +21,7 @@ import {
 import { getProducts } from "@/lib/products";
 import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { STYLE_GUIDES } from "@/lib/poradniki";
+import { getPublicShopDirectory } from "@/lib/stores";
 
 export const revalidate =
   300;
@@ -372,12 +373,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data: storeRows, error: storeError } = await supabase
     .from("extension_stores").select("slug,updated_at").eq("published", true);
   if (storeError) console.warn("Sitemap store catalog:", storeError.code);
+  // Avoid indexing empty merchant pages with no published, current offers.
+  const { stores: directoryStores } = await getPublicShopDirectory();
+  const activeStoreSlugs = new Set(
+    directoryStores.filter((store) => store.offerCount > 0).map((store) => store.slug),
+  );
   const merchantPages: MetadataRoute.Sitemap = [
-    { url: `${siteUrl}/kody-rabatowe/shein` },
-    ...(storeRows ?? []).map((store) => ({
-      url: `${siteUrl}/kody-rabatowe/${store.slug}`,
-      lastModified: toValidDate(store.updated_at),
-    })),
+    ...(activeStoreSlugs.has("shein") ? [{ url: `${siteUrl}/kody-rabatowe/shein` }] : []),
+    ...(storeRows ?? [])
+      .filter((store) => activeStoreSlugs.has(store.slug))
+      .map((store) => ({
+        url: `${siteUrl}/kody-rabatowe/${store.slug}`,
+        lastModified: toValidDate(store.updated_at),
+      })),
   ];
 
   return [
