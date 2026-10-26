@@ -35,7 +35,7 @@ async function save(request: NextRequest, edit: boolean) {
   const payload = {
     slug: input.slug, name: input.name, description: input.description,
     domains: input.domains, website_url: input.websiteUrl,
-    category: input.category, cashback_state: input.cashbackState,
+    category: input.category,
     published: input.published, updated_at: new Date().toISOString(),
   };
   const operation = edit

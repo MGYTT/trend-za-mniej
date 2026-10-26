@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Trendzamniej — Kody i promocje",
-  "version": "0.2.0",
-  "description": "Rozpoznaje sklepy, pokazuje dostępne kody i promocje. Bez śledzenia historii na serwerze i bez automatycznej podmiany afiliacji.",
+  "version": "0.3.0",
+  "description": "Wyszukuje kody i promocje dopasowane do odwiedzanego sklepu. Wszystkie przejścia na strony sklepów wymagają kliknięcia użytkownika.",
   "homepage_url": "https://trendzamniej.pl",
   "action": {
     "default_title": "Trendzamniej — znajdź promocje",

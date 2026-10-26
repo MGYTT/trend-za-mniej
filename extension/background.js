@@ -37,7 +37,7 @@ async function updateBadge(tabId, url) {
   chrome.action.setBadgeBackgroundColor({ tabId, color: "#be123c" }).catch(() => {});
   chrome.action.setBadgeText({ tabId, text: count > 0 ? String(Math.min(count, 99)) : "" }).catch(() => {});
   chrome.action.setTitle({ tabId, title: store
-    ? store.name + ": " + count + " ofert. Kliknij, aby sprawdzić kody. Cashback nieaktywny."
+    ? store.name + ": " + count + " ofert. Kliknij, aby sprawdzić kody."
     : "Trendzamniej — wyszukaj kody i promocje" }).catch(() => {});
 }
 chrome.tabs.onUpdated.addListener((tabId, changes, tab) => {
