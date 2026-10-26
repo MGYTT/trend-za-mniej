@@ -27,11 +27,26 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
   const [form, setForm] = useState<Form>({ ...EMPTY });
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "published" | "draft" | "expired">("all");
+  const today = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  const isExpired = (row: ExtensionOfferRow) => Boolean(row.valid_until && row.valid_until < today);
+  const counts = {
+    all: initialOffers.length,
+    published: initialOffers.filter(row => row.published && !isExpired(row)).length,
+    draft: initialOffers.filter(row => !row.published && !isExpired(row)).length,
+    expired: initialOffers.filter(isExpired).length,
+  };
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const visible = initialOffers.filter((item) =>
-    (item.store_name + " " + item.title + " " + (item.code || ""))
-      .toLocaleLowerCase("pl").includes(query.toLocaleLowerCase("pl")));
+  const visible = initialOffers.filter((item) => {
+    if (filter === "published" && (!item.published || isExpired(item))) return false;
+    if (filter === "draft" && (item.published || isExpired(item))) return false;
+    if (filter === "expired" && !isExpired(item)) return false;
+    return (item.store_name + " " + item.title + " " + (item.code || ""))
+      .toLocaleLowerCase("pl").includes(query.toLocaleLowerCase("pl"));
+  });
   function patch<K extends keyof Form>(field: K, value: Form[K]) {
     setForm((old) => ({ ...old, [field]: value }));
     setMessage("");
@@ -46,6 +61,22 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
       validUntil: row.valid_until, published: row.published, verified: false,
     });
     setMessage("Potwierdź ponownie weryfikację kodu przed zapisaniem opublikowanej oferty.");
+    document.getElementById("coupon-form")?.scrollIntoView({ behavior: "smooth" });
+  }
+  function duplicate(row: ExtensionOfferRow) {
+    setEditing(false);
+    setForm({
+      id: null, storeName: row.store_name, storeSlug: row.store_slug,
+      storeDomains: row.store_domains.join(", "),
+      title: ("Kopia: " + row.title).slice(0, 180), description: row.description,
+      offerType: row.offer_type,
+      // Keep the existing code as a template: database constraints require a code even for drafts.
+      // The form still starts unpublished and requires manual verification before any publication.
+      code: row.code,
+      pagePath: row.page_path, destinationUrl: row.destination_url,
+      validUntil: null, published: false, verified: false,
+    });
+    setMessage("Utworzono kopię jako nowy szkic. Skopiowany kod wymaga ponownego sprawdzenia; zaktualizuj tytuł, termin i warunki przed publikacją.");
     document.getElementById("coupon-form")?.scrollIntoView({ behavior: "smooth" });
   }
   async function save(published: boolean) {
@@ -99,19 +130,38 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
         </div>
         <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
           aria-label="Szukaj promocji" placeholder="Szukaj sklepu lub kodu" className={classes + " mt-4"} />
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Status ofert">
+          {([
+            ["all", "Wszystkie"], ["published", "Opublikowane"],
+            ["draft", "Szkice"], ["expired", "Wygasłe"],
+          ] as const).map(([key, label]) => (
+            <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}
+              className={"min-h-9 rounded-full border px-3 text-xs font-black " +
+                (filter === key ? "border-stone-950 bg-stone-950 text-white" :
+                  "border-stone-200 bg-white text-stone-600 hover:border-rose-300")}>
+              {label} ({counts[key]})
+            </button>
+          ))}
+        </div>
         <div className="mt-4 grid max-h-[620px] gap-2 overflow-y-auto">
           {visible.length === 0 && <p className="text-sm text-stone-600">Brak zapisanych ofert.</p>}
           {visible.map((item) => (
             <div key={item.id} className="rounded-xl border border-stone-200 p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-black">{item.store_name}</p>
-                <span className="text-xs font-bold text-stone-500">{item.published ? "Opublikowana" : "Szkic"}</span>
+                <span className={"text-xs font-bold " + (isExpired(item) ? "text-rose-700" : "text-stone-500")}>
+                  {isExpired(item) ? "Wygasła" : item.published ? "Opublikowana" : "Szkic"}
+                </span>
               </div>
               <p className="mt-1 text-sm text-stone-700">{item.title}</p>
-              <p className="mt-1 text-xs text-stone-500">{item.code || "Bez kodu"} · {item.offer_type}</p>
+              <p className="mt-1 text-xs text-stone-500">
+                {item.code || "Bez kodu"} · {item.offer_type} {item.valid_until ? "· do " + item.valid_until : ""}
+              </p>
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={() => edit(item)}
                   className="min-h-10 rounded-lg bg-rose-50 px-3 text-xs font-black text-rose-700">Edytuj</button>
+                <button type="button" onClick={() => duplicate(item)}
+                  className="min-h-10 rounded-lg border border-rose-200 bg-white px-3 text-xs font-black text-rose-700">Duplikuj jako szkic</button>
                 <button type="button" onClick={() => void remove(item.id)} disabled={busy}
                   className="min-h-10 rounded-lg bg-stone-100 px-3 text-xs font-black text-stone-700">Usuń</button>
               </div>
@@ -121,7 +171,7 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
       </section>
       <section id="coupon-form" className="rounded-2xl border border-rose-100 bg-white p-5">
         <h2 className="text-xl font-black">{editing ? "Edytuj promocję" : "Dodaj promocję"}</h2>
-        <p className="mt-2 text-xs leading-6 text-stone-600">Nie wpisuj wymyślonych kodów. Link do zewnętrznego sklepu pozostaje zarządzany na stronie, nie we wtyczce.</p>
+        <p className="mt-2 text-xs leading-6 text-stone-600">Nie dodawaj niepotwierdzonych kodów. Każda publikacja wymaga osobnego sprawdzenia i potwierdzenia warunków u sprzedawcy.</p>
         <div className="mt-5 grid gap-4">
           <label className="text-xs font-black">Wybierz sklep z katalogu
             <select className={classes} value={form.storeSlug || ""} onChange={e => {

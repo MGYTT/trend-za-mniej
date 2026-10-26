@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminCouponStudio from "@/components/admin/AdminCouponStudio";
 import AdminStoreStudio from "@/components/admin/AdminStoreStudio";
+import AdminBulkOfferImporter from "@/components/admin/AdminBulkOfferImporter";
 import type { StoreRecord } from "@/lib/stores";
 import { createClient } from "@/lib/supabase/server";
 import type { ExtensionOfferRow } from "@/components/admin/AdminCouponStudio";
@@ -47,5 +48,12 @@ async function OfferManager({ supabase }: { supabase: Awaited<ReturnType<typeof 
   );
   if (storeResult.error) return <p role="alert" className="mt-6 text-sm text-red-700">Błąd pobierania sklepów. Sprawdź migrację.</p>;
   const stores = (storeResult.data || []) as StoreRecord[];
-  return <><AdminStoreStudio stores={stores} /><div className="mt-10 border-t border-stone-200 pt-8"><h2 className="text-2xl font-black">Kody dla sklepów</h2><AdminCouponStudio initialOffers={(data || []) as ExtensionOfferRow[]} stores={stores} /></div></>;
+  return <>
+    <AdminStoreStudio stores={stores} />
+    <AdminBulkOfferImporter stores={stores} existingOffers={(data || []) as ExtensionOfferRow[]} />
+    <div className="mt-10 border-t border-stone-200 pt-8">
+      <h2 className="text-2xl font-black">Kody i promocje sklepów</h2>
+      <AdminCouponStudio initialOffers={(data || []) as ExtensionOfferRow[]} stores={stores} />
+    </div>
+  </>;
 }
