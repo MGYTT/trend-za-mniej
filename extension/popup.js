@@ -1,4 +1,4 @@
-import { filterOffers, matchesStore, trustedSiteLink } from "./logic.mjs";
+import { filterOffers, matchesStore, trustedSiteLink, trustedStoreWebsite } from "./logic.mjs";
 
 const API = "https://trendzamniej.pl/api/extension/offers";
 const $ = (id) => document.getElementById(id);
@@ -87,6 +87,13 @@ async function load() {
       link.href = url;
       link.hidden = false;
       link.textContent = "Zobacz wszystkie promocje " + store.name + " →";
+    }
+    const urlStore = trustedStoreWebsite(store.websiteUrl, store.domains);
+    const merchantLink = $("merchant-link");
+    if (urlStore && merchantLink) {
+      merchantLink.href = urlStore;
+      merchantLink.textContent = "Otwórz oficjalny sklep " + store.name + " ↗";
+      merchantLink.hidden = false;
     }
   }
   render();

@@ -24,3 +24,12 @@ export function trustedSiteLink(raw) {
     return url.protocol === "https:" && url.hostname === "trendzamniej.pl" ? url.toString() : null;
   } catch { return null; }
 }
+
+export function trustedStoreWebsite(raw, domains) {
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return null;
+    if (!matchesStore(url.hostname, domains)) return null;
+    return url.href;
+  } catch { return null; }
+}

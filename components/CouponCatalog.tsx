@@ -13,6 +13,7 @@ export type CatalogOffer = {
   pagePath: string;
   validUntil: string | null;
   verifiedAt: string | null;
+  destinationUrl?: string | null;
 };
 
 const LABEL: Record<CatalogOffer["type"], string> = {
@@ -86,6 +87,12 @@ export default function CouponCatalog({ offers }: { offers: CatalogOffer[] }) {
                     {copied === offer.id ? "Skopiowano" : "Kopiuj"}
                   </button>
                 </div>
+              )}
+              {offer.destinationUrl && (
+                <a href={offer.destinationUrl} target="_blank" rel="sponsored nofollow noopener noreferrer"
+                  className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-black text-white hover:bg-rose-700">
+                  Otwórz ofertę w sklepie ↗
+                </a>
               )}
               {offer.pagePath !== "/kody-rabatowe" && (
                 <Link href={offer.pagePath} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-950 px-4 text-sm font-black text-white hover:bg-rose-700">

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateExtensionOffer } from "@/lib/extension-offer-validation";
+import { merchantDestination } from "@/lib/store-destination";
 
 export const runtime = "nodejs";
 
@@ -35,12 +36,25 @@ async function save(request: NextRequest, edit: boolean) {
   const input = checked.value;
   if (edit && !input.id) return NextResponse.json({ error: "Brak ID." }, { status: 400 });
   if (!edit && input.id) return NextResponse.json({ error: "Nowy wpis nie może mieć ID." }, { status: 400 });
+  // Always derive merchant identity from Supabase, not client-submitted domains.
+  let storeName = input.storeName;
+  let storeDomains = input.storeDomains;
+  if (input.storeSlug) {
+    const { data: store, error: storeError } = await owner.supabase
+      .from("extension_stores").select("name,domains")
+      .eq("slug", input.storeSlug).maybeSingle();
+    if (storeError || !store) return NextResponse.json({ error: "Nie znaleziono przypisanego sklepu." }, { status: 400 });
+    storeName = store.name as string;
+    storeDomains = store.domains as string[];
+  }
+  if (input.destinationUrl && (!input.storeSlug || !merchantDestination(input.destinationUrl, storeDomains)))
+    return NextResponse.json({ error: "Link musi prowadzić bezpośrednio do domeny wybranego sklepu." }, { status: 400 });
   const payload = {
-    store_name: input.storeName, store_domains: input.storeDomains,
+    store_name: storeName, store_domains: storeDomains,
     store_slug: input.storeSlug,
     title: input.title, description: input.description,
     offer_type: input.offerType, code: input.code,
-    page_path: input.pagePath, published: input.published,
+    page_path: input.pagePath, destination_url: input.destinationUrl, published: input.published,
     valid_until: input.validUntil,
     last_verified_at: input.verified ? new Date().toISOString() : null,
     updated_at: new Date().toISOString(),

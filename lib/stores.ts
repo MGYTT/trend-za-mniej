@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getPublishedSheinCampaigns } from "@/lib/shein-campaigns";
 import type { CatalogOffer } from "@/components/CouponCatalog";
+import { merchantDestination } from "@/lib/store-destination";
 
 export type StoreRecord = {
   slug: string; name: string; description: string;
@@ -27,7 +28,7 @@ const today = () => new Intl.DateTimeFormat("sv-SE", {
 type OfferRow = {
   id: string; store_slug: string | null; store_name: string; store_domains: string[];
   title: string; description: string; offer_type: StoreOffer["type"]; code: string | null;
-  page_path: string; valid_until: string | null; last_verified_at: string | null;
+  page_path: string; destination_url: string | null; valid_until: string | null; last_verified_at: string | null;
 };
 
 export async function getPublicShopDirectory(): Promise<{
@@ -39,7 +40,7 @@ export async function getPublicShopDirectory(): Promise<{
       .eq("published", true).order("name").limit(300),
     getPublishedSheinCampaigns(),
     supabase.from("extension_offers")
-      .select("id,store_slug,store_name,store_domains,title,description,offer_type,code,page_path,valid_until,last_verified_at")
+      .select("id,store_slug,store_name,store_domains,title,description,offer_type,code,page_path,destination_url,valid_until,last_verified_at")
       .eq("published", true).limit(500),
   ]);
   if (s.error) console.warn("Published stores:", s.error.code);
@@ -50,7 +51,7 @@ export async function getPublicShopDirectory(): Promise<{
     title: item.title, description: item.description,
     type: item.codeKind === "coupon" ? "coupon" : "campaign",
     code: item.code, pagePath: "/promocje-shein",
-    validUntil: null, verifiedAt: null,
+    validUntil: null, verifiedAt: null, destinationUrl: null,
   }));
   const publicStores: StoreCard[] = ((s.data || []) as StoreRecord[]).map(item => ({
     slug: item.slug, name: item.name, description: item.description,
@@ -68,6 +69,8 @@ export async function getPublicShopDirectory(): Promise<{
       type: item.offer_type, code: item.code,
       pagePath: allowedPath(item.page_path),
       validUntil: item.valid_until, verifiedAt: item.last_verified_at,
+      destinationUrl: merchantDestination(item.destination_url,
+        publicStores.find(store => store.slug === item.store_slug)?.domains ?? []),
     }));
   const stores = [SHEIN, ...publicStores].map(store => ({
     ...store, offerCount: [...sheinOffers, ...others].filter(o => o.storeSlug === store.slug).length,

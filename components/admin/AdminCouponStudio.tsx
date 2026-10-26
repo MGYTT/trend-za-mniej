@@ -9,14 +9,14 @@ export type ExtensionOfferRow = {
   id: string; store_name: string; store_domains: string[]; store_slug: string | null;
   title: string; description: string;
   offer_type: ExtensionOfferInput["offerType"]; code: string | null;
-  page_path: string; published: boolean; valid_until: string | null;
+  page_path: string; destination_url: string | null; published: boolean; valid_until: string | null;
   last_verified_at: string | null; created_at: string;
 };
 
 type Form = Omit<ExtensionOfferInput, "storeDomains"> & { storeDomains: string };
 const EMPTY: Form = {
   id: null, storeName: "", storeSlug: null, storeDomains: "", title: "", description: "",
-  offerType: "coupon", code: "", pagePath: "/kody-rabatowe",
+  offerType: "coupon", code: "", pagePath: "/kody-rabatowe", destinationUrl: null,
   published: false, verified: false, validUntil: null,
 };
 
@@ -42,7 +42,7 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
       id: row.id, storeName: row.store_name, storeSlug: row.store_slug,
       storeDomains: row.store_domains.join(", "), title: row.title,
       description: row.description, offerType: row.offer_type,
-      code: row.code, pagePath: row.page_path,
+      code: row.code, pagePath: row.page_path, destinationUrl: row.destination_url,
       validUntil: row.valid_until, published: row.published, verified: false,
     });
     setMessage("Potwierdź ponownie weryfikację kodu przed zapisaniem opublikowanej oferty.");
@@ -171,6 +171,12 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
                 onChange={(e) => patch("validUntil", e.target.value || null)} />
             </label>
           </div>
+          <label className="block text-xs font-black">Adres konkretnej promocji w sklepie (opcjonalnie)
+            <input type="url" className={classes} value={form.destinationUrl || ""}
+              onChange={e => patch("destinationUrl", e.target.value || null)}
+              placeholder="https://sklep.pl/produkt-lub-promocja" />
+            <span className="mt-1 block font-normal leading-5 text-stone-500">Tylko oficjalna domena wybranego sklepu, bez adresów przekierowujących z sieci afiliacyjnych.</span>
+          </label>
           <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-950">
             <input type="checkbox" checked={form.verified} onChange={(e) => patch("verified", e.target.checked)}
               className="mt-1 h-4 w-4" />
