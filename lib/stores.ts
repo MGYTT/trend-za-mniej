@@ -5,11 +5,11 @@ import type { CatalogOffer } from "@/components/CouponCatalog";
 export type StoreRecord = {
   slug: string; name: string; description: string;
   domains: string[]; website_url: string; category: string;
-  cashback_state: "unavailable" | "preparing"; published: boolean;
+  published: boolean;
 };
 export type StoreCard = {
   slug: string; name: string; description: string; category: string;
-  domains: string[]; websiteUrl: string; cashbackState: "unavailable" | "preparing";
+  domains: string[]; websiteUrl: string;
   offerCount: number;
 };
 export type StoreOffer = CatalogOffer & { storeSlug: string | null };
@@ -18,7 +18,7 @@ const SHEIN: StoreCard = {
   slug: "shein", name: "SHEIN",
   description: "Kampanie modowe i kody do wyszukania ofert. Kody kampanii nie są kuponami do koszyka.",
   category: "Moda", domains: ["shein.com"], websiteUrl: "https://pl.shein.com/",
-  cashbackState: "unavailable", offerCount: 0,
+  offerCount: 0,
 };
 const allowedPath = (s: string) => /^\/(?!\/)[a-zA-Z0-9/_-]*$/.test(s) ? s : "/kody-rabatowe";
 const today = () => new Intl.DateTimeFormat("sv-SE", {
@@ -35,7 +35,7 @@ export async function getPublicShopDirectory(): Promise<{
 }> {
   const [s, c, o] = await Promise.all([
     supabase.from("extension_stores")
-      .select("slug,name,description,domains,website_url,category,cashback_state,published")
+      .select("slug,name,description,domains,website_url,category,published")
       .eq("published", true).order("name").limit(300),
     getPublishedSheinCampaigns(),
     supabase.from("extension_offers")
@@ -55,7 +55,7 @@ export async function getPublicShopDirectory(): Promise<{
   const publicStores: StoreCard[] = ((s.data || []) as StoreRecord[]).map(item => ({
     slug: item.slug, name: item.name, description: item.description,
     category: item.category, domains: item.domains,
-    websiteUrl: item.website_url, cashbackState: item.cashback_state,
+    websiteUrl: item.website_url,
     offerCount: 0,
   }));
   const known = new Set(publicStores.map(store => store.slug));

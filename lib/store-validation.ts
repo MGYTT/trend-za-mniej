@@ -5,7 +5,6 @@ export type StoreInput = {
   domains: string[];
   websiteUrl: string;
   category: string;
-  cashbackState: "unavailable" | "preparing";
   published: boolean;
 };
 export const isStoreSlug = (slug: string): boolean => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 80 && slug.length >= 2;
@@ -44,9 +43,6 @@ export function validateStore(raw: unknown): { value: StoreInput } | { error: st
   if (!domains.length || !domains.every(validStoreDomain)) return { error: "Domena bez https://, np. sklep.pl." };
   if (!websiteMatchesDomains(websiteUrl, domains)) return { error: "Adres https:// musi prowadzić do wskazanej domeny sklepu." };
   if (typeof row.published !== "boolean") return { error: "Nieprawidłowy status publikacji." };
-  const cashbackState = str("cashbackState");
-  if (cashbackState !== "unavailable" && cashbackState !== "preparing")
-    return { error: "Nie można włączyć cashbacku bez integracji rozliczeniowej." };
   return { value: { slug, name, description, domains, websiteUrl, category,
-    cashbackState, published: row.published } };
+    published: row.published } };
 }

@@ -38,7 +38,7 @@ export default function StoreDirectory({ stores, unavailable }: { stores: StoreC
         <div>
           <p className="text-xs font-black uppercase tracking-widest text-rose-700">Katalog sklepów</p>
           <h2 id="store-directory" className="mt-2 text-2xl font-black">Wybierz swój sklep</h2>
-          <p className="mt-2 text-sm leading-6 text-stone-600">Zobacz kupony, kampanie, promocje i status cashbacku.</p>
+          <p className="mt-2 text-sm leading-6 text-stone-600">Zobacz kupony, kody kampanii i aktualne promocje w każdym sklepie.</p>
         </div>
         <span className="rounded-xl bg-white px-4 py-2 text-sm font-black text-rose-800">{shown.length} sklepów</span>
       </div>
@@ -78,9 +78,7 @@ export default function StoreDirectory({ stores, unavailable }: { stores: StoreC
             <p className="mt-4 line-clamp-3 flex-1 text-sm leading-6 text-stone-600">{store.description}</p>
             <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
               <span className="rounded-lg bg-stone-100 px-3 py-2">{store.offerCount} ofert</span>
-              <span className="rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
-                Cashback: {store.cashbackState === "preparing" ? "w przygotowaniu" : "niedostępny"}
-              </span>
+              <span className="rounded-lg bg-rose-50 px-3 py-2 text-rose-800">Kody i promocje</span>
             </div>
             <Link href={"/kody-rabatowe/" + store.slug}
               className="mt-5 flex min-h-12 items-center justify-center rounded-xl bg-stone-950 px-4 text-sm font-black text-white hover:bg-rose-700">
@@ -91,7 +89,7 @@ export default function StoreDirectory({ stores, unavailable }: { stores: StoreC
       </div>
       {shown.length === 0 && <p className="mt-6 rounded-xl bg-white p-6 text-sm text-stone-600">Nie znaleziono pasujących sklepów.</p>}
       <p className="mt-6 text-xs leading-6 text-stone-500">
-        Ulubione są zapisywane tylko w tej przeglądarce. Prowizja dla Trendzamniej nie oznacza zwrotu dla kupującego.
+        Ulubione są zapisywane tylko w tej przeglądarce. Część linków może być afiliacyjna, co oznaczamy przy ofertach.
       </p>
     </section>
   );

@@ -7,7 +7,7 @@ import type { StoreInput } from "@/lib/store-validation";
 type Form = Omit<StoreInput, "domains"> & { domains: string };
 const EMPTY: Form = {
   slug: "", name: "", description: "", domains: "", websiteUrl: "",
-  category: "Moda", cashbackState: "unavailable", published: false,
+  category: "Moda", published: false,
 };
 const input = "mt-1 min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm";
 function slugify(s: string) {
@@ -30,13 +30,13 @@ export default function AdminStoreStudio({ stores }: { stores: StoreRecord[] }) 
     setForm({
       slug: s.slug, name: s.name, description: s.description, category: s.category,
       domains: s.domains.join(", "), websiteUrl: s.website_url,
-      cashbackState: s.cashback_state, published: s.published,
+      published: s.published,
     });
     document.getElementById("store-form")?.scrollIntoView({ behavior: "smooth" });
   }
   async function save(published: boolean) {
     if (busy) return;
-    if (published && !window.confirm("Potwierdź, że opis i domeny sklepu są poprawne. Cashback nie jest aktywny.")) return;
+    if (published && !window.confirm("Potwierdź, że nazwa, domeny oraz opis sklepu są poprawne.")) return;
     setBusy(true);
     setMessage("");
     try {
@@ -81,7 +81,7 @@ export default function AdminStoreStudio({ stores }: { stores: StoreRecord[] }) 
             <div key={store.slug} className="rounded-xl border border-stone-100 p-4">
               <p className="font-black">{store.name} <span className="text-xs text-stone-500">({store.slug})</span></p>
               <p className="mt-1 text-xs text-stone-600">
-                {store.published ? "Opublikowany" : "Szkic"} · Cashback: {store.cashback_state === "preparing" ? "w przygotowaniu" : "niedostępny"}
+                {store.published ? "Opublikowany" : "Szkic"}
               </p>
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={() => edit(store)}
@@ -95,7 +95,7 @@ export default function AdminStoreStudio({ stores }: { stores: StoreRecord[] }) 
       </div>
       <div id="store-form" className="rounded-2xl border border-rose-100 bg-white p-5">
         <h2 className="text-xl font-black">{editing ? "Edytuj sklep" : "Dodaj sklep"}</h2>
-        <p className="mt-2 text-xs leading-6 text-stone-600">Nie podawaj procentów cashbacku bez integracji z zatwierdzonym partnerem.</p>
+        <p className="mt-2 text-xs leading-6 text-stone-600">Możesz dodać kolejne sklepy; publikuj tylko poprawne adresy i opisy.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="text-xs font-black">Nazwa
             <input className={input} value={form.name} onChange={e => {
@@ -118,13 +118,7 @@ export default function AdminStoreStudio({ stores }: { stores: StoreRecord[] }) 
           <label className="text-xs font-black">Kategoria
             <input className={input} value={form.category} onChange={e => patch("category", e.target.value)} />
           </label>
-          <label className="text-xs font-black">Cashback (nieaktywny)
-            <select className={input} value={form.cashbackState}
-              onChange={e => patch("cashbackState", e.target.value as Form["cashbackState"])}>
-              <option value="unavailable">Niedostępny</option>
-              <option value="preparing">W przygotowaniu</option>
-            </select>
-          </label>
+
         </div>
         <label className="mt-4 block text-xs font-black">Opis sklepu
           <textarea className={input + " min-h-28"} value={form.description}

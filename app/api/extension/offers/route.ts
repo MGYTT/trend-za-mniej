@@ -20,7 +20,7 @@ export async function GET() {
     generatedAt: new Date().toISOString(),
     stores: stores.map(s => ({
       slug: s.slug, name: s.name, category: s.category, domains: s.domains,
-      cashbackState: s.cashbackState, offerCount: s.offerCount,
+      offerCount: s.offerCount,
       pageUrl: new URL("/kody-rabatowe/" + s.slug, getSiteUrl()).toString(),
     })),
     offers: offers.map(o => {

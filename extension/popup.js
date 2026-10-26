@@ -80,7 +80,7 @@ async function load() {
   } finally { clearTimeout(id); }
   const store = state.stores.find(s => matchesStore(state.host, s.domains));
   if (store) {
-    $("context").textContent = store.name + ": " + store.offerCount + " ofert · Cashback nieaktywny";
+    $("context").textContent = store.name + ": " + store.offerCount + " ofert";
     const url = trustedSiteLink(store.pageUrl);
     if (url) {
       const link = $("store-link");

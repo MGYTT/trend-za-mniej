@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!store) return { title: "Sklep nie istnieje" };
   return {
     title: store.name + " — kody i promocje | Trend za Mniej",
-    description: "Zobacz kupony, promocje i status cashbacku w sklepie " + store.name,
+    description: "Zobacz aktualne kupony, kody kampanii i promocje w sklepie " + store.name,
     alternates: { canonical: "/kody-rabatowe/" + slug },
   };
 }
@@ -49,10 +49,9 @@ export default async function ShopPage({ params }: Props) {
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl bg-white p-4"><p className="text-xs text-stone-600">Kupony do koszyka</p><p className="mt-1 text-2xl font-black">{coupons.length}</p></div>
             <div className="rounded-2xl bg-white p-4"><p className="text-xs text-stone-600">Kampanie i promocje</p><p className="mt-1 text-2xl font-black">{shopOffers.length - coupons.length}</p></div>
-            <div className="rounded-2xl bg-amber-50 p-4">
-              <p className="text-xs font-bold text-amber-800">Cashback użytkownika</p>
-              <p className="mt-2 font-black text-amber-950">{store.cashbackState === "preparing" ? "W przygotowaniu" : "Niedostępny"}</p>
-              <p className="mt-2 text-xs leading-5 text-amber-900">Brak aktywacji i naliczania zwrotu.</p>
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-xs text-stone-600">Wszystkie widoczne oferty</p>
+              <p className="mt-1 text-2xl font-black">{shopOffers.length}</p>
             </div>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -62,7 +61,7 @@ export default async function ShopPage({ params }: Props) {
               <a href={store.websiteUrl} target="_blank" rel="nofollow noopener noreferrer"
                 className="inline-flex min-h-12 items-center rounded-xl bg-stone-950 px-5 text-sm font-black text-white">Otwórz oficjalny sklep ↗</a>
             )}
-            <span className="text-xs text-stone-600">Otworzenie sklepu nie aktywuje cashbacku.</span>
+            <span className="text-xs text-stone-600">Warunki promocji sprawdź u sprzedawcy.</span>
           </div>
         </div>
       </div>
@@ -79,7 +78,7 @@ export default async function ShopPage({ params }: Props) {
           <p className="mt-3 text-sm leading-7 text-stone-600">
             Zwróć uwagę, czy kod jest kuponem do koszyka, oznaczeniem kampanii czy promocją bez kodu.
             Przed zakupem sprawdź aktualne warunki u sprzedawcy. Nie testujemy kuponów na żywo.
-            Trendzamniej może zarabiać na afiliacji, ale prowizja nie oznacza zwrotu dla kupującego.
+            Część linków ma charakter afiliacyjny, więc możemy otrzymać prowizję od zakupu.
           </p>
         </div>
       </section>
