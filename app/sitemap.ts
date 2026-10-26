@@ -204,6 +204,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       {
         url:
+          `${siteUrl}/kody-rabatowe`,
+      },
+
+      {
+        url:
           `${siteUrl}/promocje-shein`,
 
         lastModified:
@@ -364,7 +369,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${siteUrl}/poradniki/${guide.slug}`,
   }));
 
+  const { data: storeRows, error: storeError } = await supabase
+    .from("extension_stores").select("slug,updated_at").eq("published", true);
+  if (storeError) console.warn("Sitemap store catalog:", storeError.code);
+  const merchantPages: MetadataRoute.Sitemap = [
+    { url: `${siteUrl}/kody-rabatowe/shein` },
+    ...(storeRows ?? []).map((store) => ({
+      url: `${siteUrl}/kody-rabatowe/${store.slug}`,
+      lastModified: toValidDate(store.updated_at),
+    })),
+  ];
+
   return [
+    ...merchantPages,
     ...lookPages,
     ...guidePages,
     ...staticPages,
