@@ -33,7 +33,7 @@ export default async function CouponsPage() {
     ...shein.promotions.map((item) => ({
       id: "shein:" + item.id, store: "SHEIN", title: item.title,
       description: item.description,
-      type: item.codeKind, code: item.code, pagePath: "/promocje-shein",
+      type: item.codeKind === "coupon" ? "coupon" as const : "campaign" as const, code: item.code, pagePath: "/promocje-shein",
       validUntil: null, verifiedAt: null,
     })),
     ...((generic.data || []) as OtherOffer[])
