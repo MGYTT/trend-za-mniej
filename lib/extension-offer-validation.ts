@@ -8,6 +8,7 @@ export type ExtensionOfferInput = {
   offerType: "coupon" | "campaign" | "promotion";
   code: string | null;
   pagePath: string;
+  destinationUrl: string | null;
   published: boolean;
   verified: boolean;
   validUntil: string | null;
@@ -57,6 +58,14 @@ export function validateExtensionOffer(raw: unknown):
     return { error: "Ten typ promocji wymaga kodu." };
   const pagePath = str("pagePath") || "/kody-rabatowe";
   if (!PAGE_PATH.test(pagePath)) return { error: "Podaj bezpieczną ścieżkę na Trendzamniej, np. /kody-rabatowe." };
+  const destinationUrl = o.destinationUrl === null || o.destinationUrl === undefined || o.destinationUrl === "" ? null : str("destinationUrl");
+  if (destinationUrl !== null) {
+    try {
+      const u = new URL(destinationUrl);
+      if (u.protocol !== "https:" || u.username || u.password || u.port ||
+        destinationUrl.length > 2000) return { error: "Link musi używać HTTPS i nie może zawierać danych logowania." };
+    } catch { return { error: "Nieprawidłowy link oferty." }; }
+  }
   const validUntil = o.validUntil == null || o.validUntil === "" ? null : str("validUntil");
   if (validUntil !== null && !validCalendarDay(validUntil))
     return { error: "Nieprawidłowa data ważności." };
@@ -71,6 +80,6 @@ export function validateExtensionOffer(raw: unknown):
     id, storeName, storeSlug, storeDomains, title, description,
     offerType: offerType as ExtensionOfferInput["offerType"],
     code: offerType === "promotion" ? null : code,
-    pagePath, published: o.published, verified: o.verified, validUntil,
+    pagePath, destinationUrl, published: o.published, verified: o.verified, validUntil,
   } };
 }
