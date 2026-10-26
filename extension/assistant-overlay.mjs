@@ -31,6 +31,7 @@ export function showAssistantPanel(payload) {
     ".foot{padding:12px 15px;background:#fafaf9;font-size:11px;line-height:1.5;color:#57534e}"+
     ".foot a{display:inline-block;margin-top:6px;font-weight:700;color:#9f1239}"+
     ".empty{padding:16px;font-size:13px;color:#57534e}";
+  style.textContent += ".verify{display:flex;gap:6px;margin-top:8px}.vote{border:1px solid #fda4af;border-radius:7px;background:white;color:#9f1239;padding:7px;font-size:11px;cursor:pointer}.result{font-size:11px;color:#57534e;line-height:1.4}";
   const wrap = document.createElement("section");
   wrap.className = "wrap";
   wrap.setAttribute("role", "region");
@@ -86,6 +87,31 @@ export function showAssistantPanel(payload) {
         catch { copy.textContent = "Nie udało się skopiować"; }
       });
       card.append(copy);
+    }
+    if (offer.type === "coupon" && typeof offer.code === "string" && offer.code.length > 0) {
+      const instructions = document.createElement("p");
+      instructions.className = "desc";
+      instructions.textContent = "Sprawdź ręcznie: skopiuj kod, wklej go w koszyku i zobacz, czy rabat został naliczony.";
+      card.append(instructions);
+      const choice = document.createElement("div");
+      choice.className = "verify";
+      const result = document.createElement("p");
+      result.className = "result";
+      result.setAttribute("role", "status");
+      const worked = document.createElement("button");
+      worked.type = "button"; worked.className = "vote";
+      worked.textContent = "U mnie działa";
+      const failed = document.createElement("button");
+      failed.type = "button"; failed.className = "vote";
+      failed.textContent = "Nie działa";
+      worked.addEventListener("click", () => {
+        result.textContent = "Twoja ocena: działał. Wynik dotyczy tylko tego okna i nie potwierdza aktualności promocji.";
+      });
+      failed.addEventListener("click", () => {
+        result.textContent = "Twoja ocena: nie działał. Wynik pozostaje tylko w tym oknie.";
+      });
+      choice.append(worked, failed);
+      card.append(choice, result);
     }
     list.append(card);
   }

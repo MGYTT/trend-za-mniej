@@ -117,7 +117,7 @@ test("the in-page assistant requires explicit user interaction and narrow permis
   const helper = read("../extension/assistant-overlay.mjs");
   const html = read("../extension/popup.html");
   const manifest = JSON.parse(read("../extension/manifest.json"));
-  assert.equal(manifest.version, "0.4.0");
+  assert.equal(manifest.version, "0.5.0");
   assert.deepEqual(manifest.permissions, ["tabs", "activeTab", "scripting"]);
   assert.deepEqual(manifest.host_permissions, ["https://trendzamniej.pl/*"]);
   assert.match(popup, /\$\("show-on-site"\)\.addEventListener\("click"/);
@@ -128,4 +128,16 @@ test("the in-page assistant requires explicit user interaction and narrow permis
   assert.match(helper, /textContent/);
   assert.doesNotMatch(helper, /\.innerHTML\s*=|document\.cookie|checkout\.submit/);
   assert.doesNotMatch(popup, /chrome\.cookies|declarativeNetRequest|webRequest/);
+});
+
+test("downloadable test ZIP, website CTA and manual coupon checking", () => {
+  const archive = readFileSync(new URL("../public/downloads/trendzamniej-chrome-0.5.0.zip", import.meta.url));
+  assert.equal(archive.subarray(0, 2).toString("ascii"), "PK");
+  assert.ok(archive.includes(Buffer.from('"version": "0.5.0"')));
+  assert.match(read("../app/kody-rabatowe/page.tsx"), /href="\/downloads\/trendzamniej-chrome-0\.5\.0\.zip"/);
+  assert.match(read("../app/wtyczka-chrome/page.tsx"), /Tryb dewelopera/);
+  const assistant = read("../extension/assistant-overlay.mjs");
+  assert.match(assistant, /Sprawdź ręcznie/);
+  assert.match(assistant, /Twoja ocena/);
+  assert.doesNotMatch(assistant, /\.innerHTML\s*=|document\.cookie|checkout\.submit/);
 });

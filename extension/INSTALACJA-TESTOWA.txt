@@ -1,0 +1,15 @@
+Trendzamniej Chrome — 0.5.0 (wersja testowa)
+
+https://trendzamniej.pl/wtyczka-chrome
+
+1. Rozpakuj ZIP i znajdź folder z manifest.json.
+2. W Chrome otwórz chrome://extensions.
+3. Włącz Tryb dewelopera.
+4. Kliknij „Załaduj rozpakowane” i wskaż folder z manifest.json.
+
+Wtyczka rozpoznaje obsługiwane sklepy i wyświetla kody. Panel otwiera
+wyłącznie po kliknięciu użytkownika. Własne oznaczenie skuteczności
+kuponu jest tymczasowe i nie jest wysyłane na serwer Trendzamniej.
+
+Nie ma automatycznego testowania koszyka, podmiany cookies ani linków afiliacyjnych.
+Źródła: https://github.com/MGYTT/trend-za-mniej/tree/main/extension
