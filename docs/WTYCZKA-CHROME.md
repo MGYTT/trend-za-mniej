@@ -1,7 +1,7 @@
 # Trendzamniej — wtyczka do Chrome (MVP)
 
 ## Architektura
-- \`shein_campaigns\` (istniejące, 24 kody typu \`campaign\`) + \`extension_offers\` (nowa tabela, dowolne sklepy).
+- \`shein_campaigns\` (istniejące, 24 kody typu \`campaign\`) + \`extension_offers\` (tabela kuponów powiązanych ze sklepami).
 - Publiczne \`GET /api/extension/offers\` udostępnia tylko opublikowane, niewygasłe dane, **bez linków afiliacyjnych**.
 - \`/kody-rabatowe\` to publiczny katalog, \`/admin/kody-rabatowe\` to edytor dostępny dla właściciela.
 - \`extension/\` to samodzielne rozszerzenie Chrome Manifest V3. Po kliknięciu ikony odczytuje domenę bieżącej karty (uprawnienie \`activeTab\`) i dopasowuje oferty z API.
@@ -24,3 +24,9 @@
 - SHEIN zawiera kody kampanii, a nie automatycznie działające kupony do koszyka.
 - Nie dodano ofert innych sklepów bez potwierdzonego źródła. Afiliacja z poszczególnych programów wymaga sprawdzenia ich regulaminów.
 - Zmiana listy promocji odbywa się w Supabase i nie wymaga każdorazowo aktualizacji wtyczki ani deploymentu.
+
+## Etap linków do ofert (wersja 0.3)
+- Tabela \`extension_offers\` zawiera opcjonalny \`destination_url\` do konkretnej promocji na domenie sklepu.
+- API administracyjne pobiera domeny bezpośrednio z tabeli sklepów, a serwer ponownie sprawdza adres.
+- Rozszerzenie pokazuje wyłącznie jawne przyciski i nie aktywuje afiliacji bez akcji użytkownika.
+- Bezpośredni partnerzy afiliacyjni korzystający z domen przekierowujących muszą mieć oddzielną integrację i odpowiednie zgody.

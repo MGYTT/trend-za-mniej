@@ -2,13 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { validateExtensionOffer, validCalendarDay } from "../lib/extension-offer-validation.ts";
-import { filterOffers, matchesStore, trustedSiteLink } from "../extension/logic.mjs";
+import { filterOffers, matchesStore, trustedSiteLink, trustedStoreWebsite } from "../extension/logic.mjs";
+import { merchantDestination } from "../lib/store-destination.ts";
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
 const valid = {
   id: null, storeSlug: "sklep", storeName: "Przykładowy sklep", storeDomains: "sklep.pl, shop.sklep.pl",
   title: "Przykładowa zweryfikowana promocja", description: "Oferta ograniczona warunkami",
-  offerType: "coupon", code: "TEST10", pagePath: "/kody-rabatowe",
+  offerType: "coupon", code: "TEST10", pagePath: "/kody-rabatowe", destinationUrl: "https://www.sklep.pl/promocja?kod=TEST10",
   published: true, verified: true, validUntil: "2026-12-31",
 };
 test("validates multi-store offers and rejects URL / redirect injection", () => {
@@ -63,22 +64,50 @@ test("admin API enforces owner and same-origin; public API hides direct affiliat
   assert.match(sql,/public\.is_owner/);
 });
 
-test("public store pages, admin gating and cashback activation constraints", () => {
-  const val = read("../lib/store-validation.ts");
-  const migration = read("../supabase/migrations/20261026_store_directory_cashback_preview.sql");
-  const home = read("../app/kody-rabatowe/page.tsx");
-  const shop = read("../app/kody-rabatowe/[slug]/page.tsx");
-  const background = read("../extension/background.js");
+
+test("store directory and extension have no user-facing cashback copy", () => {
+  for (const path of [
+    "../app/kody-rabatowe/page.tsx",
+    "../app/kody-rabatowe/[slug]/page.tsx",
+    "../components/StoreDirectory.tsx",
+    "../components/admin/AdminStoreStudio.tsx",
+    "../app/api/extension/offers/route.ts",
+    "../extension/popup.html",
+    "../extension/popup.js",
+    "../extension/background.js",
+    "../lib/stores.ts",
+    "../lib/store-validation.ts",
+  ]) {
+    assert.doesNotMatch(read(path), /cashback/i, "unexpected cashback reference: " + path);
+  }
+  const admin = read("../app/api/admin/extension-stores/route.ts");
+  assert.doesNotMatch(admin, /cashback/i);
   const manifest = JSON.parse(read("../extension/manifest.json"));
-  assert.match(val, /cashbackState/);
-  assert.match(val, /Nie można włączyć cashbacku/);
-  assert.match(migration, /enable row level security/);
-  assert.match(migration, /'unavailable', 'preparing'/);
-  assert.match(shop, /Cashback użytkownika/);
-  assert.match(shop, /Nieakt[y]?wny|Niedostępny/);
-  assert.match(home, /StoreDirectory/);
-  assert.match(background, /chrome\.tabs\.onUpdated/);
-  assert.match(background, /chrome\.action\.setBadgeText/);
-  assert.doesNotMatch(background, /affiliate_url|chrome\.cookies|sendMessage\(.*url/);
   assert.deepEqual(manifest.permissions, ["tabs"]);
+});
+
+test("direct merchant URL validation blocks unsafe redirect destinations", () => {
+  assert.equal(merchantDestination("https://www.sklep.pl/oferta?x=1", ["sklep.pl"]), "https://www.sklep.pl/oferta?x=1");
+  assert.equal(merchantDestination("https://sklep.pl.evil.com/fake", ["sklep.pl"]), null);
+  assert.equal(merchantDestination("https://evil.com/oferta", ["sklep.pl"]), null);
+  assert.equal(merchantDestination("http://sklep.pl/oferta", ["sklep.pl"]), null);
+  assert.equal(merchantDestination("https://user:pass@sklep.pl/oferta", ["sklep.pl"]), null);
+  assert.equal(merchantDestination("https://sklep.pl:8443/oferta", ["sklep.pl"]), null);
+  assert.equal(merchantDestination("https://www.awin1.com/click?x=1", ["sklep.pl"]), null);
+  assert.equal(trustedStoreWebsite("https://www.sklep.pl/", ["sklep.pl"]), "https://www.sklep.pl/");
+  assert.equal(trustedStoreWebsite("https://sklep.pl.evil.com/", ["sklep.pl"]), null);
+});
+
+test("only the owner can set merchant URLs and the API reads stored domains", () => {
+  const api = read("../app/api/admin/extension-offers/route.ts");
+  const publicSource = read("../lib/stores.ts");
+  const catalog = read("../components/CouponCatalog.tsx");
+  const sql = read("../supabase/migrations/20261026_add_merchant_destination.sql");
+  assert.match(api, /getClaims/);
+  assert.match(api, /admin\?\.role === "owner"/);
+  assert.match(api, /storeDomains = store.domains/);
+  assert.match(api, /merchantDestination\(input.destinationUrl, storeDomains\)/);
+  assert.match(publicSource, /merchantDestination\(item.destination_url/);
+  assert.match(catalog, /rel="sponsored nofollow noopener noreferrer"/);
+  assert.match(sql, /add column if not exists destination_url/);
 });
