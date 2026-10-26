@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Trendzamniej — Kody i promocje",
+  "version": "0.1.0",
+  "description": "Promocje i kody z Trendzamniej. Bez automatycznej podmiany linków afiliacyjnych.",
+  "homepage_url": "https://trendzamniej.pl",
+  "action": {
+    "default_title": "Trendzamniej — znajdź promocje",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://trendzamniej.pl/*"
+  ]
+}

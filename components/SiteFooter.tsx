@@ -12,6 +12,7 @@ const discoveryLinks = [
   { label: "Produkty", href: "/okazje" },
   { label: "Kategorie", href: "/kategorie" },
   { label: "Promocje SHEIN", href: "/promocje-shein" },
+  { label: "Kody rabatowe", href: "/kody-rabatowe" },
   { label: "Z TikToka", href: "/tiktok" },
 ];
 
