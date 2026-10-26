@@ -83,7 +83,7 @@ test("store directory and extension have no user-facing cashback copy", () => {
   const admin = read("../app/api/admin/extension-stores/route.ts");
   assert.doesNotMatch(admin, /cashback/i);
   const manifest = JSON.parse(read("../extension/manifest.json"));
-  assert.deepEqual(manifest.permissions, ["tabs"]);
+  assert.deepEqual(manifest.permissions, ["tabs", "activeTab", "scripting"]);
 });
 
 test("direct merchant URL validation blocks unsafe redirect destinations", () => {
