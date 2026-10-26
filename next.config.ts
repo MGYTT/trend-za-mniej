@@ -2,6 +2,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Previously published test-extension URLs now lead to the coupons catalog.
+  async redirects() {
+    return [
+      {
+        source: "/wtyczka-chrome",
+        destination: "/kody-rabatowe",
+        permanent: false,
+      },
+      {
+        source: "/downloads/trendzamniej-chrome-0.5.0.zip",
+        destination: "/kody-rabatowe",
+        permanent: false,
+      },
+    ];
+  },
+
   cacheComponents: false,
 
   images: {

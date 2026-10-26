@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { validateExtensionOffer, validCalendarDay } from "../lib/extension-offer-validation.ts";
 import { filterOffers, matchesStore, trustedSiteLink, trustedStoreWebsite } from "../extension/logic.mjs";
 import { merchantDestination } from "../lib/store-destination.ts";
@@ -130,14 +130,16 @@ test("the in-page assistant requires explicit user interaction and narrow permis
   assert.doesNotMatch(popup, /chrome\.cookies|declarativeNetRequest|webRequest/);
 });
 
-test("downloadable test ZIP, website CTA and manual coupon checking", () => {
-  const archive = readFileSync(new URL("../public/downloads/trendzamniej-chrome-0.5.0.zip", import.meta.url));
-  assert.equal(archive.subarray(0, 2).toString("ascii"), "PK");
-  assert.ok(archive.includes(Buffer.from('"version": "0.5.0"')));
-  assert.match(read("../app/kody-rabatowe/page.tsx"), /href="\/downloads\/trendzamniej-chrome-0\.5\.0\.zip"/);
-  assert.match(read("../app/wtyczka-chrome/page.tsx"), /Tryb dewelopera/);
-  const assistant = read("../extension/assistant-overlay.mjs");
-  assert.match(assistant, /Sprawdź ręcznie/);
-  assert.match(assistant, /Twoja ocena/);
-  assert.doesNotMatch(assistant, /\.innerHTML\s*=|document\.cookie|checkout\.submit/);
+test("website no longer advertises or hosts the Chrome extension", () => {
+  const page = read("../app/kody-rabatowe/page.tsx");
+  assert.match(page, /<StoreDirectory stores=/);
+  assert.doesNotMatch(page, /chrome|wtyczk|rozszerzen|downloads\//i);
+  assert.equal(existsSync(new URL("../app/wtyczka-chrome/page.tsx", import.meta.url)), false);
+  assert.equal(existsSync(new URL("../public/downloads/trendzamniej-chrome-0.5.0.zip", import.meta.url)), false);
+  const config = read("../next.config.ts");
+  assert.match(config, /source: "\/wtyczka-chrome"/);
+  assert.match(config, /source: "\/downloads\/trendzamniej-chrome-0\.5\.0\.zip"/);
+  assert.match(config, /destination: "\/kody-rabatowe"/);
+  // Source remains in extension/ but public installation links are removed.
+  assert.equal(JSON.parse(read("../extension/manifest.json")).version, "0.5.0");
 });
