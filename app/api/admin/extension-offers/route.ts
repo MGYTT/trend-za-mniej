@@ -37,6 +37,7 @@ async function save(request: NextRequest, edit: boolean) {
   if (!edit && input.id) return NextResponse.json({ error: "Nowy wpis nie może mieć ID." }, { status: 400 });
   const payload = {
     store_name: input.storeName, store_domains: input.storeDomains,
+    store_slug: input.storeSlug,
     title: input.title, description: input.description,
     offer_type: input.offerType, code: input.code,
     page_path: input.pagePath, published: input.published,
@@ -53,6 +54,7 @@ async function save(request: NextRequest, edit: boolean) {
     return NextResponse.json({ error: "Zapis nie powiódł się. Sprawdź dane lub migrację bazy." }, { status: 400 });
   }
   revalidatePath("/kody-rabatowe");
+  if (input.storeSlug) revalidatePath("/kody-rabatowe/" + input.storeSlug);
   revalidatePath("/admin/kody-rabatowe");
   return NextResponse.json({ id: data.id });
 }
