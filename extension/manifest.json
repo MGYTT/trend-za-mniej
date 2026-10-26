@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Trendzamniej — Kody i promocje",
-  "version": "0.3.0",
-  "description": "Wyszukuje kody i promocje dopasowane do odwiedzanego sklepu. Wszystkie przejścia na strony sklepów wymagają kliknięcia użytkownika.",
+  "version": "0.4.0",
+  "description": "Kody i promocje sklepów z panelem otwieranym wyłącznie po kliknięciu użytkownika, bez automatycznego sprawdzania koszyka.",
   "homepage_url": "https://trendzamniej.pl",
   "action": {
     "default_title": "Trendzamniej — znajdź promocje",
@@ -13,7 +13,9 @@
     "type": "module"
   },
   "permissions": [
-    "tabs"
+    "tabs",
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "https://trendzamniej.pl/*"

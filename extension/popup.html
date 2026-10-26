@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trendzamniej — Promocje</title>
+  <title>Trendzamniej — Kody i promocje</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
@@ -15,8 +15,12 @@
   </header>
   <main>
     <p class="context" id="context" aria-live="polite">Sprawdzanie otwartej strony…</p>
+    <button type="button" id="show-on-site" class="site-button" hidden>Pokaż kody na stronie sklepu</button>
     <a id="store-link" hidden class="open" href="https://trendzamniej.pl/kody-rabatowe" target="_blank" rel="noopener noreferrer">Zobacz oferty →</a>
     <a id="merchant-link" hidden class="open" href="https://trendzamniej.pl/kody-rabatowe" target="_blank" rel="noopener noreferrer">Otwórz oficjalny sklep ↗</a>
+    <label id="current-only-label" class="current-filter" hidden>
+      <input type="checkbox" id="current-only" checked /> Tylko promocje obecnego sklepu
+    </label>
     <label for="search" class="search-label">Szukaj sklepu lub kodu</label>
     <input id="search" type="search" autocomplete="off" placeholder="np. SHEIN, sklep, rabat…" />
     <div class="filters" role="group" aria-label="Rodzaj oferty">
@@ -30,8 +34,8 @@
     <div id="offers" class="offers"></div>
   </main>
   <footer>
-    <p>Nie wszystkie kody są kuponami do koszyka. Sprawdź warunki u sprzedawcy.</p>
-    <p>Część linków na Trendzamniej jest afiliacyjna, użytkownik sam decyduje o skorzystaniu z oferty.</p>
+    <p>Nie testujemy kodów automatycznie w koszyku. Wyświetlenie asystenta wymaga kliknięcia.</p>
+    <p>Część linków na Trendzamniej jest afiliacyjna; użytkownik sam decyduje o skorzystaniu z oferty.</p>
   </footer>
   <script type="module" src="popup.js"></script>
 </body>

@@ -111,3 +111,21 @@ test("only the owner can set merchant URLs and the API reads stored domains", ()
   assert.match(catalog, /rel="sponsored nofollow noopener noreferrer"/);
   assert.match(sql, /add column if not exists destination_url/);
 });
+
+test("the in-page assistant requires explicit user interaction and narrow permissions", () => {
+  const popup = read("../extension/popup.js");
+  const helper = read("../extension/assistant-overlay.mjs");
+  const html = read("../extension/popup.html");
+  const manifest = JSON.parse(read("../extension/manifest.json"));
+  assert.equal(manifest.version, "0.4.0");
+  assert.deepEqual(manifest.permissions, ["tabs", "activeTab", "scripting"]);
+  assert.deepEqual(manifest.host_permissions, ["https://trendzamniej.pl/*"]);
+  assert.match(popup, /\$\("show-on-site"\)\.addEventListener\("click"/);
+  assert.match(popup, /chrome\.scripting\.executeScript/);
+  assert.match(popup, /matchesStore\(host, state\.store\.domains\)/);
+  assert.match(html, /id="current-only"/);
+  assert.match(helper, /attachShadow/);
+  assert.match(helper, /textContent/);
+  assert.doesNotMatch(helper, /\.innerHTML\s*=|document\.cookie|checkout\.submit/);
+  assert.doesNotMatch(popup, /chrome\.cookies|declarativeNetRequest|webRequest/);
+});
