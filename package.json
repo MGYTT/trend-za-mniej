@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:homepage-mobile && npm run test:homepage-discovery && npm run test:product-detail && npm run test:outfits-ui && npm run test:shein-promotions && npm run test:outfit-builder && npm run test:admin-ios-shell && npm run test:admin-daily-workflow && npm run test:admin-desktop && npm run test:admin-desktop-forms && npm run test:shein-campaign-manager && npm run test:shein-campaign-clicks && npm run test:affiliate-channels && npm run test:poradniki && npm run test:google-seo && npm run test:poradniki-ux && npm run test:shein-current-links && next build",
+    "build": "npm run test:homepage-mobile && npm run test:homepage-discovery && npm run test:product-detail && npm run test:outfits-ui && npm run test:shein-promotions && npm run test:outfit-builder && npm run test:admin-ios-shell && npm run test:admin-daily-workflow && npm run test:admin-desktop && npm run test:admin-desktop-forms && npm run test:shein-campaign-manager && npm run test:shein-campaign-clicks && npm run test:affiliate-channels && npm run test:poradniki && npm run test:google-seo && npm run test:poradniki-ux && npm run test:shein-current-links && npm run test:extension && next build",
     "start": "next start",
     "lint": "eslint",
     "test:stylizacje": "node --experimental-strip-types --test tests/stylizacje.test.mjs tests/outfit-filters.test.mjs && node --test tests/stylizacje-growth.test.mjs",
@@ -42,7 +42,8 @@
     "verify:affiliate-channels": "npm run test:affiliate-channels && npm run lint && npm run build",
     "test:poradniki-ux": "node --experimental-strip-types --test tests/poradniki-ux.test.mjs",
     "verify:poradniki-ux": "npm run test:poradniki && npm run test:google-seo && npm run test:poradniki-ux && npm run lint && npm run build",
-    "test:shein-current-links": "node --experimental-strip-types --test tests/shein-current-links.test.mjs"
+    "test:shein-current-links": "node --experimental-strip-types --test tests/shein-current-links.test.mjs",
+    "test:extension": "node --experimental-strip-types --test tests/extension-offers.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

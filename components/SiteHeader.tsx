@@ -23,6 +23,7 @@ const MENU: MenuItem[] = [
 ];
 
 const EXTRA_MENU: MenuItem[] = [
+  { label: "Kody rabatowe", description: "Promocje wielu sklepów", href: "/kody-rabatowe" },
   { label: "Kategorie", description: "Przeglądaj produkty według działu", href: "/kategorie" },
   { label: "Z TikToka", description: "Rzeczy z naszych filmów", href: "/tiktok" },
   { label: "O nas", description: "Poznaj Trend za Mniej", href: "/o-nas" },

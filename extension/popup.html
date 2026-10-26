@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trendzamniej — Promocje</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo" aria-hidden="true">T</span>
+      <div><strong>Trend za Mniej</strong><small>Kody i promocje</small></div>
+    </div>
+    <a class="header-link" href="https://trendzamniej.pl/kody-rabatowe" target="_blank" rel="noopener noreferrer">Katalog ↗</a>
+  </header>
+  <main>
+    <p class="context" id="context" aria-live="polite">Sprawdzanie otwartej strony…</p>
+    <label for="search" class="search-label">Szukaj sklepu lub kodu</label>
+    <input id="search" type="search" autocomplete="off" placeholder="np. SHEIN, sklep, rabat…" />
+    <div class="filters" role="group" aria-label="Rodzaj oferty">
+      <button class="chip selected" data-type="all" aria-pressed="true">Wszystkie</button>
+      <button class="chip" data-type="coupon" aria-pressed="false">Kupony</button>
+      <button class="chip" data-type="campaign" aria-pressed="false">Kampanie</button>
+      <button class="chip" data-type="promotion" aria-pressed="false">Promocje</button>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <div class="counter"><strong id="count">0</strong> dopasowanych ofert</div>
+    <div id="offers" class="offers"></div>
+  </main>
+  <footer>
+    <p>Nie wszystkie kody są kuponami do koszyka. Sprawdź warunki u sprzedawcy.</p>
+    <p>Na Trendzamniej mogą występować linki afiliacyjne.</p>
+  </footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

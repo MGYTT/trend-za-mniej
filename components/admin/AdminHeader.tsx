@@ -152,6 +152,7 @@ function getMobileTitle(
 
   if (pathname.startsWith("/admin/stylizacje")) return "Stylizacje";
   if (pathname.startsWith("/admin/promocje-shein")) return "Promocje SHEIN";
+  if (pathname.startsWith("/admin/kody-rabatowe")) return "Kody wielu sklepów";
   if (pathname.startsWith("/admin/skutecznosc")) return "Skuteczność";
   if (pathname.startsWith("/admin/widocznosc")) return "Widoczność";
 

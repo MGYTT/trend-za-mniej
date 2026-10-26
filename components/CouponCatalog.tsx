@@ -87,9 +87,11 @@ export default function CouponCatalog({ offers }: { offers: CatalogOffer[] }) {
                   </button>
                 </div>
               )}
-              <Link href={offer.pagePath} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-950 px-4 text-sm font-black text-white hover:bg-rose-700">
-                {offer.pagePath === "/kody-rabatowe" ? "Sprawdź warunki oferty" : "Otwórz opis i warunki"} →
-              </Link>
+              {offer.pagePath !== "/kody-rabatowe" && (
+                <Link href={offer.pagePath} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-950 px-4 text-sm font-black text-white hover:bg-rose-700">
+                  Otwórz opis i warunki →
+                </Link>
+              )}
             </article>
           ))}
         </div>

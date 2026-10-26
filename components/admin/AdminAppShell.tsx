@@ -473,6 +473,7 @@ function MobileBottomNavigation({
     pathname.startsWith("/admin/statystyki") ||
     pathname.startsWith("/admin/skutecznosc") ||
     pathname.startsWith("/admin/promocje-shein") ||
+    pathname.startsWith("/admin/kody-rabatowe") ||
     pathname.startsWith("/admin/widocznosc") ||
     pathname.startsWith("/admin/zespol");
 
@@ -747,6 +748,7 @@ function MoreSheet({
               description="Kody, kampanie i publikacja"
               onClick={onClose}
             />
+            <AppMenuLink href="/admin/kody-rabatowe" icon="offers" title="Kody wielu sklepów" description="Kupony, daty i publikacja" onClick={onClose} />
             <div className="admin-ios-divider" />
             <AppMenuLink
               href="/admin/seo"
