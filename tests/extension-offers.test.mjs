@@ -6,7 +6,7 @@ import { filterOffers, matchesStore, trustedSiteLink } from "../extension/logic.
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
 const valid = {
-  id: null, storeName: "Przykładowy sklep", storeDomains: "sklep.pl, shop.sklep.pl",
+  id: null, storeSlug: "sklep", storeName: "Przykładowy sklep", storeDomains: "sklep.pl, shop.sklep.pl",
   title: "Przykładowa zweryfikowana promocja", description: "Oferta ograniczona warunkami",
   offerType: "coupon", code: "TEST10", pagePath: "/kody-rabatowe",
   published: true, verified: true, validUntil: "2026-12-31",
@@ -57,8 +57,28 @@ test("admin API enforces owner and same-origin; public API hides direct affiliat
   assert.match(api,/admin\?\.role === "owner"/);
   assert.match(api,/sameOrigin/);
   assert.match(api,/validateExtensionOffer/);
-  assert.match(publicApi,/\.eq\("published", true\)/);
+  assert.match(read("../lib/stores.ts"),/\.eq\("published", true\)/);
   assert.doesNotMatch(publicApi,/affiliate_url/);
   assert.match(sql,/enable row level security/);
   assert.match(sql,/public\.is_owner/);
+});
+
+test("public store pages, admin gating and cashback activation constraints", () => {
+  const val = read("../lib/store-validation.ts");
+  const migration = read("../supabase/migrations/20261026_store_directory_cashback_preview.sql");
+  const home = read("../app/kody-rabatowe/page.tsx");
+  const shop = read("../app/kody-rabatowe/[slug]/page.tsx");
+  const background = read("../extension/background.js");
+  const manifest = JSON.parse(read("../extension/manifest.json"));
+  assert.match(val, /cashbackState/);
+  assert.match(val, /Nie można włączyć cashbacku/);
+  assert.match(migration, /enable row level security/);
+  assert.match(migration, /'unavailable', 'preparing'/);
+  assert.match(shop, /Cashback użytkownika/);
+  assert.match(shop, /Nieakt[y]?wny|Niedostępny/);
+  assert.match(home, /StoreDirectory/);
+  assert.match(background, /chrome\.tabs\.onUpdated/);
+  assert.match(background, /chrome\.action\.setBadgeText/);
+  assert.doesNotMatch(background, /affiliate_url|chrome\.cookies|sendMessage\(.*url/);
+  assert.deepEqual(manifest.permissions, ["tabs"]);
 });
