@@ -15,6 +15,7 @@ const groups: { title: string; items: NavItem[] }[] = [
       { label: "Kreator stylizacji", href: "/admin/stylizacje", path: "m8 4-2 5-3 2 2 9h14l2-9-3-2-2-5H8ZM8 4v4l4 2 4-2V4M8 15h8" },
       { label: "Promocje SHEIN", href: "/admin/promocje-shein", path: "M3 8V4h18v4M5 8h14v12H5zM9 12h6M9 16h4" },
       { label: "Kody wielu sklepów", href: "/admin/kody-rabatowe", path: "M3 8V4h18v4M5 8h14v12H5zM9 12h6M9 16h4" },
+      { label: "Terminy promocji", href: "/admin/terminy-promocji", path: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2ZM8 14h3M8 18h3M14 14h3" },
     ],
   },
   {

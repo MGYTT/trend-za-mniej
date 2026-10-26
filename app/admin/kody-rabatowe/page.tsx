@@ -23,6 +23,7 @@ export default async function AdminCouponPage() {
       <div className="mx-auto max-w-6xl px-5 py-8">
         <Link href="/admin" className="text-xs font-black text-rose-700">← Wróć do panelu</Link>
         <h1 className="mt-4 text-3xl font-black">Kody rabatowe i promocje sklepów</h1>
+        <Link href="/admin/terminy-promocji" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-rose-200 bg-white px-4 text-sm font-black text-rose-700">Terminy, wygasające oferty i weryfikacja →</Link>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600">
           Dodawaj zweryfikowane kupony i promocje innych sklepów.
           Dotychczasowe kampanie SHEIN pozostają w osobnym menedżerze.
