@@ -1,17 +1,26 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import type { StoreCard } from "@/lib/stores";
+
+const KEY = "tzm-stores-favourites";
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener("tzm-favourites-change", callback);
+  return () => { window.removeEventListener("storage", callback); window.removeEventListener("tzm-favourites-change", callback); };
+}
+const clientSnapshot = () => localStorage.getItem(KEY) || "[]";
+const serverSnapshot = () => "[]";
 
 export default function StoreDirectory({ stores, unavailable }: { stores: StoreCard[]; unavailable: boolean }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Wszystkie");
-  const [favourites, setFavourites] = useState<string[]>([]);
+  const saved = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
+  const favourites = useMemo(() => {
+    try { const data: unknown = JSON.parse(saved); return Array.isArray(data) ? data.filter(x => typeof x === "string") as string[] : []; }
+    catch { return []; }
+  }, [saved]);
   const [onlyFavourites, setOnlyFavourites] = useState(false);
-  useEffect(() => {
-    try { const saved: unknown = JSON.parse(localStorage.getItem("tzm-stores-favourites") || "[]");
-      if (Array.isArray(saved)) setFavourites(saved.filter(s => typeof s === "string")); } catch { /* unavailable */ }
-  }, []);
   const categories = useMemo(() => ["Wszystkie", ...new Set(stores.map(s => s.category))], [stores]);
   const shown = useMemo(() => stores.filter(s =>
     (s.name + " " + s.description + " " + s.category).toLocaleLowerCase("pl")
@@ -21,8 +30,7 @@ export default function StoreDirectory({ stores, unavailable }: { stores: StoreC
   ), [stores, query, category, favourites, onlyFavourites]);
   function toggle(slug: string) {
     const next = favourites.includes(slug) ? favourites.filter(s => s !== slug) : [...favourites, slug];
-    setFavourites(next);
-    try { localStorage.setItem("tzm-stores-favourites", JSON.stringify(next)); } catch { /* unavailable */ }
+    try { localStorage.setItem(KEY, JSON.stringify(next)); window.dispatchEvent(new Event("tzm-favourites-change")); } catch { /* unavailable */ }
   }
   return (
     <section aria-labelledby="store-directory" className="mx-auto max-w-7xl px-5 py-10">
