@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { LOOKS } from "@/lib/stylizacje";
 import { validateOutfitInput } from "@/lib/outfit-builder";
+import { OUTFIT_CATEGORIES } from "@/lib/outfit-landing-categories";
 
 export const runtime = "nodejs";
 
@@ -38,6 +39,7 @@ async function parseBody(request: NextRequest): Promise<Record<string, unknown> 
 function refreshOutfits(slugs: string[]) {
   revalidatePath("/");
   revalidatePath("/stylizacje");
+  for (const category of OUTFIT_CATEGORIES) revalidatePath("/stylizacje/" + category.slug);
   revalidatePath("/sitemap.xml");
   for (const slug of slugs) {
     revalidatePath("/stylizacje/" + slug);
