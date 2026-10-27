@@ -75,6 +75,7 @@ export default async function LookPage({ params }: Props) {
   }
   const look = eligibleLooks.find((item) => item.slug === slug);
   if (!look) notFound();
+  const matchingCategories = OUTFIT_CATEGORIES.filter((category) => matchesOutfitCategory(category, look));
 
   const siteUrl = getSiteUrl();
   const url = siteUrl + "/stylizacje/" + look.slug;
@@ -192,6 +193,20 @@ export default async function LookPage({ params }: Props) {
             </p>
           </div>
         </header>
+
+        {matchingCategories.length > 0 && (
+          <nav aria-label="Kategorie tej stylizacji" className="mt-10">
+            <p className="mb-3 text-sm font-black text-stone-700">Przeglądaj podobne inspiracje</p>
+            <div className="flex flex-wrap gap-2">
+              {matchingCategories.map((category) => (
+                <Link key={category.slug} href={"/stylizacje/" + category.slug}
+                  className="inline-flex min-h-11 items-center rounded-full border border-rose-200 bg-white px-4 text-xs font-bold text-rose-700 hover:bg-rose-50">
+                  {category.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
 
         <section id="sklad-stylizacji" aria-labelledby="outfit-items-title" className="mt-12 scroll-mt-24 lg:mt-16">
           <div className="max-w-3xl">
