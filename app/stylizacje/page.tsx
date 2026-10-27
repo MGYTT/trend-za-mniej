@@ -8,6 +8,7 @@ import { getProducts, formatPrice } from "@/lib/products";
 import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { getSiteUrl } from "@/lib/site";
 import type { OutfitPreview } from "@/lib/outfit-filters";
+import { OUTFIT_CATEGORIES, matchesOutfitCategory } from "@/lib/outfit-landing-categories";
 
 export const revalidate = 60;
 
@@ -54,6 +55,8 @@ export default async function LooksPage({
       alt: product.name,
     })),
   }));
+
+  const visibleCategories = OUTFIT_CATEGORIES.filter((category) => looks.some((look) => matchesOutfitCategory(category, look)));
 
   const featured = looks.length
     ? looks.reduce((cheapest, current) => current.total < cheapest.total ? current : cheapest)
@@ -129,7 +132,7 @@ export default async function LooksPage({
               {[100, 150, 200].map((budget) => (
                 <Link
                   key={budget}
-                  href={`/stylizacje?budzet=${budget}#wybierz-stylizacje`}
+                  href={`/stylizacje/do-${budget}-zl`}
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-rose-200 bg-white px-4 text-xs font-black text-rose-700 transition hover:border-rose-400 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-400"
                 >
                   Do {budget} zł →
@@ -173,6 +176,26 @@ export default async function LooksPage({
           )}
         </div>
       </div>
+
+      {visibleCategories.length > 0 && (
+        <section aria-labelledby="outfit-categories-title" className="mx-auto max-w-7xl px-6 pt-12 sm:px-8 sm:pt-16">
+          <p className="text-xs font-black uppercase tracking-widest text-rose-700">Inspiracje na konkretną okazję</p>
+          <h2 id="outfit-categories-title" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+            Stylizacje według budżetu i okazji
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-600">
+            Odkryj osobne kolekcje na randkę, imprezę, do pracy i na codzienne wyjścia. Każda prowadzi do zestawów ze sprawdzoną sumą cen.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {visibleCategories.map((category) => (
+              <Link key={category.slug} href={"/stylizacje/" + category.slug}
+                className="inline-flex min-h-11 items-center rounded-full border border-rose-200 bg-white px-4 text-sm font-bold text-rose-700 transition hover:border-rose-400 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-rose-400">
+                {category.label} →
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section id="wybierz-stylizacje" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-12 sm:px-8 sm:py-16" aria-labelledby="choose-title">
         <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
