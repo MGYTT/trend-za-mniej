@@ -22,7 +22,7 @@ test("listing is consistent with the homepage on small screens", () => {
   assert.match(listing, /bg-\[#fff8f7\]/);
   assert.match(listing, /px-6 py-11 sm:gap-10 sm:px-8/);
   assert.match(listing, /text-\[clamp\(2\.3rem,7\.5vw,5rem\)\]/);
-  assert.match(listing, /\/stylizacje\?budzet=\$\{budget\}/);
+  assert.match(listing, /\/stylizacje\/do-\$\{budget\}-zl/);
   assert.match(listing, /id="wybierz-stylizacje"/);
   assert.match(listing, /id="poradnik-stylizacji"/);
 });

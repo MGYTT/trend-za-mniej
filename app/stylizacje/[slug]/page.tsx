@@ -9,16 +9,35 @@ import { LOOKS } from "@/lib/stylizacje";
 import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 import { getSiteUrl } from "@/lib/site";
 import { getGuidesForLook } from "@/lib/poradniki";
+import { OUTFIT_CATEGORIES, getOutfitCategory, matchesOutfitCategory } from "@/lib/outfit-landing-categories";
+import OutfitCategoryLanding from "@/components/OutfitCategoryLanding";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return LOOKS.map((look) => ({ slug: look.slug }));
+  return [...LOOKS.map((look) => ({ slug: look.slug })), ...OUTFIT_CATEGORIES.map((category) => ({ slug: category.slug }))];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const category = getOutfitCategory(slug);
+  if (category) {
+    const matching = (await getAllResolvedLooks(await getProducts()))
+      .filter((item) => item.available && matchesOutfitCategory(category, item));
+    if (!matching.length) return { title: "Kategoria stylizacji niedostępna", robots: { index: false, follow: false } };
+    return {
+      title: category.heading,
+      description: category.description,
+      alternates: { canonical: "/stylizacje/" + category.slug },
+      openGraph: {
+        type: "website",
+        title: category.heading + " | Trend za Mniej",
+        description: category.description,
+        url: "/stylizacje/" + category.slug,
+      },
+    };
+  }
   const look = (await getAllResolvedLooks(await getProducts())).find((item) => item.slug === slug);
   if (!look?.available) {
     return { title: "Stylizacja niedostępna", robots: { index: false, follow: false } };
@@ -48,8 +67,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LookPage({ params }: Props) {
   const { slug } = await params;
   const eligibleLooks = (await getAllResolvedLooks(await getProducts())).filter((item) => item.available);
+  const category = getOutfitCategory(slug);
+  if (category) {
+    const matching = eligibleLooks.filter((item) => matchesOutfitCategory(category, item));
+    if (!matching.length) notFound();
+    return <OutfitCategoryLanding category={category} looks={matching} />;
+  }
   const look = eligibleLooks.find((item) => item.slug === slug);
   if (!look) notFound();
+  const matchingCategories = OUTFIT_CATEGORIES.filter((category) => matchesOutfitCategory(category, look));
 
   const siteUrl = getSiteUrl();
   const url = siteUrl + "/stylizacje/" + look.slug;
@@ -167,6 +193,20 @@ export default async function LookPage({ params }: Props) {
             </p>
           </div>
         </header>
+
+        {matchingCategories.length > 0 && (
+          <nav aria-label="Kategorie tej stylizacji" className="mt-10">
+            <p className="mb-3 text-sm font-black text-stone-700">Przeglądaj podobne inspiracje</p>
+            <div className="flex flex-wrap gap-2">
+              {matchingCategories.map((category) => (
+                <Link key={category.slug} href={"/stylizacje/" + category.slug}
+                  className="inline-flex min-h-11 items-center rounded-full border border-rose-200 bg-white px-4 text-xs font-bold text-rose-700 hover:bg-rose-50">
+                  {category.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
 
         <section id="sklad-stylizacji" aria-labelledby="outfit-items-title" className="mt-12 scroll-mt-24 lg:mt-16">
           <div className="max-w-3xl">

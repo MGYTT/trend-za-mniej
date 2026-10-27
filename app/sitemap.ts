@@ -20,6 +20,7 @@ import {
 
 import { getProducts } from "@/lib/products";
 import { getAllResolvedLooks } from "@/lib/editorial-outfits";
+import { OUTFIT_CATEGORIES, matchesOutfitCategory } from "@/lib/outfit-landing-categories";
 import { STYLE_GUIDES } from "@/lib/poradniki";
 import { getPublicShopDirectory } from "@/lib/stores";
 
@@ -362,9 +363,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // Only include published, complete outfits that still fit their budgets.
-  const lookPages: MetadataRoute.Sitemap = (await getAllResolvedLooks(await getProducts()))
-    .filter((look) => look.available)
+  const availableLooks = (await getAllResolvedLooks(await getProducts())).filter((look) => look.available);
+  const lookPages: MetadataRoute.Sitemap = availableLooks
     .map((look) => ({ url: `${siteUrl}/stylizacje/${look.slug}` }));
+  const outfitCategoryPages: MetadataRoute.Sitemap = OUTFIT_CATEGORIES
+    .filter((category) => availableLooks.some((look) => matchesOutfitCategory(category, look)))
+    .map((category) => ({ url: `${siteUrl}/stylizacje/${category.slug}` }));
 
   const guidePages: MetadataRoute.Sitemap = STYLE_GUIDES.map((guide) => ({
     url: `${siteUrl}/poradniki/${guide.slug}`,
@@ -391,6 +395,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...merchantPages,
     ...lookPages,
+    ...outfitCategoryPages,
     ...guidePages,
     ...staticPages,
     ...categoryPages,
