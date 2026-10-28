@@ -2086,3 +2086,14 @@ body.admin-social-studio-app {
       1 !important;
   }
 }
+/* Soft entrance for the optional, dismissible welcome offer. */
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

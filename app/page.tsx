@@ -1,6 +1,7 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import HomeLanding from "@/components/HomeLanding";
+import WelcomeSheinOffer from "@/components/WelcomeSheinOffer";
 import { getProducts, getFeaturedProducts, type Product } from "@/lib/products";
 import { getAllResolvedLooks } from "@/lib/editorial-outfits";
 
@@ -32,6 +33,7 @@ export default async function Home() {
     <main className="min-h-screen bg-[#faf8f7] text-stone-950">
       <SiteHeader />
       <HomeLanding looks={looks} products={selectedProducts} />
+      <WelcomeSheinOffer />
       <SiteFooter />
     </main>
   );
