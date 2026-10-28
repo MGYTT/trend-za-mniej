@@ -92,11 +92,11 @@ export default function SweaterCategoryEditorial({
           <div className="rounded-2xl border border-stone-200 bg-stone-50 p-5">
             <h3 className="text-base font-black text-stone-950">Z czym połączyć sweter?</h3>
             <p className="mt-2 text-sm leading-7 text-stone-600">
-              Beżowy lub jednokolorowy sweter można zestawić z ciemnym dołem.
+              Beżowy lub jednokolorowy sweter można zestawić z ciemnym dołem.{" "}
               {hasTrousers && (
-                <> Porównaj <Link href="/kategoria/spodnie" className="font-bold text-rose-700 underline-offset-2 hover:underline">spodnie z katalogu</Link>,</>
+                <>Sprawdź <Link href="/kategoria/spodnie" className="font-bold text-rose-700 underline-offset-2 hover:underline">spodnie z katalogu</Link>.{" "}</>
               )}
-              {" "}a po pomysły na gotowe zestawy zajrzyj do <Link href="/stylizacje" className="font-bold text-rose-700 underline-offset-2 hover:underline">stylizacji w budżecie</Link>.
+              Po pomysły na gotowe zestawy zajrzyj do <Link href="/stylizacje" className="font-bold text-rose-700 underline-offset-2 hover:underline">stylizacji w budżecie</Link>.
             </p>
           </div>
         </div>
