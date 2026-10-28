@@ -288,6 +288,12 @@ function MoreWaysToDiscover() {
             </Link>
           ))}
         </div>
+        <p className="mt-6 text-center text-sm leading-7 text-stone-600">
+          Szukasz inspiracji na chłodniejsze dni?{" "}
+          <Link href="/kategoria/swetry" className="font-black text-rose-700 underline-offset-4 hover:underline">
+            Zobacz swetry damskie SHEIN i porównaj ceny w katalogu →
+          </Link>
+        </p>
       </div>
     </section>
   );
