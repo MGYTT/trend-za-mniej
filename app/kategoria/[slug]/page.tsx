@@ -9,6 +9,7 @@ import {
 } from "next/navigation";
 
 import ProductCard from "@/components/ProductCard";
+import SweaterCategoryEditorial from "@/components/SweaterCategoryEditorial";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
@@ -180,6 +181,8 @@ export default async function CategoryPage({
   ) {
     notFound();
   }
+
+  const isSweaterCategory = category.name === "Swetry";
 
   const siteUrl =
     getSiteUrl();
@@ -400,9 +403,7 @@ export default async function CategoryPage({
               </p>
 
               <h1 className="mt-1 text-balance text-3xl font-black tracking-[-0.04em] sm:text-4xl lg:text-5xl">
-                {
-                  category.name
-                }
+                {isSweaterCategory ? "Swetry damskie SHEIN" : category.name}
               </h1>
 
               <p className="mt-3 max-w-2xl text-pretty text-sm leading-7 text-stone-500 sm:text-base">
@@ -479,6 +480,14 @@ export default async function CategoryPage({
           )}
         </div>
       </section>
+
+      {isSweaterCategory && (
+        <SweaterCategoryEditorial
+          products={products}
+          hasCardigans={categories.includes("Kardigany")}
+          hasTrousers={categories.includes("Spodnie")}
+        />
+      )}
 
       {categoryLooks.length > 0 && (
         <section className="border-t border-rose-100 bg-rose-50/40">
