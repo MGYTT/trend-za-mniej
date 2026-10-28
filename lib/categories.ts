@@ -34,15 +34,15 @@ const CATEGORY_SEO: Record<
 
   Swetry: {
     title:
-      "Swetry damskie SHEIN – modne swetry i okazje",
+      "Swetry damskie SHEIN – modele i ceny w katalogu",
     description:
-      "Przeglądaj wybrane swetry damskie SHEIN: klasyczne, oversize i dzianinowe modele na chłodniejsze dni. Zobacz ceny i aktualne oferty.",
+      "Swetry damskie SHEIN z katalogu Trend za Mniej: porównaj zdjęcia, fasony i zapisane ceny. Sprawdź rozmiary oraz cenę końcową u sprzedawcy.",
     intro:
-      "Zebraliśmy tutaj wybrane swetry damskie, które łatwo zestawić z jeansami, spódnicą lub codzienną stylizacją. Każda oferta prowadzi do aktualnej strony produktu w sklepie.",
+      "Przeglądaj swetry damskie SHEIN wybrane do katalogu Trend za Mniej: gładkie, luźniejsze i dzianinowe fasony. Porównaj zapisane ceny i zdjęcia, a przed zakupem sprawdź aktualny wariant oraz dostępność bezpośrednio w SHEIN.",
     tips: [
-      "Przed zakupem sprawdź skład dzianiny i sposób pielęgnacji.",
-      "Zwróć uwagę na długość swetra i wymiary podane w tabeli produktu.",
-      "Cena widoczna w Trend za Mniej jest ceną z chwili publikacji lub aktualizacji.",
+      "Porównaj skład dzianiny, grubość materiału i zalecenia dotyczące prania.",
+      "Sprawdź długość swetra i tabelę wymiarów; zwróć uwagę, czy rozmiarówka nie jest młodzieżowa.",
+      "Ceny w Trend za Mniej są zapisane w katalogu, a nie sprawdzane na żywo w koszyku SHEIN.",
     ],
   },
 
