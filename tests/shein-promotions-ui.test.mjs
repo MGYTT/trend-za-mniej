@@ -124,3 +124,13 @@ test("sale and new-customer filters include cross-category campaigns", () => {
   assert.match(explorer, /promotion.category === category \|\| newUserPromotion\(promotion\)/);
   assert.match(explorer, /promotion.category === category \|\| salePromotion\(promotion\)/);
 });
+
+
+test("Search Console queries map to truthful SHEIN search landing content", () => {
+  assert.match(listing, /title: "Kody SHEIN i promocje – wyszukiwarka kampanii"/);
+  assert.match(listing, /Szukasz kodu rabatowego SHEIN\?/);
+  assert.match(listing, /couponCount === 0/);
+  assert.match(listing, /nie ma tu wpisów oznaczonych jako kupony rabatowe do koszyka/);
+  assert.match(listing, /Kod kampanii nie musi obniżać ceny zamówienia/);
+  assert.doesNotMatch(listing, /najlepszy kod rabatowy|gwarantowany kupon|100% działające kody/i);
+});

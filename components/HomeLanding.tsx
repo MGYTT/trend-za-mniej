@@ -267,7 +267,7 @@ function ProductSelection({ products }: { products: readonly Product[] }) {
 }
 
 const DISCOVERY_PATHS = [
-  { href: "/promocje-shein", label: "Promocje SHEIN", title: "Sprawdź kampanie i kupony", description: "Warunki i aktualność promocji potwierdzaj bezpośrednio w sklepie.", accent: "bg-rose-50 border-rose-100", mark: "%" },
+  { href: "/promocje-shein", label: "Promocje SHEIN", title: "Kody SHEIN – poznaj rodzaj oferty", description: "Sprawdź kody kampanii i dowiedz się, czym różnią się od kuponów rabatowych.", accent: "bg-rose-50 border-rose-100", mark: "%" },
   { href: "/tiktok", label: "Inspiracje społeczności", title: "Odkryj produkty z TikToka", description: "Zobacz produkty wyróżniane w naszej sekcji TikTok.", accent: "bg-orange-50 border-orange-100", mark: "↗" },
   { href: "/poradniki", label: "Praktyczna wiedza", title: "Wybieraj z większą pewnością", description: "Sprawdź, jak łączyć fasony, dopasować rozmiar i planować zakupy.", accent: "bg-stone-100 border-stone-200", mark: "?" },
 ] as const;
