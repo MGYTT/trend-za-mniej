@@ -7,9 +7,9 @@ import { getPublishedSheinCampaigns } from "@/lib/shein-campaigns";
 import { getSiteUrl, SITE_LANGUAGE, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Promocje SHEIN i kody kampanii – znajdź ofertę",
+  title: "Kody SHEIN i promocje – wyszukiwarka kampanii",
   description:
-    "Znajdź kampanie i kody SHEIN bez długiego szukania. Filtruj kategorię, skopiuj kod i przejdź do sklepu, aby sprawdzić aktualne warunki.",
+    "Szukasz kodu rabatowego SHEIN? Sprawdź dostępne kody kampanii, dowiedz się, czym różnią się od kuponów do koszyka, i poznaj warunki ofert w SHEIN.",
   alternates: { canonical: "/promocje-shein" },
   robots: { index: true, follow: true },
   openGraph: {
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
     locale: "pl_PL",
     url: "/promocje-shein",
     siteName: SITE_NAME,
-    title: "Promocje SHEIN i kody kampanii | Trend za Mniej",
-    description: "Kody, kampanie i wyprzedaże SHEIN w przejrzystej wyszukiwarce.",
+    title: "Kody SHEIN i promocje – wyszukiwarka kampanii",
+    description: "Sprawdź kody SHEIN i rodzaje ofert. Kody kampanii to nie zawsze kupony rabatowe do koszyka.",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Promocje SHEIN i kody kampanii",
-    description: "Wybierz kategorię, skopiuj kod kampanii i sprawdź ofertę w SHEIN.",
+    title: "Kody SHEIN i promocje – wyszukiwarka kampanii",
+    description: "Szukasz kuponu SHEIN? Zobacz kody kampanii i sprawdź, jakiego rodzaju są to promocje.",
     images: ["/opengraph-image"],
   },
 };
@@ -51,6 +51,8 @@ export const dynamic = "force-dynamic";
 
 export default async function SheinPromotionsPage() {
   const { promotions, updatedAt, unavailable } = await getPublishedSheinCampaigns();
+  const couponCount = promotions.filter((promotion) => promotion.codeKind === "coupon").length;
+  const campaignCount = promotions.filter((promotion) => promotion.codeKind === "campaign").length;
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/promocje-shein`;
   const updatedAtLabel = new Intl.DateTimeFormat("pl-PL", {
@@ -67,8 +69,8 @@ export default async function SheinPromotionsPage() {
         "@type": "CollectionPage",
         "@id": `${pageUrl}#webpage`,
         url: pageUrl,
-        name: "Promocje SHEIN i kody kampanii",
-        description: "Zestawienie kodów do wyszukiwania kampanii i ofert SHEIN.",
+        name: "Kody SHEIN i promocje – wyszukiwarka kampanii",
+        description: "Kody kampanii SHEIN z informacją o różnicach między kampanią a kuponem rabatowym.",
         inLanguage: SITE_LANGUAGE,
         dateModified: updatedAt,
         isPartOf: { "@id": `${siteUrl}/#website` },
@@ -112,10 +114,10 @@ export default async function SheinPromotionsPage() {
                 Kody i kampanie w jednym miejscu
               </p>
               <h1 id="promotion-hero-title" className="mt-1 max-w-3xl text-pretty text-[clamp(2.1rem,7.3vw,4.6rem)] font-black leading-[1.08] tracking-[-0.055em] text-stone-950 sm:mt-5">
-                Promocje SHEIN. <span className="block text-rose-600">Znajdź je szybciej.</span>
+                Kody SHEIN i promocje. <span className="block text-rose-600">Znajdź właściwą ofertę.</span>
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-6 text-stone-600 sm:mt-4 sm:text-lg sm:leading-8">
-                Wybierz kategorię lub wpisz kod. Skopiuj go i sprawdź warunki oferty w SHEIN — bez długiego szukania.
+                Wybierz kategorię lub wpisz kod. Sprawdź, czy to kod kampanii do wyszukania oferty, czy kupon do koszyka. Warunki i ceny potwierdź w SHEIN.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-6">
                 <a href="#znajdz-promocje"
@@ -167,7 +169,19 @@ export default async function SheinPromotionsPage() {
                Lista kampanii jest chwilowo niedostępna. Spróbuj ponownie później.
              </div>
            )}
-           <SheinPromotionsExplorer promotions={promotions} />
+           <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50/60 p-5 sm:p-6" aria-labelledby="shein-coupon-help-title">
+            <h3 id="shein-coupon-help-title" className="text-lg font-black tracking-tight text-stone-950">
+              Szukasz kodu rabatowego SHEIN?
+            </h3>
+            <p className="mt-2 text-sm leading-7 text-stone-700">
+              W katalogu znajdziesz {campaignCount} {campaignCount === 1 ? "kod kampanii" : "kodów kampanii"} do wyszukiwania ofert.
+              {couponCount === 0
+                ? " Obecnie nie ma tu wpisów oznaczonych jako kupony rabatowe do koszyka."
+                : ` Jest też ${couponCount} ${couponCount === 1 ? "wpis oznaczony" : "wpisów oznaczonych"} jako kupony do koszyka.`}
+              {" "}Kod kampanii nie musi obniżać ceny zamówienia. Każdą zniżkę i jej warunki sprawdź u sprzedawcy.
+            </p>
+          </div>
+          <SheinPromotionsExplorer promotions={promotions} />
           <p className="mt-7 rounded-2xl border border-rose-100 bg-white px-5 py-4 text-xs leading-6 text-stone-600">
             <strong className="text-stone-900">Ważne:</strong> kody z katalogu nie są weryfikowane w czasie rzeczywistym.
             Większość to oznaczenia kampanii, a nie kupony do koszyka. Ceny, ważność i warunki sprawdzaj bezpośrednio w SHEIN.
