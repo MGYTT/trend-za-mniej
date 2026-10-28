@@ -21,7 +21,7 @@ test("sweater price range is calculated only from current active category catalo
   assert.match(categoryPage, /getProducts\(\{ category: category\.name, sort: "newest" \}\)/);
   assert.match(categoryPage, /<SweaterCategoryEditorial/);
   assert.match(categoryPage, /products=\{products\}/);
-  assert.match(editorial, /products\.map\(\(product\) => product\.price\)/);
+  assert.match(editorial, /products\s*\.map\(\(product\) => product\.price\)/);
   assert.match(editorial, /Number\.isFinite\(price\) && price > 0/);
   assert.match(editorial, /Math\.min\(\.\.\.prices\)/);
   assert.match(editorial, /Math\.max\(\.\.\.prices\)/);
