@@ -25,7 +25,7 @@
     "verify:shein-promotions": "npm run test:shein-promotions && npm run lint && npm run build",
     "test:outfit-builder": "node --experimental-strip-types --test tests/outfit-builder.test.mjs",
     "verify:outfit-builder": "npm run test:outfit-builder && npm run lint && npm run build",
-    "test:homepage-discovery": "node --test tests/homepage-discovery.test.mjs",
+    "test:homepage-discovery": "node --test tests/homepage-discovery.test.mjs tests/welcome-shein-offer.test.mjs",
     "test:admin-ios-shell": "node --test tests/admin-ios-shell.test.mjs",
     "verify:admin-ios-shell": "npm run test:admin-ios-shell && npm run lint && npm run build",
     "test:admin-daily-workflow": "node --test tests/admin-daily-workflow.test.mjs",
