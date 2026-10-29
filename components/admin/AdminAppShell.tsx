@@ -318,7 +318,7 @@ export default function AdminAppShell({
           dialog.querySelectorAll<HTMLElement>(
             'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-        ).filter((element) => element.getClientRects().length > 0);
+        ).filter((element) => element.getClientRects().length > 0 && !element.closest("[inert]"));
         if (!focusables.length) {
           event.preventDefault();
           dialog.focus();
