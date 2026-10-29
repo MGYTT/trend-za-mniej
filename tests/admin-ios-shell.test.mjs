@@ -122,7 +122,7 @@ test("More is organized into four accessible, collapsible iOS-style categories",
   assert.match(shell, /inert=\{!opened\}/);
   assert.match(shell, /role="dialog"/);
   assert.match(shell, /aria-modal="true"/);
-  assert.match(shell, /<MoreMenuIcon icon=\{item\.icon\} \/>/);
+  assert.match(shell, /<MoreMenuIcon icon=\{icon\} \/>/);
   assert.match(shell, /aria-current=\{active \? "page" : undefined\}/);
 });
 
