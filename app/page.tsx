@@ -4,6 +4,7 @@ import HomeLanding from "@/components/HomeLanding";
 import WelcomeSheinOffer from "@/components/WelcomeSheinOffer";
 import { getProducts, getFeaturedProducts, type Product } from "@/lib/products";
 import { getAllResolvedLooks } from "@/lib/editorial-outfits";
+import { getPublicWelcomeSheinOffer } from "@/lib/welcome-shein-public";
 
 export const revalidate = 60;
 
@@ -17,9 +18,10 @@ function uniqueById(products: readonly Product[]): Product[] {
 }
 
 export default async function Home() {
-  const [allProducts, featuredProducts] = await Promise.all([
+  const [allProducts, featuredProducts, welcomeOffer] = await Promise.all([
     getProducts(),
     getFeaturedProducts(),
+    getPublicWelcomeSheinOffer(),
   ]);
   // Lead with parts of complete looks, not an unrelated random product.
   const looks = (await getAllResolvedLooks(allProducts)).filter((look) => look.available);
@@ -33,7 +35,7 @@ export default async function Home() {
     <main className="min-h-screen bg-[#faf8f7] text-stone-950">
       <SiteHeader />
       <HomeLanding looks={looks} products={selectedProducts} />
-      <WelcomeSheinOffer />
+      {welcomeOffer && <WelcomeSheinOffer settings={welcomeOffer} />}
       <SiteFooter />
     </main>
   );
