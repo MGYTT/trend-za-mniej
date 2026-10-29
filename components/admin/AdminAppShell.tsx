@@ -468,6 +468,7 @@ function MobileBottomNavigation({
   const offersActive = onDashboard && activeHash === "#admin-offers";
   const moreActive =
     moreOpen ||
+    pathname.startsWith("/admin/autopilot") ||
     pathname.startsWith("/admin/tiktok") ||
     pathname.startsWith("/admin/seo") ||
     pathname.startsWith("/admin/statystyki") ||
@@ -695,8 +696,32 @@ function MoreSheet({
             </section>
           )}
 
-          <p className="admin-sheet-section-label">Narzędzia</p>
+          <p className="admin-sheet-section-label">Centrum i narzędzia</p>
           <section className="admin-ios-group">
+            <AppMenuLink
+              href="/admin/autopilot"
+              icon="stats"
+              title="Centrum Autopilota"
+              description="Automatyzacje, pilne zadania i porządek"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
+            <AppMenuLink
+              href="/admin/terminy-promocji"
+              icon="offers"
+              title="Terminy promocji"
+              description="Sprawdź ważność i ostatnie weryfikacje"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
+            <AppMenuLink
+              href="/admin/widocznosc"
+              icon="seo"
+              title="Indeksowanie i IndexNow"
+              description="Zgłoszenia adresów do wyszukiwarek"
+              onClick={onClose}
+            />
+            <div className="admin-ios-divider" />
             <AppMenuLink
               href="/admin/nowa-oferta"
               icon="add"
