@@ -145,9 +145,9 @@ export default function AdminOutfitStudio({
   }
 
   return (
-    <div className="mt-8 grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(330px,0.82fr)]">
+    <div className="mt-8 grid min-w-0 w-full grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(330px,0.82fr)]">
       <div className="min-w-0 space-y-6">
-        <section aria-labelledby="outfit-admin-list" className="rounded-[26px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
+        <section aria-labelledby="outfit-admin-list" className="min-w-0 overflow-hidden rounded-[26px] border border-stone-200 bg-white p-4 shadow-sm sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-rose-700">Biblioteka zestawów</p>
@@ -168,15 +168,15 @@ export default function AdminOutfitStudio({
                 Nie masz jeszcze zestawów z kreatora. Dodaj pierwszą stylizację i opublikuj ją po sprawdzeniu podglądu.
               </div>
             ) : existing.map((look) => (
-              <div key={look.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 px-4 py-4">
-                <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm font-black text-stone-900">{look.title}</p>
+              <div key={look.id} className="grid min-w-0 w-full grid-cols-1 gap-3 rounded-2xl border border-stone-200 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="min-w-0 w-full">
+                  <p className="w-full text-sm font-black leading-6 text-stone-900 [overflow-wrap:normal] [word-break:normal]">{look.title}</p>
                   <p className="mt-1 text-xs text-stone-500">{look.occasion} · {look.product_ids.length} elementy</p>
                   <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-black ${look.published ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
                     {look.published ? "Opublikowano" : "Szkic"}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
                   {look.published && (
                     <Link href={"/stylizacje/" + look.slug} target="_blank"
                       className="inline-flex min-h-10 items-center rounded-xl border border-stone-200 px-3 text-xs font-bold text-stone-700">
@@ -197,7 +197,7 @@ export default function AdminOutfitStudio({
           </div>
         </section>
 
-        <section id="outfit-editor" aria-labelledby="outfit-editor-title" className="scroll-mt-24 rounded-[26px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
+        <section id="outfit-editor" aria-labelledby="outfit-editor-title" className="min-w-0 overflow-hidden scroll-mt-24 rounded-[26px] border border-stone-200 bg-white p-4 shadow-sm sm:p-7">
           <p className="text-xs font-black uppercase tracking-widest text-rose-700">{editing ? "Edycja zestawu" : "Nowy zestaw"}</p>
           <h2 id="outfit-editor-title" className="mt-2 text-2xl font-black tracking-tight text-stone-950">Zbuduj stylizację</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -304,7 +304,7 @@ export default function AdminOutfitStudio({
         </section>
       </div>
 
-      <aside className="min-w-0 space-y-4 xl:sticky xl:top-24">
+      <aside className="min-w-0 w-full space-y-4 xl:sticky xl:top-24">
         <section aria-labelledby="outfit-preview-heading" className="overflow-hidden rounded-[26px] border border-rose-100 bg-white shadow-[0_14px_40px_rgba(136,19,55,0.07)]">
           <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
             <h2 id="outfit-preview-heading" className="text-lg font-black text-stone-950">Podgląd na żywo</h2>
@@ -323,8 +323,8 @@ export default function AdminOutfitStudio({
             )}
           </div>
           <div className="p-5">
-            <p className="text-xs font-black uppercase tracking-wider text-rose-700">{form.occasion} · {form.style || "Twój styl"}</p>
-            <h3 className="mt-2 text-xl font-black leading-snug text-stone-950">{form.title || "Tytuł Twojego zestawu"}</h3>
+            <p className="text-xs font-black uppercase leading-5 tracking-wider text-rose-700 [overflow-wrap:normal] [word-break:normal]">{form.occasion} · {form.style || "Twój styl"}</p>
+            <h3 className="mt-2 text-xl font-black leading-snug text-stone-950 [overflow-wrap:normal] [word-break:normal]">{form.title || "Tytuł Twojego zestawu"}</h3>
             <p className="mt-2 line-clamp-3 text-sm leading-6 text-stone-600">{form.intro || "Uzupełnij opis, żeby przedstawić pomysł na stylizację."}</p>
             <div className="mt-5 border-t border-stone-100 pt-4">
               <p className="text-xs font-bold text-stone-600">Automatyczna suma zapisanych cen</p>
