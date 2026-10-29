@@ -86,7 +86,7 @@ test("outfit ranking labels are grounded in actual editor and legacy outfit titl
 
 test("desktop, iOS, existing analytics and headers link to the new report", () => {
   assert.match(sidebar, /href: "\/admin\/skutecznosc"/);
-  assert.match(shell, /href="\/admin\/skutecznosc"/);
+  assert.match(shell, /href: "\/admin\/skutecznosc"/);
   assert.match(shell, /pathname\.startsWith\("\/admin\/skutecznosc"\)/);
   assert.match(header, /pathname\.startsWith\("\/admin\/skutecznosc"\)/);
   assert.match(productStats, /adminData\.role === "owner"/);

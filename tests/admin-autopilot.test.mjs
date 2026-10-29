@@ -57,7 +57,7 @@ test("desktop and mobile navigation retain every old tool and introduce a clear 
   assert.match(sidebar, /01 · Sterowanie/);
   assert.match(sidebar, /04 · Wyniki i jakość/);
   assert.match(shell, /href="\/admin\/autopilot"/);
-  assert.match(shell, /href="\/admin\/terminy-promocji"/);
+  assert.match(shell, /href: "\/admin\/terminy-promocji"/);
   assert.match(header, /return "Centrum Autopilota"/);
   assert.match(dashboard, /href="\/admin\/autopilot"/);
   assert.match(admin, /href="\/admin\/autopilot"/);
