@@ -38,7 +38,7 @@ test("essential tools remain accessible when secondary routes move to More", () 
   for (const destination of [
     "/admin/nowa-oferta", "/admin/statystyki", "/admin/tiktok",
     "/admin/seo", "/admin/zespol", "/admin/stylizacje", "/admin#admin-offers",
-  ]) assert.ok(shell.includes(`href="${destination}"`), destination);
+  ]) assert.ok(shell.includes(`href="${destination}"`) || shell.includes(`href: "${destination}"`), destination);
   assert.match(shell, /Zainstaluj Trend Admin/);
   assert.match(shell, /action="\/auth\/signout"/);
 });
@@ -108,4 +108,44 @@ test("JSX class attributes and navigation closing tags remain well-formed", () =
     assert.doesNotMatch(source, /className="[^"\n>]*>/);
   }
   assert.equal(tabs.split("<BottomNavLink").length - 1, 4);
+});
+
+
+test("More is organized into four accessible, collapsible iOS-style categories", () => {
+  for (const title of [
+    "Katalog i oferty", "Marketing i treści",
+    "Wyniki i widoczność", "System i administracja",
+  ]) assert.ok(shell.includes(title), title);
+  assert.match(shell, /MORE_CATEGORIES: MoreCategory\[\]/);
+  assert.match(shell, /aria-controls=\{"admin-more-panel-" \+ group\.id\}/);
+  assert.match(shell, /aria-expanded=\{opened\}/);
+  assert.match(shell, /inert=\{!opened\}/);
+  assert.match(shell, /role="dialog"/);
+  assert.match(shell, /aria-modal="true"/);
+  assert.match(shell, /<MoreMenuIcon icon=\{item\.icon\} \/>/);
+  assert.match(shell, /aria-current=\{active \? "page" : undefined\}/);
+});
+
+test("More shows four fast shortcuts and searches by tool title or group", () => {
+  assert.match(shell, /className="admin-more-shortcuts"/);
+  for (const path of ["/admin/autopilot", "/admin/nowa-oferta", "/admin/stylizacje", "/admin/statystyki"]) {
+    assert.ok(shell.includes('href="' + path + '"'), path);
+  }
+  assert.match(shell, /type="search"/);
+  assert.match(shell, /htmlFor="admin-more-search"/);
+  assert.match(shell, /toLocaleLowerCase\("pl-PL"\)/);
+  assert.match(shell, /visibleCategories\.map/);
+  assert.match(shell, /Brak pasujących narzędzi/);
+  assert.match(shell, /input:not\(\[disabled\]\)/);
+});
+
+test("new mobile effects respect reduced motion and desktop layout is untouched", () => {
+  assert.match(newStyles, /\.admin-more-sheet\s*\{/);
+  assert.match(newStyles, /\.admin-more-shortcut:active/);
+  assert.match(newStyles, /\.admin-more-category-panel\.is-open/);
+  assert.match(newStyles, /@keyframes admin-more-slide-in/);
+  assert.match(newStyles, /admin-more-indicator/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(styles, /animation: none !important/);
+  assert.match(newStyles, /font-size: 16px/);
 });
