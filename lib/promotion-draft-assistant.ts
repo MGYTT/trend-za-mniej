@@ -44,10 +44,10 @@ export function preparePromotionDraft(input:DraftInput): PromotionDraft {
    new Date(date[0]+"T12:00:00Z").toISOString().slice(0,10)===date[0] ? date[0]:null;
  if(!validUntil) warnings.push("Nie znaleziono jednoznacznej daty wygaśnięcia.");
  else warnings.push("Datę ważności odczytano z tekstu — potwierdź ją u sprzedawcy.");
- const basket=/kod\w*.*koszyk|w\s+koszyku|kupon\s+rabatowy/i.test(text);
+ const basket=/kod\w*.*koszyk|w\s+koszyku|kupon\s+rabatowy|kod\s+rabatowy/i.test(text);
  const search=/wpisz.*wyszukiw|wyszukaj.*kod|kod\s+kampanii/i.test(text);
  const offerType:PromotionDraft["offerType"]=input.channel==="shein"?"campaign":
-   !code?"promotion":search?"campaign":basket||input.requestedType==="coupon"?"coupon":"campaign";
+   !code?"promotion":search?"campaign":basket?"coupon":"campaign";
  if(input.channel==="shein" && basket)warnings.push("Kupon do koszyka wymaga osobnego potwierdzenia. Zachowano bezpieczny typ kampanii.");
  const context=text.length>=12 ? text.replace(/[.!?]\s*$/,"") : "Sprawdź zakres oferty w sklepie";
  const title=limit((code?"Kod "+code:"Promocja")+" – "+(store||"Sklep")+" · "+badge,
