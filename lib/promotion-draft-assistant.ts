@@ -17,7 +17,8 @@ const limit = (s:string,n:number) => s.length <= n ? s : s.slice(0,n-1).replace(
 export function preparePromotionDraft(input:DraftInput): PromotionDraft {
  const store=clean(input.channel==="shein"?"SHEIN":input.storeName,120);
  const text=clean(input.rawText,2400);
- const enteredCode=clean(input.code,90).toUpperCase();
+ const rawCode = text.match(/\b(?:kod|kupon)\s*[:\-]\s*([A-Za-z0-9]{4,14})\b/i)?.[1] || "";
+ const enteredCode=clean(input.code || rawCode,90).toUpperCase();
  const code=input.channel==="shein" ? (/^[A-Z0-9]{4,14}$/.test(enteredCode)?enteredCode:"")
    : (/^[^\s]{2,90}$/.test(enteredCode)?enteredCode:"");
  const warnings:string[]=[];
