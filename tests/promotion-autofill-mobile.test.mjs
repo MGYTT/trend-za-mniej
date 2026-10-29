@@ -76,5 +76,5 @@ test("admin editors offer explicit draft button, SEO review and unchanged verifi
   assert.match(shein, /codeKind: "campaign"/);
   assert.match(shein, /Link i działanie kodu wymagają sprawdzenia/);
   assert.match(seo, /nie osobne tagi meta/);
-  assert.match(seo, /nie sprawdzania oferty na żywo/);
+  assert.match(seo, /bez sprawdzania oferty na żywo/);
 });
