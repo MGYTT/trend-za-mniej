@@ -78,6 +78,7 @@ export default async function AdminSheinCampaignsPage() {
               kampanię bez zmieniania kodu i ponownego wdrażania strony.
             </p>
           </div>
+          <Link href="/admin/oferta-powitalna" className="inline-flex min-h-11 items-center rounded-xl border border-rose-200 bg-white px-5 text-sm font-black text-rose-700">Personalizuj ofertę powitalną →</Link>
           <Link href="/admin/terminy-promocji"
             className="inline-flex min-h-11 items-center rounded-xl border border-stone-200 bg-white px-5 text-sm font-black text-stone-800">
             Terminy promocji →
