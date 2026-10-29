@@ -316,7 +316,7 @@ export default function AdminAppShell({
         if (event.key !== "Tab" || !dialog) return;
         const focusables = Array.from(
           dialog.querySelectorAll<HTMLElement>(
-            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
         ).filter((element) => element.getClientRects().length > 0);
         if (!focusables.length) {
@@ -428,6 +428,7 @@ export default function AdminAppShell({
         moreOpen && (
         <MoreSheet
           dialogRef={moreSheetRef}
+          pathname={pathname}
           standalone={
             standalone
           }
@@ -547,415 +548,278 @@ function BottomNavLink({
   );
 }
 
+
+type MoreIcon = "tiktok" | "seo" | "add" | "stats" | "offers" | "team" |
+  "website" | "looks" | "social" | "autopilot" | "calendar";
+
+type MoreTool = { href: string; icon: MoreIcon; title: string; description: string; external?: boolean };
+type MoreCategory = { id: string; title: string; subtitle: string; icon: MoreIcon; items: MoreTool[] };
+
+const MORE_CATEGORIES: MoreCategory[] = [
+  {
+    id: "catalog", title: "Katalog i oferty", subtitle: "Produkty, zestawy i promocje", icon: "offers",
+    items: [
+      { href: "/admin#admin-offers", icon: "offers", title: "Wszystkie oferty", description: "Przeglądaj i edytuj katalog" },
+      { href: "/admin/nowa-oferta", icon: "add", title: "Dodaj ofertę", description: "Nowy produkt w katalogu" },
+      { href: "/admin/stylizacje", icon: "looks", title: "Kreator stylizacji", description: "Twórz i publikuj zestawy" },
+      { href: "/admin/promocje-shein", icon: "offers", title: "Promocje SHEIN", description: "Kampanie i kody SHEIN" },
+      { href: "/admin/kody-rabatowe", icon: "offers", title: "Kody wielu sklepów", description: "Promocje innych partnerów" },
+      { href: "/admin/terminy-promocji", icon: "calendar", title: "Terminy promocji", description: "Ważność i weryfikacja ofert" },
+    ],
+  },
+  {
+    id: "marketing", title: "Marketing i treści", subtitle: "Materiały i kanały społecznościowe", icon: "social",
+    items: [
+      { href: "/admin/social", icon: "social", title: "Social Media", description: "Grafiki i materiały do publikacji" },
+      { href: "/admin/tiktok", icon: "tiktok", title: "TikTok", description: "Produkty z naszych filmów" },
+    ],
+  },
+  {
+    id: "insights", title: "Wyniki i widoczność", subtitle: "Statystyki, SEO i indeksowanie", icon: "stats",
+    items: [
+      { href: "/admin/statystyki", icon: "stats", title: "Statystyki", description: "Kliknięcia i wyniki produktów" },
+      { href: "/admin/skutecznosc", icon: "stats", title: "Skuteczność kanałów", description: "Produkty, stylizacje i kampanie" },
+      { href: "/admin/seo", icon: "seo", title: "Kontrola SEO", description: "Jakość kart produktowych" },
+      { href: "/admin/widocznosc", icon: "seo", title: "Widoczność Google", description: "IndexNow i wyszukiwarki" },
+    ],
+  },
+  {
+    id: "system", title: "System i administracja", subtitle: "Autopilot i dostęp do panelu", icon: "autopilot",
+    items: [
+      { href: "/admin/autopilot", icon: "autopilot", title: "Centrum Autopilota", description: "Automatyzacje i zadania do kontroli" },
+      { href: "/admin/zespol", icon: "team", title: "Zespół", description: "Administratorzy i uprawnienia" },
+      { href: "/", icon: "website", title: "Strona publiczna", description: "Otwórz Trend za Mniej", external: true },
+    ],
+  },
+];
+
 function MoreSheet({
-  dialogRef,
-  standalone,
-  isIOS,
-  installHelpOpen,
-  onInstall,
-  onClose,
+  dialogRef, pathname, standalone, isIOS, installHelpOpen, onInstall, onClose,
 }: {
   dialogRef: React.RefObject<HTMLDivElement | null>;
+  pathname: string;
   standalone: boolean;
   isIOS: boolean;
   installHelpOpen: boolean;
-
-  onInstall:
-    () => void;
-
-  onClose:
-    () => void;
+  onInstall: () => void;
+  onClose: () => void;
 }) {
+  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(["catalog"]));
+  const query = search.trim().toLocaleLowerCase("pl-PL");
+  const visibleCategories = MORE_CATEGORIES.map((group) => {
+    const matchesCategory = [group.title, group.subtitle]
+      .some((value) => value.toLocaleLowerCase("pl-PL").includes(query));
+    return {
+      ...group,
+      items: group.items.filter((item) =>
+        !query || matchesCategory ||
+        [item.title, item.description].some((value) => value.toLocaleLowerCase("pl-PL").includes(query))
+      ),
+    };
+  }).filter((group) => group.items.length > 0);
+
+  function toggleCategory(id: string) {
+    setExpanded((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   return (
     <>
-      <button
-        type="button"
-        aria-label="Zamknij menu"
-        onClick={
-          onClose
-        }
-        className="admin-sheet-backdrop lg:hidden"
-      />
-
-      <div
-          id="admin-more-sheet"
-          ref={dialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="admin-more-title"
-          tabIndex={-1}
-          className="admin-ios-sheet lg:hidden"
-        >
+      <button type="button" aria-label="Zamknij menu" onClick={onClose}
+        className="admin-sheet-backdrop admin-more-backdrop lg:hidden" />
+      <div id="admin-more-sheet" ref={dialogRef} role="dialog" aria-modal="true"
+        aria-labelledby="admin-more-title" tabIndex={-1}
+        className="admin-ios-sheet admin-more-sheet lg:hidden">
         <div className="admin-sheet-handle" />
-
-        <div className="admin-sheet-header">
+        <div className="admin-more-heading">
           <div>
-            <p className="admin-sheet-eyebrow">
-              Trend Admin
-            </p>
-
-            <h2 id="admin-more-title" className="admin-sheet-title">
-              Więcej
-            </h2>
+            <p className="admin-sheet-eyebrow">TREND ADMIN · TWOJE CENTRUM</p>
+            <h2 id="admin-more-title" className="admin-sheet-title">Więcej</h2>
+            <p className="admin-more-intro">Wszystkie narzędzia w jednym miejscu.</p>
           </div>
-
-          <button
-            type="button"
-            onClick={
-              onClose
-            }
-            aria-label="Zamknij"
-            className="admin-sheet-close"
-          >
-            ×
-          </button>
+          <button type="button" onClick={onClose} aria-label="Zamknij"
+            className="admin-sheet-close admin-more-close"><span aria-hidden="true">×</span></button>
         </div>
-
-        <div className="admin-sheet-content">
+        <div className="admin-sheet-content admin-more-content">
+          <section aria-label="Szybkie akcje">
+            <p className="admin-sheet-section-label admin-more-overline">Szybki dostęp</p>
+            <div className="admin-more-shortcuts">
+              <Link href="/admin/autopilot" onClick={onClose} prefetch className="admin-more-shortcut admin-more-shortcut-featured">
+                <span className="admin-more-shortcut-icon"><MoreMenuIcon icon="autopilot" /></span>
+                <span>Autopilot</span><small>Stan systemu</small>
+              </Link>
+              <Link href="/admin/nowa-oferta" onClick={onClose} prefetch className="admin-more-shortcut">
+                <span className="admin-more-shortcut-icon"><MoreMenuIcon icon="add" /></span>
+                <span>Nowa oferta</span><small>Dodaj produkt</small>
+              </Link>
+              <Link href="/admin/stylizacje" onClick={onClose} prefetch className="admin-more-shortcut">
+                <span className="admin-more-shortcut-icon"><MoreMenuIcon icon="looks" /></span>
+                <span>Stylizacje</span><small>Gotowe zestawy</small>
+              </Link>
+              <Link href="/admin/statystyki" onClick={onClose} prefetch className="admin-more-shortcut">
+                <span className="admin-more-shortcut-icon"><MoreMenuIcon icon="stats" /></span>
+                <span>Wyniki</span><small>Przegląd danych</small>
+              </Link>
+            </div>
+          </section>
+          <div className="admin-more-search-wrap">
+            <label htmlFor="admin-more-search" className="sr-only">Szukaj narzędzia</label>
+            <span aria-hidden="true" className="admin-more-search-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
+                <circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" />
+              </svg>
+            </span>
+            <input id="admin-more-search" type="search" value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              autoComplete="off" placeholder="Znajdź narzędzie…" className="admin-more-search" />
+          </div>
+          <section aria-label="Kategorie narzędzi" className="admin-more-categories">
+            <div className="admin-more-categories-heading">
+              <p className="admin-sheet-section-label admin-more-overline">Kategorie</p>
+              <span>{query ? "Wyniki wyszukiwania" : "Dotknij, aby rozwinąć"}</span>
+            </div>
+            {visibleCategories.map((group) => {
+              const opened = Boolean(query) || expanded.has(group.id);
+              return (
+                <section key={group.id} className="admin-more-category" aria-labelledby={"admin-more-title-" + group.id}>
+                  <button type="button" disabled={Boolean(query)}
+                    onClick={() => toggleCategory(group.id)} aria-expanded={opened}
+                    aria-controls={"admin-more-panel-" + group.id}
+                    className="admin-more-category-toggle">
+                    <span className={"admin-more-category-icon admin-more-tone-" + group.id}>
+                      <MoreMenuIcon icon={group.icon} />
+                    </span>
+                    <span className="admin-more-category-copy">
+                      <strong id={"admin-more-title-" + group.id}>{group.title}</strong>
+                      <small>{group.subtitle}</small>
+                    </span>
+                    <span className="admin-more-category-count">{group.items.length}</span>
+                    <span aria-hidden="true"
+                      className={"admin-more-category-chevron " + (opened ? "is-open" : "")}>⌄</span>
+                  </button>
+                  <div id={"admin-more-panel-" + group.id}
+                    className={"admin-more-category-panel " + (opened ? "is-open" : "")}
+                    aria-hidden={!opened} inert={!opened}>
+                    <div className="admin-more-category-inner">
+                      <div className="admin-more-category-links">
+                        {group.items.map((item) => (
+                          <AppMenuLink key={item.href} {...item}
+                            active={!item.external && (
+                              pathname === item.href || pathname.startsWith(item.href + "/")
+                            )}
+                            onClick={onClose} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
+            {visibleCategories.length === 0 && (
+              <div className="admin-more-no-results" role="status">
+                <p className="font-black text-stone-800">Brak pasujących narzędzi</p>
+                <p className="mt-1 text-sm text-stone-500">Wpisz inną nazwę lub kategorię.</p>
+                <button type="button" onClick={() => setSearch("")}
+                  className="mt-3 min-h-11 rounded-xl bg-rose-50 px-4 text-sm font-bold text-rose-700">
+                  Wyczyść wyszukiwanie
+                </button>
+              </div>
+            )}
+          </section>
           {!standalone && (
-            <section className="admin-ios-group">
-              <button
-                type="button"
-                onClick={
-                  onInstall
-                }
-                className="admin-ios-row"
-              >
-                <span className="admin-ios-row-icon admin-ios-row-icon-brand">
-                  <AppIcon />
-                </span>
-
+            <section className="admin-more-device" aria-label="Aplikacja mobilna">
+              <button type="button" onClick={onInstall} className="admin-ios-row admin-more-install-row">
+                <span className="admin-ios-row-icon admin-ios-row-icon-brand"><AppIcon /></span>
                 <span className="admin-ios-row-copy">
-                  <strong>
-                    Zainstaluj Trend Admin
-                  </strong>
-
-                  <small>
-                    Otwieraj panel jak
-                    zwykłą aplikację
-                  </small>
+                  <strong>Zainstaluj Trend Admin</strong>
+                  <small>Dodaj panel do ekranu głównego</small>
                 </span>
-
-                <span className="admin-ios-chevron">
-                  ›
-                </span>
+                <span aria-hidden="true" className="admin-ios-chevron">›</span>
               </button>
-
               {installHelpOpen && (
-                <div className="border-t border-stone-100 bg-stone-50 px-4 py-4">
+                <div className="admin-more-install-help">
                   {isIOS ? (
                     <>
-                      <p className="text-xs font-black text-stone-800">
-                        Instalacja na
-                        iPhone
-                      </p>
-
-                      <div className="mt-3 space-y-2">
-                        <InstructionStep
-                          number="1"
-                          text="Otwórz panel w Safari."
-                        />
-
-                        <InstructionStep
-                          number="2"
-                          text="Naciśnij Udostępnij."
-                        />
-
-                        <InstructionStep
-                          number="3"
-                          text="Wybierz „Dodaj do ekranu początkowego”."
-                        />
-
-                        <InstructionStep
-                          number="4"
-                          text="Naciśnij „Dodaj”."
-                        />
+                      <p className="text-sm font-black text-stone-800">Na iPhonie</p>
+                      <div className="mt-2 grid gap-2">
+                        <InstructionStep number="1" text="Otwórz panel w Safari." />
+                        <InstructionStep number="2" text="Naciśnij Udostępnij." />
+                        <InstructionStep number="3" text="Wybierz „Dodaj do ekranu początkowego”." />
+                        <InstructionStep number="4" text="Naciśnij „Dodaj”." />
                       </div>
                     </>
                   ) : (
-                    <>
-                      <p className="text-xs font-black text-stone-800">
-                        Instalacja
-                        aplikacji
-                      </p>
-
-                      <p className="mt-2 text-xs leading-5 text-stone-500">
-                        Otwórz menu
-                        przeglądarki
-                        i wybierz
-                        „Zainstaluj
-                        aplikację”
-                        albo „Dodaj
-                        do ekranu
-                        głównego”.
-                      </p>
-                    </>
+                    <p className="text-sm leading-6 text-stone-600">
+                      W menu przeglądarki wybierz „Zainstaluj aplikację” albo „Dodaj do ekranu głównego”.
+                    </p>
                   )}
                 </div>
               )}
             </section>
           )}
-
-          <p className="admin-sheet-section-label">Centrum i narzędzia</p>
-          <section className="admin-ios-group">
-            <AppMenuLink
-              href="/admin/autopilot"
-              icon="stats"
-              title="Centrum Autopilota"
-              description="Automatyzacje, pilne zadania i porządek"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/terminy-promocji"
-              icon="offers"
-              title="Terminy promocji"
-              description="Sprawdź ważność i ostatnie weryfikacje"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/widocznosc"
-              icon="seo"
-              title="Indeksowanie i IndexNow"
-              description="Zgłoszenia adresów do wyszukiwarek"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/nowa-oferta"
-              icon="add"
-              title="Nowa oferta"
-              description="Dodaj produkt do katalogu"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/statystyki"
-              icon="stats"
-              title="Statystyki"
-              description="Kliknięcia i wyniki produktów"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/skutecznosc"
-              icon="stats"
-              title="Skuteczność kanałów"
-              description="Produkty, stylizacje i promocje"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/tiktok"
-              icon="tiktok"
-              title="TikTok"
-              description="Dodawaj i usuwaj produkty z /tiktok"
-              onClick={
-                onClose
-              }
-            />
-
-            <div className="admin-ios-divider" />
-
-            <AppMenuLink
-              href="/admin/stylizacje"
-              icon="offers"
-              title="Kreator stylizacji"
-              description="Buduj, zapisuj i publikuj zestawy"
-              onClick={onClose}
-            />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/promocje-shein"
-              icon="offers"
-              title="Promocje SHEIN"
-              description="Kody, kampanie i publikacja"
-              onClick={onClose}
-            />
-            <AppMenuLink href="/admin/kody-rabatowe" icon="offers" title="Kody wielu sklepów" description="Kupony, daty i publikacja" onClick={onClose} />
-            <div className="admin-ios-divider" />
-            <AppMenuLink
-              href="/admin/seo"
-              icon="seo"
-              title="SEO Quality"
-              description="Sprawdź jakość SEO produktów"
-              onClick={
-                onClose
-              }
-            />
-
-            <div className="admin-ios-divider" />
-
-            <AppMenuLink
-              href="/admin#admin-offers"
-              icon="offers"
-              title="Wszystkie oferty"
-              description="Przejdź bezpośrednio do produktów"
-              onClick={
-                onClose
-              }
-            />
-
-            <div className="admin-ios-divider" />
-
-            <AppMenuLink
-              href="/admin/zespol"
-              icon="team"
-              title="Zespół"
-              description="Administratorzy i role"
-              onClick={
-                onClose
-              }
-            />
-
-            <div className="admin-ios-divider" />
-
-            <AppMenuLink
-              href="/"
-              icon="website"
-              title="Strona publiczna"
-              description="Otwórz Trend za Mniej"
-              external
-              onClick={
-                onClose
-              }
-            />
-          </section>
-
-          <p className="admin-sheet-section-label">Konto</p>
-          <section className="admin-ios-group">
-            <form
-              action="/auth/signout"
-              method="post"
-            >
-              <button
-                type="submit"
-                className="admin-ios-row text-red-600"
-              >
-                <span className="admin-ios-row-icon bg-red-50 text-red-600">
-                  <LogoutIcon />
-                </span>
-
-                <span className="admin-ios-row-copy">
-                  <strong className="text-red-600">
-                    Wyloguj się
-                  </strong>
-                </span>
+          <section aria-label="Konto" className="admin-more-account">
+            <form action="/auth/signout" method="post">
+              <button type="submit" className="admin-ios-row admin-more-logout">
+                <span className="admin-ios-row-icon bg-red-50 text-red-600"><LogoutIcon /></span>
+                <span className="admin-ios-row-copy"><strong>Wyloguj się</strong></span>
+                <span aria-hidden="true" className="admin-ios-chevron">›</span>
               </button>
             </form>
           </section>
-
-          <p className="px-4 text-center text-[10px] leading-5 text-stone-400">
-            Panel administratora
-            korzysta z tych samych
-            danych i zabezpieczeń
-            co wersja internetowa.
-          </p>
+          <p className="admin-more-footer">Trend za Mniej · Panel administratora</p>
         </div>
       </div>
     </>
   );
 }
 
+function MoreMenuIcon({ icon }: { icon: MoreIcon }) {
+  if (icon === "tiktok") return <TikTokIcon />;
+  if (icon === "seo") return <SeoIcon />;
+  if (icon === "add") return <PlusIcon />;
+  if (icon === "stats") return <BottomIcon type="stats" />;
+  if (icon === "team") return <TeamIcon />;
+  if (icon === "website") return <WebsiteIcon />;
+  if (icon === "social") return <BottomIcon type="social" />;
+  if (icon === "looks") return <BottomIcon type="looks" />;
+  if (icon === "autopilot") return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="15" rx="4" />
+      <path d="M8 3v2M16 3v2M8 12h2m4 0h2M9 16c2 1.5 4 1.5 6 0" />
+    </svg>
+  );
+  if (icon === "calendar") return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M7 3v4M17 3v4M3 10h18M8 15h3" />
+    </svg>
+  );
+  return <OffersIcon />;
+}
+
 function AppMenuLink({
-  href,
-  icon,
-  title,
-  description,
-  external = false,
-  onClick,
-}: {
-  href: string;
-
-  icon:
-    | "tiktok"
-    | "seo"
-    | "add"
-    | "stats"
-    | "offers"
-    | "team"
-    | "website";
-
-  title: string;
-  description: string;
-  external?: boolean;
-
-  onClick:
-    () => void;
-}) {
+  href, icon, title, description, external = false, active = false, onClick,
+}: MoreTool & { active?: boolean; onClick: () => void }) {
   return (
-    <Link
-      href={
-        href
-      }
-      prefetch={
-        !external
-      }
-      target={
-        external
-          ? "_blank"
-          : undefined
-      }
-      rel={
-        external
-          ? "noopener noreferrer"
-          : undefined
-      }
-      onClick={
-        onClick
-      }
-      className="admin-ios-row"
-    >
-      <span
-        className={[
-          "admin-ios-row-icon",
-          icon ===
-          "tiktok"
-            ? "bg-stone-950 text-white"
-            : "",
-        ].join(
-          " "
-        )}
-      >
-        {icon ===
-        "tiktok" ? (
-          <TikTokIcon />
-        ) : icon ===
-          "seo" ? (
-          <SeoIcon />
-        ) : icon ===
-          "add" ? (
-          <PlusIcon />
-        ) : icon ===
-          "stats" ? (
-          <BottomIcon type="stats" />
-        ) : icon ===
-          "team" ? (
-          <TeamIcon />
-        ) : icon ===
-          "website" ? (
-          <WebsiteIcon />
-        ) : (
-          <OffersIcon />
-        )}
+    <Link href={href} prefetch={!external} target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined} onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={["admin-ios-row admin-more-row", active ? "is-current" : ""].join(" ")}>
+      <span className={"admin-ios-row-icon admin-more-tool-icon admin-more-tool-" + icon}>
+        <MoreMenuIcon icon={icon} />
       </span>
-
       <span className="admin-ios-row-copy">
-        <strong>
-          {title}
-        </strong>
-
-        <small>
-          {description}
-        </small>
+        <strong>{title}</strong><small>{description}</small>
       </span>
-
-      <span className="admin-ios-chevron">
-        {external
-          ? "↗"
-          : "›"}
-      </span>
+      <span aria-hidden="true" className="admin-ios-chevron">{external ? "↗" : "›"}</span>
     </Link>
   );
 }
