@@ -28,7 +28,7 @@
     "test:homepage-discovery": "node --test tests/homepage-discovery.test.mjs tests/welcome-shein-offer.test.mjs",
     "test:admin-ios-shell": "node --test tests/admin-ios-shell.test.mjs",
     "verify:admin-ios-shell": "npm run test:admin-ios-shell && npm run lint && npm run build",
-    "test:admin-daily-workflow": "node --test tests/admin-daily-workflow.test.mjs",
+    "test:admin-daily-workflow": "node --test tests/admin-daily-workflow.test.mjs tests/admin-autopilot.test.mjs",
     "verify:admin-daily-workflow": "npm run test:admin-daily-workflow && npm run lint && npm run build",
     "test:admin-desktop": "node --test tests/admin-desktop-workspace.test.mjs",
     "verify:admin-desktop": "npm run test:admin-desktop && npm run lint && npm run build",
