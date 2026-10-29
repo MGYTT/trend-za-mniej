@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { SheinCampaignRow, CampaignClickCounts } from "@/lib/shein-campaigns";
 import { CAMPAIGN_CATEGORIES, type CampaignCategory, type CampaignInput } from "@/lib/shein-campaign-validation";
+import { preparePromotionDraft, type PromotionDraft } from "@/lib/promotion-draft-assistant";
+import PromotionSeoPreview from "@/components/admin/PromotionSeoPreview";
 
 const LABELS: Record<CampaignCategory, string> = {
   "new-users": "Dla nowych", fashion: "Moda", beauty: "Beauty",
@@ -54,6 +56,8 @@ export default function AdminSheinCampaignStudio({
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30>(30);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; success: boolean } | null>(null);
+  const [sourceDescription, setSourceDescription] = useState("");
+  const [seoDraft, setSeoDraft] = useState<PromotionDraft | null>(null);
   const today = localDate();
 
   const expired = (row: SheinCampaignRow) => Boolean(row.valid_until && row.valid_until < today);
@@ -87,10 +91,12 @@ export default function AdminSheinCampaignStudio({
   function patch<K extends keyof CampaignInput>(key: K, value: CampaignInput[K]) {
     setForm((current) => ({ ...current, [key]: value }));
     setMessage(null);
+    setSeoDraft(null);
   }
 
   function startNew() {
     setEditing(null);
+    setSeoDraft(null); setSourceDescription("");
     setForm({ ...EMPTY, sortOrder: initialCampaigns.length * 10 + 10 });
     setMessage(null);
     document.getElementById("shein-campaign-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -98,9 +104,31 @@ export default function AdminSheinCampaignStudio({
 
   function edit(row: SheinCampaignRow) {
     setEditing(row.id);
+    setSeoDraft(null); setSourceDescription("");
     setForm(toInput(row));
     setMessage(null);
     document.getElementById("shein-campaign-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function fillFromSource() {
+    if (!sourceDescription.trim() || (!form.code.trim() && !/kod\s*[:\-]/i.test(sourceDescription))) {
+      setMessage({ text: "Wpisz kod oraz opis oferty lub użyj zapisu „Kod: ABC123” w tekście.", success: false });
+      return;
+    }
+    const draft = preparePromotionDraft({
+      channel: "shein", storeName: "SHEIN", code: form.code, rawText: sourceDescription,
+    });
+    setForm((prev) => ({
+      ...prev,
+      id: editing ? prev.id : slugify(draft.title),
+      title: draft.title, badge: draft.badge,
+      description: draft.description, note: draft.note,
+      ctaLabel: draft.ctaLabel, category: draft.category,
+      codeKind: "campaign", code: draft.code || prev.code,
+      validUntil: draft.validUntil || prev.validUntil, published: false,
+    }));
+    setSeoDraft(draft);
+    setMessage({ text: "Przygotowano pola i wskazówki SEO. Link i działanie kodu wymagają sprawdzenia w SHEIN przed publikacją.", success: true });
   }
 
   async function save(published: boolean) {
@@ -122,7 +150,7 @@ export default function AdminSheinCampaignStudio({
         return;
       }
       setEditing(null);
-      setForm({ ...EMPTY });
+      setForm({ ...EMPTY }); setSeoDraft(null); setSourceDescription("");
       setMessage({
         text: published ? "Kampania zapisana i opublikowana. Zmiany są widoczne na stronie." : "Zapisano kampanię jako szkic. Nie jest widoczna publicznie.",
         success: true,
@@ -296,6 +324,25 @@ export default function AdminSheinCampaignStudio({
         <p className="mt-2 text-xs leading-6 text-stone-500">
           Publikacja dotyczy tylko widoczności w Trend za Mniej. Nie potwierdza aktywności kampanii w SHEIN.
         </p>
+        <section aria-label="Asystent wypełniania kampanii SHEIN" className="mt-5 min-w-0 rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
+          <p className="text-sm font-black text-rose-900">✨ Automatyczne przygotowanie kampanii i SEO</p>
+          <p className="mt-2 text-xs leading-6 text-stone-600">
+            Wpisz kod w formularzu poniżej i wklej tekst oferty. Asystent przygotuje tytuł,
+            opis, warunki, etykietę, kategorię i wskazówki SEO. Nie weryfikuje promocji w SHEIN.
+          </p>
+          <label className="mt-3 block text-xs font-black text-stone-700">
+            Surowy opis od partnera
+            <textarea rows={4} maxLength={2800} value={sourceDescription}
+              onChange={(event) => setSourceDescription(event.target.value)}
+              placeholder="Np. Kod: ABC1234. Oferta dla nowych użytkowników na ubrania, ważna do 2026-11-30."
+              className={areaClass + " min-h-28"} />
+          </label>
+          <button type="button" disabled={busy} onClick={fillFromSource}
+            className="mt-3 min-h-12 w-full rounded-xl bg-stone-950 px-4 text-sm font-black text-white hover:bg-stone-800 disabled:opacity-50">
+            ✨ Uzupełnij formularz i przygotuj SEO
+          </button>
+          <PromotionSeoPreview draft={seoDraft} />
+        </section>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">
             <span className="text-xs font-black text-stone-700">Tytuł kampanii *</span>

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ExtensionOfferInput } from "@/lib/extension-offer-validation";
 import type { StoreRecord } from "@/lib/stores";
+import { preparePromotionDraft, type PromotionDraft } from "@/lib/promotion-draft-assistant";
+import PromotionSeoPreview from "@/components/admin/PromotionSeoPreview";
 
 export type ExtensionOfferRow = {
   id: string; store_name: string; store_domains: string[]; store_slug: string | null;
@@ -40,6 +42,8 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
   };
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [sourceDescription, setSourceDescription] = useState("");
+  const [seoDraft, setSeoDraft] = useState<PromotionDraft | null>(null);
   const visible = initialOffers.filter((item) => {
     if (filter === "published" && (!item.published || isExpired(item))) return false;
     if (filter === "draft" && (item.published || isExpired(item))) return false;
@@ -50,9 +54,12 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
   function patch<K extends keyof Form>(field: K, value: Form[K]) {
     setForm((old) => ({ ...old, [field]: value }));
     setMessage("");
+    setSeoDraft(null);
   }
   function edit(row: ExtensionOfferRow) {
     setEditing(true);
+    setSeoDraft(null);
+    setSourceDescription("");
     setForm({
       id: row.id, storeName: row.store_name, storeSlug: row.store_slug,
       storeDomains: row.store_domains.join(", "), title: row.title,
@@ -65,6 +72,8 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
   }
   function duplicate(row: ExtensionOfferRow) {
     setEditing(false);
+    setSeoDraft(null);
+    setSourceDescription("");
     setForm({
       id: null, storeName: row.store_name, storeSlug: row.store_slug,
       storeDomains: row.store_domains.join(", "),
@@ -78,6 +87,28 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
     });
     setMessage("Utworzono kopię jako nowy szkic. Skopiowany kod wymaga ponownego sprawdzenia; zaktualizuj tytuł, termin i warunki przed publikacją.");
     document.getElementById("coupon-form")?.scrollIntoView({ behavior: "smooth" });
+  }
+  function fillFromSource() {
+    if (!form.storeSlug) {
+      setMessage("Najpierw wybierz sklep z katalogu.");
+      return;
+    }
+    if (!sourceDescription.trim() || (!form.code?.trim() && !/kod\s*[:\-]/i.test(sourceDescription))) {
+      setMessage("Wklej opis oferty i wpisz kod albo podaj kod w tekście jako „Kod: ABC123”.");
+      return;
+    }
+    const draft = preparePromotionDraft({
+      channel: "merchant", storeName: form.storeName, code: form.code || "",
+      rawText: sourceDescription, requestedType: form.offerType,
+    });
+    setForm((prev) => ({
+      ...prev, title: draft.title, description: draft.description + "\n\n" + draft.note,
+      offerType: draft.offerType, code: draft.code || null,
+      validUntil: draft.validUntil || prev.validUntil,
+      verified: false, published: false,
+    }));
+    setSeoDraft(draft);
+    setMessage("Uzupełniono pola i przygotowano podgląd SEO. Sprawdź ofertę, rodzaj kodu i warunki przed publikacją.");
   }
   async function save(published: boolean) {
     if (busy) return;
@@ -97,7 +128,7 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) { setMessage(data.error || "Nie udało się zapisać."); return; }
-      setForm({ ...EMPTY }); setEditing(false);
+      setForm({ ...EMPTY }); setEditing(false); setSeoDraft(null); setSourceDescription("");
       setMessage(published ? "Opublikowano ofertę." : "Zapisano szkic.");
       router.refresh();
     } catch { setMessage("Brak połączenia z serwerem."); }
@@ -113,7 +144,7 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
         body: JSON.stringify({ id }),
       });
       if (!response.ok) throw new Error("Błąd usuwania");
-      if (form.id === id) { setForm({ ...EMPTY }); setEditing(false); }
+      if (form.id === id) { setForm({ ...EMPTY }); setEditing(false); setSeoDraft(null); setSourceDescription(""); }
       setMessage("Usunięto ofertę.");
       router.refresh();
     } catch { setMessage("Nie udało się usunąć oferty."); }
@@ -125,7 +156,7 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
       <section className="rounded-2xl border border-stone-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-black">Lista kodów ({initialOffers.length})</h2>
-          <button type="button" onClick={() => { setForm({ ...EMPTY }); setEditing(false); }}
+          <button type="button" onClick={() => { setForm({ ...EMPTY }); setEditing(false); setSeoDraft(null); setSourceDescription(""); }}
             className="min-h-10 rounded-xl bg-stone-950 px-4 text-xs font-black text-white">+ Nowa oferta</button>
         </div>
         <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
@@ -173,6 +204,24 @@ export default function AdminCouponStudio({ initialOffers, stores }: { initialOf
         <h2 className="text-xl font-black">{editing ? "Edytuj promocję" : "Dodaj promocję"}</h2>
         <p className="mt-2 text-xs leading-6 text-stone-600">Nie dodawaj niepotwierdzonych kodów. Każda publikacja wymaga osobnego sprawdzenia i potwierdzenia warunków u sprzedawcy.</p>
         <div className="mt-5 grid gap-4">
+          <section aria-label="Asystent wypełniania promocji" className="min-w-0 rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
+            <p className="text-sm font-black text-rose-900">✨ Wypełnij automatycznie z kodu i opisu</p>
+            <p className="mt-2 text-xs leading-6 text-stone-600">
+              Wybierz sklep poniżej, wpisz kod i wklej opis od partnera. Asystent przygotuje tytuł,
+              warunki, rodzaj oferty i propozycje SEO. Niczego nie publikuje automatycznie.
+            </p>
+            <label className="mt-3 block text-xs font-black text-stone-700">Wklej opis promocji lub wiadomość partnera
+              <textarea rows={4} value={sourceDescription} maxLength={2800}
+                onChange={(e) => setSourceDescription(e.target.value)}
+                placeholder="Np. Kod: JESIEN20. Promocja 20% na swetry, ważna do 2026-11-30. Warunki..."
+                className={classes + " min-h-28 text-base"} />
+            </label>
+            <button type="button" onClick={fillFromSource} disabled={busy}
+              className="mt-3 min-h-12 w-full rounded-xl bg-stone-950 px-4 text-sm font-black text-white hover:bg-stone-800 disabled:opacity-50">
+              ✨ Przygotuj pola i SEO
+            </button>
+            <PromotionSeoPreview draft={seoDraft} />
+          </section>
           <label className="text-xs font-black">Wybierz sklep z katalogu
             <select className={classes} value={form.storeSlug || ""} onChange={e => {
               const row = stores.find(s => s.slug === e.target.value);
