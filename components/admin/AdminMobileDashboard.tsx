@@ -262,6 +262,13 @@ export default function AdminMobileDashboard({
         />
 
         <div className="admin-ios-group mt-2">
+          {currentRole === "owner" && (<><QuickRow
+            href="/admin/autopilot"
+            icon="stats"
+            title="Centrum Autopilota"
+            description="Zadania, automatyzacje i stan serwisu"
+          />
+          <div className="admin-ios-divider" /></>)}
           <QuickRow
             href="/admin/social"
             icon="social"
