@@ -47,6 +47,7 @@ create policy "Owner updates welcome offer"
   on public.welcome_shein_offer for update to authenticated
   using ((select public.is_owner()))
   with check ((select public.is_owner()));
+revoke all on public.welcome_shein_offer from anon, authenticated;
 grant select on public.welcome_shein_offer to anon, authenticated;
 grant update on public.welcome_shein_offer to authenticated;
 insert into public.welcome_shein_offer (id)
