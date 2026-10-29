@@ -34,7 +34,7 @@
     "verify:admin-desktop": "npm run test:admin-desktop && npm run lint && npm run build",
     "test:admin-desktop-forms": "node --test tests/admin-desktop-forms.test.mjs",
     "verify:admin-desktop-forms": "npm run test:admin-desktop-forms && npm run lint && npm run build",
-    "test:shein-campaign-manager": "node --experimental-strip-types --test tests/shein-campaign-manager.test.mjs",
+    "test:shein-campaign-manager": "node --experimental-strip-types --test tests/shein-campaign-manager.test.mjs tests/welcome-shein-settings.test.mjs",
     "verify:shein-campaign-manager": "npm run test:shein-campaign-manager && npm run lint && npm run build",
     "test:shein-campaign-clicks": "node --test tests/shein-campaign-clicks.test.mjs",
     "verify:shein-campaign-clicks": "npm run test:shein-campaign-clicks && npm run lint && npm run build",

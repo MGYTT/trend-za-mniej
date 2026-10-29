@@ -27,6 +27,7 @@ const groups: { title: string; items: NavItem[] }[] = [
   {
     title: "03 · Marketing",
     items: [
+      { label: "Oferta powitalna SHEIN", href: "/admin/oferta-powitalna", path: "M12 3 2 8l10 6 10-6-10-5ZM4 10v9h16v-9M12 14v5" },
       { label: "Social Media", href: "/admin/social", path: "M7 2h10v20H7zM10 5h4M11 19h2" },
       { label: "TikTok", href: "/admin/tiktok", path: "M4 5h16v14H4zM10 9l6 3-6 3z" },
     ],
