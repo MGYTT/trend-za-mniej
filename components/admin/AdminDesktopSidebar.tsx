@@ -7,30 +7,36 @@ import { useEffect, useState } from "react";
 type NavItem = { label: string; href: string; path: string };
 const groups: { title: string; items: NavItem[] }[] = [
   {
-    title: "Praca",
+    title: "01 · Sterowanie",
     items: [
-      { label: "Pulpit", href: "/admin", path: "M3 3h8v8H3zM13 3h8v5h-8zM3 13h8v8H3zM13 10h8v11h-8z" },
+      { label: "Centrum Autopilota", href: "/admin/autopilot", path: "M3 12h3l2-6 4 12 2-6h7M3 3h18v18H3z" },
+      { label: "Pulpit i katalog", href: "/admin", path: "M3 3h8v8H3zM13 3h8v5h-8zM3 13h8v8H3zM13 10h8v11h-8z" },
+      { label: "Terminy promocji", href: "/admin/terminy-promocji", path: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2ZM8 14h3M8 18h3M14 14h3" },
+    ],
+  },
+  {
+    title: "02 · Katalog i publikacja",
+    items: [
       { label: "Wszystkie oferty", href: "/admin#admin-offers", path: "M4 5h16v14H4zM8 9h8M8 13h8M8 17h5" },
       { label: "Dodaj ofertę", href: "/admin/nowa-oferta", path: "M4 4h16v16H4zM12 7v10M7 12h10" },
       { label: "Kreator stylizacji", href: "/admin/stylizacje", path: "m8 4-2 5-3 2 2 9h14l2-9-3-2-2-5H8ZM8 4v4l4 2 4-2V4M8 15h8" },
       { label: "Promocje SHEIN", href: "/admin/promocje-shein", path: "M3 8V4h18v4M5 8h14v12H5zM9 12h6M9 16h4" },
       { label: "Kody wielu sklepów", href: "/admin/kody-rabatowe", path: "M3 8V4h18v4M5 8h14v12H5zM9 12h6M9 16h4" },
-      { label: "Terminy promocji", href: "/admin/terminy-promocji", path: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2ZM8 14h3M8 18h3M14 14h3" },
     ],
   },
   {
-    title: "Treści i kanały",
+    title: "03 · Marketing",
     items: [
       { label: "Social Media", href: "/admin/social", path: "M7 2h10v20H7zM10 5h4M11 19h2" },
       { label: "TikTok", href: "/admin/tiktok", path: "M4 5h16v14H4zM10 9l6 3-6 3z" },
     ],
   },
   {
-    title: "Wyniki i ustawienia",
+    title: "04 · Wyniki i jakość",
     items: [
-      { label: "Statystyki", href: "/admin/statystyki", path: "M3 21V12M9 21V5M15 21v-9M21 21H2" },
       { label: "Skuteczność kanałów", href: "/admin/skutecznosc", path: "M3 18l6-6 4 3 8-9M3 6v4M3 18v3M9 12v9M15 15v6M21 6v15" },
-      { label: "SEO Quality", href: "/admin/seo", path: "M16 10a6 6 0 1 1-12 0 6 6 0 0 1 12 0Zm-1 5 5 5M8 10l2 2 3-4" },
+      { label: "Statystyki", href: "/admin/statystyki", path: "M3 21V12M9 21V5M15 21v-9M21 21H2" },
+      { label: "Kontrola SEO", href: "/admin/seo", path: "M16 10a6 6 0 1 1-12 0 6 6 0 0 1 12 0Zm-1 5 5 5M8 10l2 2 3-4" },
       { label: "Widoczność Google", href: "/admin/widocznosc", path: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18" },
       { label: "Zespół", href: "/admin/zespol", path: "M12 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM3 20v-2a6 6 0 0 1 12 0v2M17 6a3 3 0 0 1 0 6M18 14c2 1 3 3 3 6" },
     ],
