@@ -570,6 +570,7 @@ const MORE_CATEGORIES: MoreCategory[] = [
   {
     id: "marketing", title: "Marketing i treści", subtitle: "Materiały i kanały społecznościowe", icon: "social",
     items: [
+      { href: "/admin/oferta-powitalna", icon: "offers", title: "Oferta powitalna SHEIN", description: "Włącz, wyłącz i personalizuj popup" },
       { href: "/admin/social", icon: "social", title: "Social Media", description: "Grafiki i materiały do publikacji" },
       { href: "/admin/tiktok", icon: "tiktok", title: "TikTok", description: "Produkty z naszych filmów" },
     ],
