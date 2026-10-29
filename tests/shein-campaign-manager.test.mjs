@@ -127,7 +127,7 @@ test("public UI respects editable categories, order, label and affiliate disclos
 
 test("campaign manager is reachable from desktop and iOS navigation", () => {
   assert.match(sidebar, /href: "\/admin\/promocje-shein"/);
-  assert.match(mobile, /href="\/admin\/promocje-shein"/);
+  assert.match(mobile, /href: "\/admin\/promocje-shein"/);
   assert.match(mobile, /pathname\.startsWith\("\/admin\/promocje-shein"\)/);
 });
 
