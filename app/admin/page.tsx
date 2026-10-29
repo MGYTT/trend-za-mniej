@@ -496,6 +496,12 @@ export default async function AdminPage({
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
+                {currentRole === "owner" && (
+                  <Link href="/admin/autopilot"
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-stone-950 px-5 text-sm font-black text-white transition hover:bg-stone-800">
+                    Centrum Autopilota →
+                  </Link>
+                )}
                 <Link href="/admin/nowa-oferta"
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-rose-600 px-5 text-sm font-black text-white shadow-[0_10px_26px_rgba(225,29,72,0.18)] transition hover:bg-rose-700">
                   + Dodaj ofertę

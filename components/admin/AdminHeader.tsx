@@ -119,6 +119,9 @@ function getMobileTitle(
     return "Trend Admin";
   }
 
+  if (pathname.startsWith("/admin/autopilot")) return "Centrum Autopilota";
+  if (pathname.startsWith("/admin/terminy-promocji")) return "Terminy promocji";
+
   if (
     pathname ===
     "/admin/nowa-oferta"
