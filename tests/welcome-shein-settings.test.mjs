@@ -88,7 +88,7 @@ test("owner-only API validates input, updates existing singleton and invalidates
 test("editor supports toggle, live preview, code, URL, copy, themes, timing and campaign version", () => {
   assert.match(editor, /role="switch"/);
   assert.match(editor, /<WelcomeSheinOfferCard settings=\{form\} preview \/>/);
-  assert.match(editor, /campaignVersion: form\.campaignVersion \+ 1/);
+  assert.match(editor, /patch\("campaignVersion", form\.campaignVersion \+ 1\)/);
   assert.match(editor, /onClick=\{\(\) => void save\(\)\}/);
   assert.match(editor, /\/api\/admin\/welcome-shein/);
   assert.match(editor, /discountPercent/);
