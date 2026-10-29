@@ -43,7 +43,7 @@
     "test:poradniki-ux": "node --experimental-strip-types --test tests/poradniki-ux.test.mjs",
     "verify:poradniki-ux": "npm run test:poradniki && npm run test:google-seo && npm run test:poradniki-ux && npm run lint && npm run build",
     "test:shein-current-links": "node --experimental-strip-types --test tests/shein-current-links.test.mjs",
-    "test:extension": "node --experimental-strip-types --test tests/extension-offers.test.mjs",
+    "test:extension": "node --experimental-strip-types --test tests/extension-offers.test.mjs tests/promotion-autofill-mobile.test.mjs",
     "test:catalog": "node --experimental-strip-types --test tests/store-directory.test.mjs",
     "test:offer-lifecycle": "node --experimental-strip-types --test tests/offer-lifecycle.test.mjs",
     "test:offer-import": "node --experimental-strip-types --test tests/offer-import.test.mjs"
