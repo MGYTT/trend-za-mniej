@@ -836,27 +836,6 @@ function CategoryProductCard({
 
   const image = product.image?.trim();
 
-  const oldPrice =
-    product.oldPrice !== null &&
-    Number.isFinite(product.oldPrice) &&
-    Number.isFinite(product.price) &&
-    product.price >= 0 &&
-    product.oldPrice > product.price
-      ? product.oldPrice
-      : null;
-
-  const discount =
-    oldPrice !== null
-      ? Math.round(
-          (1 - product.price / oldPrice) * 100
-        )
-      : null;
-
-  const showDiscount =
-    discount !== null &&
-    discount >= 1 &&
-    discount <= 99;
-
   return (
     <article className="group flex h-full min-w-0 overflow-hidden rounded-[17px] border border-stone-200 bg-white shadow-[0_4px_16px_rgba(28,25,23,0.04)] transition hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md sm:rounded-[23px]">
       <Link
@@ -879,11 +858,6 @@ function CategoryProductCard({
             </div>
           )}
 
-          {showDiscount && (
-            <span className="absolute left-2 top-2 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-black text-white shadow-sm sm:left-3 sm:top-3 sm:text-xs">
-              −{discount}%
-            </span>
-          )}
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-4">
@@ -897,11 +871,6 @@ function CategoryProductCard({
                 {formatPrice(product.price)}
               </strong>
 
-              {oldPrice !== null && (
-                <span className="text-[10px] font-semibold text-stone-500 line-through sm:text-xs">
-                  {formatPrice(oldPrice)}
-                </span>
-              )}
             </div>
 
             <p className="mt-1 hidden text-xs leading-5 text-stone-500 sm:block">

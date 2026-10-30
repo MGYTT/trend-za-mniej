@@ -32,7 +32,9 @@ test("product image uses existing image component and compact responsive dimensi
 test("product purchase copy describes saved prices without unverified discounts", () => {
   assert.match(page, /Cena zapisana w katalogu/);
   assert.match(page, /Sprawdź aktualną ofertę w SHEIN/);
-  assert.match(page, /Poprzednia cena w katalogu/);
+  assert.doesNotMatch(page, /Poprzednia cena w katalogu/);
+  assert.doesNotMatch(page, /getPriceDifference|comparison\.oldPrice/);
+  assert.match(page, /Reklama · link afiliacyjny/);
   assert.match(page, /nie gwarancja ceny w sklepie/);
   assert.doesNotMatch(page, /względem wcześniejszej ceny/);
   assert.doesNotMatch(page, /\{comparison\.percent\}/);

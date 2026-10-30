@@ -28,25 +28,6 @@ export default function ProductCard({
 
   const soldText = product.sold?.trim();
 
-  const validOldPrice =
-    product.oldPrice !== null &&
-    Number.isFinite(product.oldPrice) &&
-    Number.isFinite(product.price) &&
-    product.oldPrice > 0 &&
-    product.price >= 0 &&
-    product.oldPrice > product.price;
-
-  const percent =
-    validOldPrice &&
-    product.oldPrice !== null
-      ? Math.round(
-          (
-            1 -
-            product.price / product.oldPrice
-          ) * 100
-        )
-      : 0;
-
   return (
     <article
       className={`group flex h-full min-w-0 overflow-hidden border border-stone-200 bg-white shadow-[0_4px_18px_rgba(28,25,23,0.05)] transition hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md focus-within:ring-2 focus-within:ring-rose-200 motion-reduce:transform-none ${
@@ -82,23 +63,10 @@ export default function ProductCard({
 
           {/* OZNACZENIA */}
 
-          {(product.featured ||
-            (percent >= 1 &&
-              percent <= 99)) && (
-            <div className="absolute left-2 top-2 flex flex-col items-start gap-1 sm:left-3 sm:top-3">
-              {product.featured && (
-                <span className="rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold text-rose-700 shadow-sm sm:px-3 sm:py-1.5 sm:text-xs">
-                  Wybrane
-                </span>
-              )}
-
-              {percent >= 1 &&
-                percent <= 99 && (
-                  <span className="rounded-full bg-rose-600 px-2 py-1 text-[10px] font-black text-white sm:px-3 sm:py-1.5 sm:text-xs">
-                    −{percent}%
-                  </span>
-                )}
-            </div>
+          {product.featured && (
+            <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold text-rose-700 shadow-sm sm:left-3 sm:top-3 sm:px-3 sm:py-1.5 sm:text-xs">
+              Wybrane
+            </span>
           )}
         </div>
 
@@ -151,14 +119,6 @@ export default function ProductCard({
                 {formatPrice(product.price)}
               </strong>
 
-              {validOldPrice &&
-                product.oldPrice !== null && (
-                  <span className="text-[10px] font-semibold text-stone-500 line-through sm:text-xs">
-                    {formatPrice(
-                      product.oldPrice
-                    )}
-                  </span>
-                )}
             </div>
 
             <p
