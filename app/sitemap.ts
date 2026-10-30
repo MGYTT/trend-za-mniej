@@ -229,6 +229,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       {
         url:
+          `${siteUrl}/regulamin`,
+      },
+
+      {
+        url:
           `${siteUrl}/kontakt`,
       },
 

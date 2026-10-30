@@ -12,5 +12,12 @@ export async function getPublicWelcomeSheinOffer(): Promise<WelcomeSheinSettings
     console.error("Welcome SHEIN settings unavailable:", error.message);
     return null;
   }
-  return data ? mapWelcomeRow(data as Record<string, unknown>) : null;
+  if (!data) return null;
+  const settings = mapWelcomeRow(data as Record<string, unknown>);
+  // Explicit end date is necessary for a temporary welcome promotion.
+  if (!settings.validUntil) return null;
+  const today = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  return settings.validUntil >= today ? settings : null;
 }
