@@ -235,6 +235,13 @@ export default function ContactPage() {
               </Link>
 
               <Link
+                href="/regulamin"
+                className="font-bold text-rose-600 hover:text-rose-700"
+              >
+                Regulamin serwisu →
+              </Link>
+
+              <Link
                 href="/polityka-prywatnosci"
                 className="font-bold text-rose-600 hover:text-rose-700"
               >

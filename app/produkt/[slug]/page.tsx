@@ -87,25 +87,6 @@ function metaDescription(
   );
 }
 
-function getPriceDifference(
-  product: Product
-) {
-  const { price, oldPrice } = product;
-
-  if (
-    oldPrice === null ||
-    !Number.isFinite(price) ||
-    !Number.isFinite(oldPrice) ||
-    price < 0 ||
-    oldPrice <= price ||
-    oldPrice <= 0
-  ) {
-    return null;
-  }
-
-  return { oldPrice };
-}
-
 /* ======================================================
    SEO
 ====================================================== */
@@ -243,9 +224,6 @@ export default async function ProductPage({
     ? shortText(description, 155)
     : "";
 
-  const comparison =
-    getPriceDifference(product);
-
   const goHref = `/go/${product.id}`;
 
   const siteUrl = getSiteUrl();
@@ -355,20 +333,6 @@ export default async function ProductPage({
               formatPrice(product.price),
           },
 
-          ...(comparison
-            ? [
-                {
-                  "@type":
-                    "PropertyValue",
-                  name:
-                    "Poprzednia cena zapisana w katalogu",
-                  value:
-                    formatPrice(
-                      comparison.oldPrice
-                    ),
-                },
-              ]
-            : []),
         ],
       },
 
@@ -577,11 +541,6 @@ export default async function ProductPage({
                   {formatPrice(product.price)}
                 </strong>
 
-                {comparison && (
-                  <span className="pb-1 text-xs font-semibold leading-5 text-stone-500">
-                    Poprzednia cena w katalogu: {formatPrice(comparison.oldPrice)}
-                  </span>
-                )}
               </div>
 
               <p className="mt-3 text-sm leading-6 text-stone-600">
@@ -590,6 +549,11 @@ export default async function ProductPage({
               </p>
 
               {/* PRZEJŚCIE DO SHEIN */}
+              <p className="mt-4 text-sm leading-6 text-stone-700">
+                <strong>Reklama · link afiliacyjny SHEIN.</strong> Możemy otrzymać prowizję,
+                jeśli dokonasz kwalifikującego się zakupu po przejściu przez link.
+                Trend za Mniej nie dolicza dodatkowej opłaty.
+              </p>
 
               <a
                 href={goHref}
@@ -602,7 +566,7 @@ export default async function ProductPage({
               </a>
 
               <p className="mt-3 text-center text-xs leading-5 text-stone-600">
-                Link afiliacyjny · sklep otworzy się w nowej karcie.
+                Link afiliacyjny · sklep otworzy się w nowej karcie. Warunki zakupu ustala SHEIN.
               </p>
             </div>
 
@@ -900,6 +864,9 @@ export default async function ProductPage({
           }}
         >
           <div className="min-w-0 flex-1">
+            <p className="truncate text-[11px] font-semibold text-rose-700">
+              Reklama · link afiliacyjny
+            </p>
             <p className="truncate text-[11px] font-semibold text-stone-500">
               Cena w katalogu
             </p>

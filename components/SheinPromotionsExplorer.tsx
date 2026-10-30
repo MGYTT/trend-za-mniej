@@ -528,8 +528,11 @@ function PromotionCard({
               <p className="mt-2 font-semibold">{promotion.note}</p>
             </div>
           </details>
-          <a
-            href={"/promocje-shein/go/" + encodeURIComponent(promotion.id)}
+          <p className="mt-4 text-xs leading-5 text-stone-700">
+             <strong>Reklama · link afiliacyjny SHEIN.</strong> Możemy otrzymać prowizję
+             za kwalifikujący się zakup. Zasady rabatów sprawdź w SHEIN.
+           </p>
+           <a href={"/promocje-shein/go/" + encodeURIComponent(promotion.id)}
             target="_blank"
             rel="sponsored nofollow noopener noreferrer"
             className="mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-center text-sm font-black leading-6 text-white shadow-[0_8px_20px_rgba(225,29,72,0.16)] transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-400"

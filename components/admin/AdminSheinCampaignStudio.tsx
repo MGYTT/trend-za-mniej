@@ -55,13 +55,22 @@ export default function AdminSheinCampaignStudio({
   const [filter, setFilter] = useState<"all" | "published" | "draft" | "expired">("all");
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30>(30);
   const [busy, setBusy] = useState(false);
+  const [verifiedNow, setVerifiedNow] = useState(false);
   const [message, setMessage] = useState<{ text: string; success: boolean } | null>(null);
   const [sourceDescription, setSourceDescription] = useState("");
   const [seoDraft, setSeoDraft] = useState<PromotionDraft | null>(null);
   const today = localDate();
 
   const expired = (row: SheinCampaignRow) => Boolean(row.valid_until && row.valid_until < today);
-  const publishedCount = initialCampaigns.filter((row) => row.published && !expired(row)).length;
+  // Derived from a stable day value; no clock calls during React render.
+  const reviewCutoff = Date.parse(today + "T00:00:00Z") - 14 * 24 * 60 * 60 * 1000;
+  const reviewedRecently = (row: SheinCampaignRow) => Boolean(
+    row.last_reviewed_at &&
+    Date.parse(row.last_reviewed_at) >= reviewCutoff
+  );
+  const isVisible = (row: SheinCampaignRow) =>
+    row.published && !expired(row) && reviewedRecently(row);
+  const publishedCount = initialCampaigns.filter(isVisible).length;
   const expiredCount = initialCampaigns.filter((row) => expired(row)).length;
   const drafts = initialCampaigns.filter((row) => !row.published).length;
 
@@ -80,7 +89,7 @@ export default function AdminSheinCampaignStudio({
   const visible = (() => {
     const needle = query.trim().toLocaleLowerCase("pl");
     return initialCampaigns.filter((row) => {
-      if (filter === "published" && (!row.published || expired(row))) return false;
+      if (filter === "published" && !isVisible(row)) return false;
       if (filter === "draft" && row.published) return false;
       if (filter === "expired" && !expired(row)) return false;
       return !needle || [row.title, row.id, row.badge, row.code, row.category]
@@ -96,6 +105,7 @@ export default function AdminSheinCampaignStudio({
 
   function startNew() {
     setEditing(null);
+    setVerifiedNow(false);
     setSeoDraft(null); setSourceDescription("");
     setForm({ ...EMPTY, sortOrder: initialCampaigns.length * 10 + 10 });
     setMessage(null);
@@ -104,6 +114,7 @@ export default function AdminSheinCampaignStudio({
 
   function edit(row: SheinCampaignRow) {
     setEditing(row.id);
+    setVerifiedNow(false);
     setSeoDraft(null); setSourceDescription("");
     setForm(toInput(row));
     setMessage(null);
@@ -133,6 +144,10 @@ export default function AdminSheinCampaignStudio({
 
   async function save(published: boolean) {
     if (busy) return;
+    if (published && !verifiedNow) {
+      setMessage({ text: "Zaznacz potwierdzenie ręcznego sprawdzenia kodu, linku i warunków kampanii.", success: false });
+      return;
+    }
     if (published && !window.confirm(
       "Opublikować tę kampanię? Upewnij się, że kod, link i warunki zostały sprawdzone w SHEIN."
     )) return;
@@ -142,7 +157,7 @@ export default function AdminSheinCampaignStudio({
       const response = await fetch("/api/admin/shein-campaigns", {
         method: editing ? "PATCH" : "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, published }),
+        body: JSON.stringify({ ...form, published, verifiedNow: published && verifiedNow }),
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) {
@@ -151,6 +166,7 @@ export default function AdminSheinCampaignStudio({
       }
       setEditing(null);
       setForm({ ...EMPTY }); setSeoDraft(null); setSourceDescription("");
+      setVerifiedNow(false);
       setMessage({
         text: published ? "Kampania zapisana i opublikowana. Zmiany są widoczne na stronie." : "Zapisano kampanię jako szkic. Nie jest widoczna publicznie.",
         success: true,
@@ -292,8 +308,8 @@ export default function AdminSheinCampaignStudio({
                     </p>
                   )}
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${expired(row) ? "bg-stone-100 text-stone-600" : row.published ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
-                  {expired(row) ? "Wygasła" : row.published ? "Widoczna" : "Szkic"}
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${expired(row) ? "bg-stone-100 text-stone-600" : isVisible(row) ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
+                  {expired(row) ? "Wygasła" : isVisible(row) ? "Widoczna" : row.published ? "Do ponownego sprawdzenia" : "Szkic"}
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -301,7 +317,7 @@ export default function AdminSheinCampaignStudio({
                   className="min-h-11 rounded-xl border border-rose-200 bg-white px-4 text-xs font-black text-rose-700 hover:bg-rose-50 disabled:opacity-50">
                   Edytuj
                 </button>
-                {row.published && !expired(row) && (
+                {isVisible(row) && (
                   <Link href={"/promocje-shein#" + row.id} target="_blank"
                     className="inline-flex min-h-11 items-center rounded-xl border border-stone-200 px-3 text-xs font-bold text-stone-700">
                     Zobacz ↗
@@ -433,6 +449,11 @@ export default function AdminSheinCampaignStudio({
             {message.text}
           </div>
         )}
+        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-stone-800">
+          <input type="checkbox" checked={verifiedNow} onChange={(e) => setVerifiedNow(e.target.checked)}
+            className="mt-1 h-5 w-5 shrink-0 accent-rose-600" />
+          <span>Potwierdzam, że <strong>samodzielnie sprawdziłem dziś</strong> kod, link i warunki kampanii w SHEIN oraz zachowałem dowód weryfikacji. Bez tego nie mogę opublikować kampanii.</span>
+        </label>
         <div className="mt-6 grid gap-3 border-t border-stone-100 pt-5 sm:grid-cols-2">
           <button type="button" disabled={busy} onClick={() => void save(false)}
             className="min-h-12 rounded-xl border border-stone-300 bg-white px-5 text-sm font-black text-stone-900 disabled:opacity-50">

@@ -21,7 +21,7 @@ test("original 60% offer is preserved as defaults and edits are validated", () =
   assert.equal(DEFAULT_WELCOME_SHEIN.affiliateUrl, "https://onelink.shein.com/58/66hx4q3nwzrl");
   assert.equal(DEFAULT_WELCOME_SHEIN.discountPercent, 60);
   assert.equal(DEFAULT_WELCOME_SHEIN.delaySeconds, 10);
-  assert.equal(DEFAULT_WELCOME_SHEIN.enabled, true);
+  assert.equal(DEFAULT_WELCOME_SHEIN.enabled, false); // Unverified discount cannot be enabled by default.
   const checked = validateWelcomeSheinSettings({ ...DEFAULT_WELCOME_SHEIN, campaignCode: "newcode1" });
   assert.ok("value" in checked);
   assert.equal(checked.value.campaignCode, "NEWCODE1");

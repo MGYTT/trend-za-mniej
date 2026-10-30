@@ -1,505 +1,79 @@
-import type {
-  Metadata,
-} from "next";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-
-import InfoPageLayout, {
-  InfoNotice,
-  InfoSection,
-} from "@/components/InfoPageLayout";
-
-import {
-  CONTACT_EMAIL,
-  getSiteUrl,
-  SITE_LANGUAGE,
-  SITE_NAME,
-} from "@/lib/site";
+import InfoPageLayout, { InfoNotice, InfoSection } from "@/components/InfoPageLayout";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title:
-    "Polityka prywatności – Trend za Mniej",
-
-  description:
-    "Polityka prywatności Trend za Mniej: informacje o danych technicznych, statystykach kliknięć, dostawcach infrastruktury i prawach użytkowników.",
-
-  alternates: {
-    canonical:
-      "/polityka-prywatnosci",
-  },
-
-  openGraph: {
-    type:
-      "website",
-
-    locale:
-      "pl_PL",
-
-    url:
-      "/polityka-prywatnosci",
-
-    siteName:
-      SITE_NAME,
-
-    title:
-      "Polityka prywatności | Trend za Mniej",
-
-    description:
-      "Dowiedz się, jakie informacje mogą być przetwarzane podczas korzystania z Trend za Mniej.",
-  },
+  title: "Polityka prywatności – Trend za Mniej",
+  description: "Informacje o przetwarzaniu danych, statystykach kliknięć, plikach cookies, lokalnej pamięci przeglądarki oraz prawach użytkowników.",
+  alternates: { canonical: "/polityka-prywatnosci" },
 };
 
 export default function PrivacyPage() {
-  const contactEmail =
-    CONTACT_EMAIL;
-
-  const legalName =
-    process.env
-      .NEXT_PUBLIC_LEGAL_NAME
-      ?.trim();
-
-  const siteUrl =
-    getSiteUrl();
-
-  const pageUrl =
-    `${siteUrl}/polityka-prywatnosci`;
-
-  const operatorName =
-    legalName ||
-    "operator serwisu Trend za Mniej";
-
-  const structuredData = {
-    "@context":
-      "https://schema.org",
-
-    "@type":
-      "WebPage",
-
-    "@id":
-      `${pageUrl}#webpage`,
-
-    url:
-      pageUrl,
-
-    name:
-      "Polityka prywatności",
-
-    description:
-      "Informacje dotyczące prywatności i przetwarzania danych w serwisie Trend za Mniej.",
-
-    inLanguage:
-      SITE_LANGUAGE,
-
-    isPartOf: {
-      "@id":
-        `${siteUrl}/#website`,
-    },
-  };
-
   return (
     <InfoPageLayout
       eyebrow="Prywatność"
       title="Polityka prywatności"
-      lead="Poniżej wyjaśniamy, jakie informacje mogą być przetwarzane podczas korzystania z Trend za Mniej, w jakim celu są wykorzystywane i jakie prawa przysługują użytkownikowi."
+      lead="Wyjaśniamy, jakie dane mogą być przetwarzane podczas korzystania z Trend za Mniej i jak skorzystać z przysługujących praw."
       activePath="/polityka-prywatnosci"
-      structuredData={
-        structuredData
-      }
     >
-      <div className="mb-8 flex flex-col gap-2 rounded-[20px] border border-stone-200 bg-white p-5 text-sm leading-6 text-stone-500 sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          Ostatnia aktualizacja
-        </span>
-
-        <strong className="text-stone-900">
-          8 października 2026 r.
-        </strong>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+      <p className="mb-8 rounded-2xl border border-stone-200 bg-white p-5 text-sm text-stone-600">
+        Ostatnia aktualizacja: <strong>30 października 2026 r.</strong>
+      </p>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         <article>
-          <InfoSection title="1. Administrator i kontakt">
+          <InfoSection title="1. Administrator danych i kontakt">
             <p>
-              Za funkcjonowanie
-              serwisu oraz
-              przetwarzanie danych
-              związanych z jego
-              działaniem odpowiada{" "}
-              <strong className="font-bold text-stone-800">
-                {operatorName}
-              </strong>
-              .
-            </p>
-
-            {contactEmail ? (
-              <p>
-                W sprawach dotyczących
-                prywatności można
-                skontaktować się pod
-                adresem{" "}
-                <a
-                  href={`mailto:${contactEmail}`}
-                  className="font-bold text-rose-600 hover:text-rose-700"
-                >
-                  {contactEmail}
-                </a>
-                .
-              </p>
-            ) : (
-              <p>
-                W sprawach dotyczących
-                prywatności można
-                skorzystać ze strony{" "}
-                <Link
-                  href="/kontakt"
-                  className="font-bold text-rose-600 hover:text-rose-700"
-                >
-                  Kontakt
-                </Link>
-                .
-              </p>
-            )}
-          </InfoSection>
-
-          <InfoSection title="2. Korzystanie z publicznej części serwisu">
-            <p>
-              Przeglądanie publicznej
-              części Trend za Mniej
-              nie wymaga zakładania
-              konta ani logowania.
-            </p>
-
-            <p>
-              Serwis może przetwarzać
-              podstawowe dane
-              techniczne niezbędne
-              do prawidłowego
-              i bezpiecznego
-              dostarczenia strony,
-              takie jak informacje
-              związane z żądaniem
-              sieciowym, urządzeniem,
-              przeglądarką lub
-              zdarzeniami
-              technicznymi.
-            </p>
-
-            <p>
-              Część takich informacji
-              może być przetwarzana
-              również przez
-              dostawców infrastruktury
-              wykorzystywanej do
-              działania serwisu.
+              Trend za Mniej jest prowadzony przez osobę fizyczną jako serwis
+              informacyjno-afiliacyjny. W sprawach dotyczących przetwarzania danych
+              i korzystania z przysługujących praw skontaktuj się przez e-mail:
+              <a className="ml-1 font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
             </p>
           </InfoSection>
-
-          <InfoSection title="3. Statystyki kliknięć w oferty">
-            <p>
-              Gdy użytkownik wybiera
-              link prowadzący do
-              zewnętrznej oferty,
-              Trend za Mniej zapisuje
-              identyfikator klikniętego
-              produktu. Baza danych
-              może również zapisywać
-              czas utworzenia takiego
-              zdarzenia.
-            </p>
-
-            <p>
-              Informacje te służą
-              do tworzenia
-              podstawowych statystyk
-              popularności produktów
-              oraz oceny działania
-              serwisu.
-            </p>
-
-            <p>
-              Mechanizm Trend za Mniej
-              nie zapisuje przy takim
-              zdarzeniu imienia,
-              nazwiska ani adresu
-              e-mail użytkownika.
-            </p>
+          <InfoSection title="2. Jakie informacje mogą być przetwarzane">
+            <p>Podczas otwierania stron dostawca hostingu może otrzymywać dane techniczne zapytań sieciowych, takie jak adres IP, czas żądania, adres strony, typ przeglądarki i dane potrzebne do zapewnienia bezpieczeństwa oraz obsługi błędów.</p>
+            <p>Po kliknięciu odnośnika prowadzącego do sklepu system może zapisać identyfikator produktu lub kampanii, źródło przejścia i czas zdarzenia. Te dane pomagają mierzyć popularność ofert. Nie prosimy osoby przeglądającej katalog o podanie imienia i nazwiska do rejestrowania takiego kliknięcia.</p>
+            <p>Jeśli wyślesz e-mail, przetwarzamy adres nadawcy, treść wiadomości i podane przez Ciebie informacje w celu odpowiedzi i obsługi zgłoszenia.</p>
+            <p>Osoby uprawnione do panelu administracyjnego korzystają z mechanizmów uwierzytelniania, które mogą przetwarzać identyfikator konta, adres e-mail oraz informacje o sesji.</p>
           </InfoSection>
-
-          <InfoSection title="4. Kontakt z nami">
-            <p>
-              Jeżeli użytkownik
-              kontaktuje się z nami
-              pocztą elektroniczną,
-              możemy przetwarzać dane
-              przekazane w wiadomości,
-              w szczególności adres
-              e-mail oraz treść
-              korespondencji.
-            </p>
-
-            <p>
-              Dane te są wykorzystywane
-              w celu udzielenia
-              odpowiedzi, rozwiązania
-              zgłoszonego problemu
-              lub prowadzenia
-              korespondencji związanej
-              z serwisem.
-            </p>
+          <InfoSection title="3. Cele i podstawy prawne">
+            <p>Dane techniczne przetwarzamy w celu dostarczenia stron, utrzymania bezpieczeństwa, usuwania błędów i zapobiegania nadużyciom; podstawą jest prawnie uzasadniony interes administratora (art. 6 ust. 1 lit. f RODO).</p>
+            <p>Podstawą statystyk kliknięć i analizy działania serwisu jest uzasadniony interes polegający na ocenie popularności treści i ulepszaniu serwisu (art. 6 ust. 1 lit. f RODO), z zastrzeżeniem odrębnych wymogów dotyczących dostępu do informacji w urządzeniu użytkownika.</p>
+            <p>Korespondencję dotyczącą pytań i zgłoszeń obsługujemy co do zasady na podstawie uzasadnionego interesu (art. 6 ust. 1 lit. f RODO); jeżeli kontakt jest konieczny do wykonania umowy lub działań przed jej zawarciem, zastosowanie może mieć art. 6 ust. 1 lit. b RODO. Wypełnianie obowiązków wynikających z przepisów opiera się na art. 6 ust. 1 lit. c RODO.</p>
+            <p>Jeżeli dla konkretnej funkcji potrzebna jest zgoda, zostanie ona uzyskana przed uruchomieniem przetwarzania, którego dotyczy. Zgodę można wycofać bez wpływu na zgodność z prawem wcześniejszego przetwarzania.</p>
           </InfoSection>
-
-          <InfoSection title="5. Cele i podstawy przetwarzania">
-            <p>
-              Dane mogą być
-              przetwarzane w zakresie
-              niezbędnym do
-              zapewnienia działania
-              serwisu, jego
-              bezpieczeństwa,
-              obsługi zgłoszeń
-              oraz prowadzenia
-              podstawowych statystyk.
-            </p>
-
-            <p>
-              Jeżeli informacje
-              stanowią dane osobowe,
-              podstawą przetwarzania
-              może być uzasadniony
-              interes związany
-              z prowadzeniem,
-              bezpieczeństwem
-              i ulepszaniem serwisu
-              oraz obsługą
-              korespondencji,
-              zgodnie z art. 6 ust. 1
-              lit. f RODO.
-            </p>
-
-            <p>
-              W zależności od
-              charakteru konkretnej
-              sprawy podstawą może być
-              również podjęcie działań
-              na żądanie osoby,
-              której dane dotyczą.
-            </p>
+          <InfoSection title="4. Cookies, localStorage i statystyki">
+            <p>Przeglądanie publicznego katalogu nie wymaga utworzenia konta. Funkcja ulubionych może zapisywać wybrane oferty w pamięci przeglądarki (localStorage) po skorzystaniu z tej funkcji. Dane ulubionych pozostają na urządzeniu, dopóki ich nie usuniesz lub nie wyczyścisz pamięci witryny.</p>
+            <p>Panel administracyjny korzysta z technicznych mechanizmów sesji i uwierzytelniania, w tym cookies potrzebnych do bezpiecznego logowania.</p>
+            <p>Na stronie używana jest usługa Vercel Web Analytics do pomiaru odwiedzin. Należy odróżnić ją od wewnętrznych zliczeń kliknięć w oferty. Przed dodaniem innych skryptów statystycznych, reklamowych lub identyfikatorów w przeglądarce ocenimy, czy konieczna jest osobna, uprzednia zgoda i mechanizm jej wycofania.</p>
+            <p>Ustawienia zapisów lokalnych możesz usunąć w ustawieniach swojej przeglądarki. Niezbędne technicznie cookies mogą być wymagane do działania panelu po zalogowaniu.</p>
           </InfoSection>
-
-          <InfoSection title="6. Dostawcy infrastruktury">
-            <p>
-              Trend za Mniej korzysta
-              między innymi z usług
-              Vercel do hostingu
-              aplikacji oraz Supabase
-              do obsługi bazy danych,
-              przechowywania danych
-              i mechanizmów
-              administracyjnych.
-            </p>
-
-            <p>
-              Dostawcy ci mogą
-              przetwarzać dane
-              techniczne w zakresie
-              niezbędnym do
-              świadczenia swoich
-              usług, zgodnie
-              z własnymi zasadami
-              bezpieczeństwa,
-              prywatności oraz
-              obowiązującymi
-              przepisami.
-            </p>
+          <InfoSection title="5. Odbiorcy danych i przekazanie poza EOG">
+            <p>Dane mogą być powierzane podmiotom świadczącym hosting i usługi techniczne (Vercel), utrzymanie bazy danych i uwierzytelnianie (Supabase) oraz dostawcy poczty elektronicznej. Dostęp otrzymują tylko podmioty i osoby, które potrzebują go do realizacji swoich zadań.</p>
+            <p>W zależności od konfiguracji i siedziby dostawców może wystąpić przekazanie danych poza Europejski Obszar Gospodarczy. W takim przypadku wymagane jest zastosowanie właściwej podstawy transferu (np. decyzji stwierdzającej odpowiedni stopień ochrony albo standardowych klauzul umownych). Szczegółowe lokalizacje przetwarzania i zastosowane zabezpieczenia należy potwierdzić w umowach z dostawcami.</p>
+            <p>Gdy przechodzisz na stronę sklepu przez link afiliacyjny, dalsze przetwarzanie przez sklep i sieć afiliacyjną odbywa się na ich zasadach. Informacje znajdziesz w dokumentach podmiotów zewnętrznych.</p>
           </InfoSection>
-
-          <InfoSection title="7. Linki afiliacyjne i strony zewnętrzne">
-            <p>
-              Po kliknięciu linku
-              prowadzącego do
-              zewnętrznego sklepu
-              użytkownik opuszcza
-              Trend za Mniej.
-            </p>
-
-            <p>
-              Od tego momentu
-              przetwarzanie danych,
-              wykorzystanie cookies,
-              prowadzenie konta,
-              płatność i realizacja
-              zamówienia podlegają
-              zasadom obowiązującym
-              w zewnętrznym serwisie.
-            </p>
-
-            <Link
-              href="/afiliacja"
-              className="inline-flex font-black text-rose-600 hover:text-rose-700"
-            >
-              Więcej o afiliacji →
-            </Link>
+          <InfoSection title="6. Jak długo przechowujemy dane">
+            <p>Dane techniczne i logi są przechowywane zgodnie z okresami potrzebnymi do bezpieczeństwa, diagnostyki i politykami retencji dostawców infrastruktury. Dane zdarzeń afiliacyjnych pozostają tak długo, jak są przydatne do analiz i rozliczenia działań serwisu, po czym powinny być usunięte albo zagregowane.</p>
+            <p>Korespondencję przechowujemy przez czas obsługi zgłoszenia oraz, gdy jest to uzasadnione, przez okres potrzebny do wykazania sposobu jego załatwienia lub obrony przed roszczeniami. Dane administratorów są przechowywane przez okres uprawnionego dostępu oraz niezbędny czas ochrony i rozliczenia dostępu.</p>
           </InfoSection>
-
-          <InfoSection title="8. Cookies i profilowanie">
-            <p>
-              Publiczna część Trend
-              za Mniej nie wymaga
-              konta użytkownika
-              i nie wykorzystuje
-              własnego mechanizmu
-              profilowania reklamowego
-              użytkowników.
-            </p>
-
-            <p>
-              Funkcje administracyjne
-              serwisu mogą korzystać
-              z technicznych
-              mechanizmów
-              uwierzytelniania
-              wymaganych do
-              zabezpieczenia panelu
-              administratora.
-            </p>
-
-            <p>
-              Jeżeli w przyszłości
-              zostaną wdrożone
-              dodatkowe narzędzia
-              analityczne lub
-              marketingowe wymagające
-              zmian w zasadach
-              prywatności, dokument
-              zostanie odpowiednio
-              zaktualizowany.
-            </p>
+          <InfoSection title="7. Prawa osób, których dane dotyczą">
+            <p>W granicach określonych przez RODO możesz zażądać dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przeniesienia danych (gdy ma zastosowanie) albo zgłosić sprzeciw wobec przetwarzania opartego na uzasadnionym interesie. Możesz również wycofać udzieloną zgodę, jeśli przetwarzanie jest na niej oparte.</p>
+            <p>Aby zgłosić żądanie, napisz na <a className="font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>. Masz prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p>
+            <p>Nie podejmujemy zautomatyzowanych decyzji wywołujących wobec odwiedzających skutki prawne lub podobnie istotnie na nich wpływających w rozumieniu art. 22 RODO.</p>
           </InfoSection>
-
-          <InfoSection title="9. Okres przechowywania">
-            <p>
-              Dane są przechowywane
-              przez okres potrzebny
-              do realizacji celu,
-              dla którego zostały
-              zebrane, a następnie
-              usuwane lub
-              anonimizowane, chyba że
-              dalsze przechowywanie
-              wynika z obowiązku
-              prawnego, potrzeby
-              bezpieczeństwa albo
-              ochrony przed
-              roszczeniami.
-            </p>
-
-            <p>
-              Podstawowe statystyki
-              ofert mogą być
-              przechowywane tak długo,
-              jak pozostają potrzebne
-              do analizy działania
-              serwisu.
-            </p>
-          </InfoSection>
-
-          <InfoSection title="10. Prawa użytkownika">
-            <p>
-              Jeżeli przetwarzamy dane
-              osobowe dotyczące
-              konkretnej osoby,
-              może ona — w przypadkach
-              przewidzianych przez
-              prawo — żądać dostępu
-              do danych, ich
-              sprostowania, usunięcia,
-              ograniczenia
-              przetwarzania lub
-              wnieść sprzeciw.
-            </p>
-
-            <p>
-              Osobie, której dane
-              dotyczą, przysługuje
-              również prawo wniesienia
-              skargi do właściwego
-              organu nadzorczego,
-              w Polsce do Prezesa
-              Urzędu Ochrony Danych
-              Osobowych.
-            </p>
-
-            <p>
-              W przypadku danych,
-              które nie pozwalają nam
-              na identyfikację
-              konkretnego użytkownika,
-              możemy nie mieć
-              technicznej możliwości
-              przypisania konkretnego
-              zapisu do danej osoby.
-            </p>
-          </InfoSection>
-
-          <InfoSection title="11. Zmiany polityki prywatności">
-            <p>
-              Polityka może być
-              aktualizowana wraz
-              z rozwojem Trend za
-              Mniej, zmianą
-              wykorzystywanych usług
-              lub zmianą sposobu
-              przetwarzania danych.
-            </p>
-
-            <p>
-              Aktualna wersja
-              dokumentu jest zawsze
-              publikowana pod tym
-              adresem.
-            </p>
+          <InfoSection title="8. Odnośniki zewnętrzne i zmiany dokumentu">
+            <p>Serwis może odsyłać do sklepów prowadzących własne polityki cookies i prywatności. Trend za Mniej nie decyduje o ich praktykach po przejściu na ich witryny.</p>
+            <p>Zmiany sposobu przetwarzania danych lub używanych narzędzi wymagają odpowiedniej aktualizacji niniejszej polityki. Obowiązującą wersję publikujemy pod tym adresem.</p>
+            <Link className="inline-flex font-bold text-rose-700 underline" href="/regulamin">Przejdź do regulaminu serwisu →</Link>
           </InfoSection>
         </article>
-
-        <aside className="space-y-4 lg:sticky lg:top-36">
-          <InfoNotice
-            title="Najważniejsze informacje"
-            tone="rose"
-          >
-            <div className="space-y-3">
-              <p>
-                Publiczna część strony
-                nie wymaga konta.
-              </p>
-
-              <p>
-                Zapisujemy podstawowe
-                statystyki kliknięć
-                produktów.
-              </p>
-
-              <p>
-                Korzystamy z Vercel
-                i Supabase jako
-                dostawców
-                infrastruktury.
-              </p>
-
-              <p>
-                Po przejściu do
-                sklepu obowiązuje jego
-                polityka prywatności.
-              </p>
-            </div>
-          </InfoNotice>
-
-          <InfoNotice title="Masz pytanie dotyczące danych?">
-            <Link
-              href="/kontakt"
-              className="inline-flex font-black text-rose-600 hover:text-rose-700"
-            >
-              Skontaktuj się z nami →
-            </Link>
+        <aside>
+          <InfoNotice title="W skrócie" tone="rose">
+            <p>Nie trzeba zakładać konta, aby przeglądać oferty.</p>
+            <p className="mt-2">Wykorzystujemy statystyki odwiedzin i przejść do ofert.</p>
+            <p className="mt-2">Obsługę techniczną zapewniają m.in. Vercel i Supabase.</p>
+            <p className="mt-2">Zgłoszenia dotyczące danych przyjmujemy e-mailem.</p>
           </InfoNotice>
         </aside>
       </div>

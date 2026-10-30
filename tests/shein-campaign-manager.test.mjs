@@ -136,3 +136,11 @@ test("modified JSX has no unterminated class attributes", () => {
     assert.doesNotMatch(text, /className="[^"\n>]*>/);
   }
 });
+
+
+test("owner explicitly confirms fresh manual checks before publishing SHEIN campaigns", () => {
+  assert.match(api, /verifiedNow !== true/);
+  assert.match(api, /last_reviewed_at: new Date\(\)\.toISOString\(\)/);
+  assert.match(studio, /verifiedNow/);
+  assert.match(studio, /Potwierdzam, że/);
+});

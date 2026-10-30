@@ -5,6 +5,7 @@ import type {
 import Link from "next/link";
 
 import BrandLogo from "@/components/BrandLogo";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 const discoveryLinks = [
   { label: "Stylizacje", href: "/stylizacje" },
@@ -19,6 +20,7 @@ const discoveryLinks = [
 const informationLinks = [
   { label: "O Trend za Mniej", href: "/o-nas" },
   { label: "Afiliacja", href: "/afiliacja" },
+  { label: "Regulamin", href: "/regulamin" },
   { label: "Prywatność", href: "/polityka-prywatnosci" },
   { label: "Kontakt", href: "/kontakt" },
 ];
@@ -49,7 +51,7 @@ export default function SiteFooter() {
                 </span>
 
                 <p className="text-xs leading-6 text-stone-500">
-                  Część linków ma
+                  Reklama · część linków ma
                   charakter
                   afiliacyjny.
                   Możemy otrzymać
@@ -123,6 +125,12 @@ export default function SiteFooter() {
           </p>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <a href={"mailto:" + CONTACT_EMAIL} className="underline underline-offset-2 hover:text-rose-600">
+              {CONTACT_EMAIL}
+            </a>
+            <span>
+              •
+            </span>
             <span>
               Moda i okazje
             </span>

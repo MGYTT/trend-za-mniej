@@ -233,6 +233,9 @@ export default async function LookPage({ params }: Props) {
                   <p className="mt-auto pt-5 text-2xl font-black tracking-tight text-stone-950">{formatPrice(product.price)}</p>
                   <p className="mt-1 text-xs leading-5 text-stone-500">Cena zapisana przy publikacji · bez dostawy</p>
                   <div className="mt-5 grid grid-cols-1 gap-2">
+                    <p className="text-xs leading-5 text-stone-700">
+                      <strong>Reklama · link afiliacyjny.</strong> Możemy otrzymać prowizję za zakup.
+                    </p>
                     <a
                       href={"/go/" + product.id + "?origin=outfit&look=" + encodeURIComponent(look.slug)}
                       target="_blank"
