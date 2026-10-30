@@ -60,8 +60,13 @@ export async function getPublicShopDirectory(): Promise<{
     offerCount: 0,
   }));
   const known = new Set(publicStores.map(store => store.slug));
+  // An offer imported from another store must be reviewed recently as well.
+  const reviewCutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
   const others: StoreOffer[] = ((o.data || []) as OfferRow[])
     .filter(item => !item.valid_until || item.valid_until >= current)
+    .filter(item => item.last_verified_at !== null &&
+      Number.isFinite(Date.parse(item.last_verified_at)) &&
+      Date.parse(item.last_verified_at) >= reviewCutoff)
     .filter(item => item.store_slug !== null && known.has(item.store_slug))
     .map(item => ({
       id: item.id, store: item.store_name, storeSlug: item.store_slug,

@@ -16,6 +16,7 @@ const footer = read("../components/SiteFooter.tsx");
 const styles = read("../app/stylizacje/[slug]/page.tsx");
 const offers = read("../components/SheinPromotionsExplorer.tsx");
 const coupons = read("../components/CouponCatalog.tsx");
+const shops = read("../lib/stores.ts");
 
 test("uncertain old price and calculated percent are not shown as discounts", () => {
   assert.doesNotMatch(productCard, /oldPrice|percent >= 1|line-through/);
@@ -35,6 +36,8 @@ test("SHEIN promotions require documented operator action or fresh manual review
   assert.match(popupSettings, /settings\.validUntil/);
   assert.match(promotions, /last_reviewed_at/);
   assert.match(promotions, /reviewCutoff/);
+  assert.match(shops, /last_verified_at/);
+  assert.match(shops, /reviewCutoff/);
 });
 
 test("legal information names the natural-person operator without inventing company or NIP", () => {

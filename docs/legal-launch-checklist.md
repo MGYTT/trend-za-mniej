@@ -17,7 +17,7 @@ Adres kontaktowy został znaleziony w kodzie: `trendzamniej@gmail.com`. Zweryfik
 - Baner powitalny 60% jest domyślnie wyłączony i dodatkowo wymaga serwerowej zmiennej `SHEIN_WELCOME_VERIFIED=true`. Przed ustawieniem flagi sprawdź i zachowaj warunki kampanii, źródło, datę przeglądu, ograniczenia dla nowych użytkowników oraz datę końcową `valid_until` w panelu administracyjnym. Nie włączaj flagi bez dokumentacji. Nie jest to automatyczna weryfikacja kuponu.
 - Reklamowane kampanie z tabeli `shein_campaigns` wymagają `last_reviewed_at` nie starszego niż 14 dni i nieprzekroczonego `valid_until` (jeśli istnieje). Zachowaj dowody sprawdzenia warunków i uzupełniaj `last_reviewed_at` tylko po realnej weryfikacji, nie automatycznie.
 - Zrezygnowano z automatycznie wyliczanego procentu rabatu i przekreślonych cen produktów: pole `oldPrice` nie potwierdza ceny najniższej z 30 dni. Jeśli ma wrócić reklama obniżek, wdroż i udokumentuj prawidłowe dane referencyjne oraz sposób ich komunikacji.
-- Zweryfikuj również oferty z katalogu zewnętrznych sklepów (tabela ofert sklepowych), ceny od/do, hasła o ilościach produktów i sezonowości.
+- Oferty z katalogu zewnętrznych sklepów także wymagają `last_verified_at` z ostatnich 14 dni. Zweryfikuj ceny od/do, hasła o ilościach produktów i sezonowości.
 
 ## Prywatność, skrypty i licencje
 
