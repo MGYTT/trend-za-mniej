@@ -2,15 +2,13 @@
 
 Stan zmian: 30.10.2026. To lista czynności dla operatora serwisu, **nie certyfikat zgodności prawnej**.
 
-## Operator — osoba fizyczna, bez wymyślonej firmy
+## Kontakt wyłącznie przez e-mail — decyzja operatora
 
-W konfiguracji wdrożenia Vercel ustaw zmienne **serwerowe**:
-- `LEGAL_OPERATOR_NAME` — prawdziwe imię i nazwisko osoby świadczącej usługę.
-- `LEGAL_OPERATOR_ADDRESS` — prawdziwe miejsce zamieszkania i adres identyfikujący usługodawcę, zgodnie z art. 5 ustawy o świadczeniu usług drogą elektroniczną.
+Na publicznych podstronach **Kontakt**, **Regulamin** i **Polityka prywatności** pokazujemy tylko `trendzamniej@gmail.com`, bez imienia, nazwiska i adresu prywatnego. Skrzynkę należy potwierdzić jako działającą.
 
-Te zmienne będą wyświetlane na podstronach **Kontakt**, **Regulamin**, **Polityka prywatności**. **Nie umieszczaj adresu domowego w repozytorium ani w plikach .env w Git.** Bez skonfigurowania obu danych podstrony pokazują ostrzeżenie. To nie oznacza spełnienia obowiązku. Rozważ niezależną konsultację sposobu realizacji obowiązku adresowego z uwagi na prywatność.
+**Znana luka zgodności:** Art. 5 ust. 2 ustawy o świadczeniu usług drogą elektroniczną co do zasady nakazuje osobie fizycznej świadczącej zarobkową usługę internetową udostępnić także imię, nazwisko, miejsce zamieszkania i adres. Serwis z linkami afiliacyjnymi, które mogą przynosić prowizję, może podlegać temu obowiązkowi mimo braku sklepu czy działalności zarejestrowanej. **Sam e-mail nie spełnia w pełni tego wymogu.** Zmiana została dokonana zgodnie z wyraźną decyzją operatora i nie usuwa ryzyka prawnego. Nie wprowadzamy fikcyjnej firmy, NIP-u ani adresu.
 
-Adres kontaktowy został znaleziony w kodzie: `trendzamniej@gmail.com`. Zweryfikuj, że skrzynka istnieje, jest kontrolowana przez operatora i odbiera wiadomości. Skonfiguruj wszystkie zmienne przed wdrożeniem oraz ponownie wdroż aplikację. Nie dopisujemy NIP-u, numeru KRS ani zmyślonej firmy. Pamiętaj, że brak wpisu w CEIDG nie znosi obowiązków osoby fizycznej świadczącej usługi elektroniczne.
+Przed uznaniem strony za zgodną z prawem uzyskaj niezależną poradę prawną w zakresie art. 5 i identyfikacji administratora danych na gruncie art. 13 RODO. Szczegóły ustawy: https://eli.gov.pl/api/acts/DU/2024/1513/text.html.
 
 ## Przegląd promocji SHEIN
 
@@ -33,7 +31,7 @@ Przychód z afiliacji może oznaczać zorganizowaną działalność zarobkową, 
 
 ## Kontrola przed publikacją
 
-1. Uzupełnij dwie zmienne tożsamości operatora i potwierdź realny e-mail.
+1. Potwierdź realny e-mail i rozstrzygnij z prawnikiem nierozwiązany obowiązek podania danych operatora — e-mail bez danych identyfikacyjnych nie zapewnia pełnej zgodności.
 2. Sprawdź ręcznie stronę główną i wszystkie miejsca z linkami afiliacyjnymi (desktop i telefon), w tym stały przycisk produktu.
 3. Potwierdź zgodność opisów cen i promocji z aktualnymi danymi sprzedawcy.
 4. Zweryfikuj narzędzia cookies, pliki i transfery danych.

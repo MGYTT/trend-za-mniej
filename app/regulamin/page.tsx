@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import InfoPageLayout, { InfoNotice, InfoSection } from "@/components/InfoPageLayout";
 import { CONTACT_EMAIL } from "@/lib/site";
-import { LEGAL_OPERATOR_NAME, LEGAL_OPERATOR_ADDRESS, LEGAL_IDENTITY_COMPLETE } from "@/lib/legal-operator";
 
 export const metadata: Metadata = {
   title: "Regulamin korzystania z serwisu – Trend za Mniej",
@@ -23,19 +22,11 @@ export default function TermsPage() {
       </p>
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         <article>
-          <InfoSection title="1. Operator i kontakt">
-            {LEGAL_IDENTITY_COMPLETE ? (
-              <p>
-                Operatorem serwisu jest osoba fizyczna: <strong>{LEGAL_OPERATOR_NAME}</strong>,
-                miejsce zamieszkania i adres: <strong>{LEGAL_OPERATOR_ADDRESS}</strong>.
-              </p>
-            ) : (
-              <p className="font-semibold text-amber-800">
-                Dane identyfikacyjne operatora wymagają uzupełnienia przed uruchomieniem serwisu.
-                Brak wpisu nie zwalnia z obowiązków informacyjnych.
-              </p>
-            )}
-            <p>Kontakt i zgłoszenia dotyczące serwisu: <a className="font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.</p>
+          <InfoSection title="1. Serwis i kontakt">
+            <p>Trend za Mniej to serwis informacyjno-afiliacyjny prowadzony przez osobę fizyczną. Nie jest sklepem internetowym i nie sprzedaje prezentowanych produktów.</p>
+            <p>Kontakt w sprawach serwisu, zgłoszeń i reklamacji:
+              <a className="ml-1 font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
+            </p>
           </InfoSection>
           <InfoSection title="2. Charakter i zakres usługi">
             <p>Trend za Mniej jest serwisem informacyjno-afiliacyjnym udostępniającym bezpłatnie opisy produktów, stylizacje, poradniki, kody i odnośniki do sklepów zewnętrznych.</p>

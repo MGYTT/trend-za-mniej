@@ -5,6 +5,7 @@ import type {
 import Link from "next/link";
 
 import BrandLogo from "@/components/BrandLogo";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 const discoveryLinks = [
   { label: "Stylizacje", href: "/stylizacje" },
@@ -124,6 +125,12 @@ export default function SiteFooter() {
           </p>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <a href={"mailto:" + CONTACT_EMAIL} className="underline underline-offset-2 hover:text-rose-600">
+              {CONTACT_EMAIL}
+            </a>
+            <span>
+              •
+            </span>
             <span>
               Moda i okazje
             </span>

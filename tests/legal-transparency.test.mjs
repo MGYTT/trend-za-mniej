@@ -40,14 +40,16 @@ test("SHEIN promotions require documented operator action or fresh manual review
   assert.match(shops, /reviewCutoff/);
 });
 
-test("legal information names the natural-person operator without inventing company or NIP", () => {
-  assert.match(terms, /LEGAl_IDENTITY_COMPLETE/i);
-  assert.match(contact, /LEGAL_IDENTITY_COMPLETE/);
-  assert.match(privacy, /LEGAL_IDENTITY_COMPLETE/);
+test("public legal pages contain email-only contact, without disclosing residential details", () => {
+  assert.match(terms, /CONTACT_EMAIL/);
+  assert.match(contact, /CONTACT_EMAIL/);
+  assert.match(privacy, /CONTACT_EMAIL/);
+  assert.doesNotMatch(terms + privacy + contact, /LEGAL_OPERATOR_NAME|LEGAL_OPERATOR_ADDRESS|LEGAL_IDENTITY_COMPLETE/);
   assert.match(terms, /nie jest sklepem/);
   assert.match(terms, /reklamacj/i);
   assert.match(privacy, /Vercel Web Analytics/);
   assert.match(footer, /href: "\/regulamin"/);
+  assert.match(footer, /mailto:.*CONTACT_EMAIL/);
   for (const page of [terms, privacy, contact]) {
     assert.doesNotMatch(page, /NIP|REGON|spółka z ograniczoną/i);
   }
