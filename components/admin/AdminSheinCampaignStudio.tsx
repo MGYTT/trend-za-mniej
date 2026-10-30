@@ -62,9 +62,11 @@ export default function AdminSheinCampaignStudio({
   const today = localDate();
 
   const expired = (row: SheinCampaignRow) => Boolean(row.valid_until && row.valid_until < today);
+  // Derived from a stable day value; no clock calls during React render.
+  const reviewCutoff = Date.parse(today + "T00:00:00Z") - 14 * 24 * 60 * 60 * 1000;
   const reviewedRecently = (row: SheinCampaignRow) => Boolean(
     row.last_reviewed_at &&
-    Date.parse(row.last_reviewed_at) >= Date.now() - 14 * 24 * 60 * 60 * 1000
+    Date.parse(row.last_reviewed_at) >= reviewCutoff
   );
   const isVisible = (row: SheinCampaignRow) =>
     row.published && !expired(row) && reviewedRecently(row);
