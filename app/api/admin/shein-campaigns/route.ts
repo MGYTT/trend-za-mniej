@@ -41,6 +41,12 @@ async function save(request: NextRequest, edit: boolean) {
   const checked = validateSheinCampaign(body);
   if ("error" in checked) return NextResponse.json({ error: checked.error }, { status: 400 });
   const input = checked.value;
+  // Publishing requires the owner's explicit fresh manual check.
+  if (input.published && body?.verifiedNow !== true) {
+    return NextResponse.json({
+      error: "Potwierdź ręczne sprawdzenie kodu, linku i warunków kampanii przed publikacją.",
+    }, { status: 400 });
+  }
   const payload = {
     title: input.title,
     badge: input.badge,
@@ -54,6 +60,7 @@ async function save(request: NextRequest, edit: boolean) {
     sort_order: input.sortOrder,
     published: input.published,
     valid_until: input.validUntil,
+    ...(input.published ? { last_reviewed_at: new Date().toISOString() } : {}),
     updated_at: new Date().toISOString(),
   };
   const query = edit
