@@ -139,6 +139,11 @@ export default function CouponCatalog({ offers }: { offers: CatalogOffer[] }) {
                 </div>
               )}
               {offer.destinationUrl && (
+                <p className="mt-4 text-xs leading-5 text-stone-700">
+                  <strong>Reklama · link afiliacyjny.</strong> Możemy otrzymać prowizję za kwalifikujący się zakup.
+                </p>
+              )}
+              {offer.destinationUrl && (
                 <a href={offer.destinationUrl} target="_blank" rel="sponsored nofollow noopener noreferrer"
                   className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-4 text-center text-sm font-black text-white hover:bg-rose-700">
                   Przejdź do promocji w sklepie ↗

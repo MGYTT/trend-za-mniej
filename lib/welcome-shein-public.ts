@@ -3,6 +3,9 @@ import { mapWelcomeRow, type WelcomeSheinSettings } from "@/lib/welcome-shein-se
 
 /** Fail closed: a disabled or unavailable offer must not be shown to visitors. */
 export async function getPublicWelcomeSheinOffer(): Promise<WelcomeSheinSettings | null> {
+  // A database toggle alone cannot publish an unverified percentage claim.
+  // Set this server-only flag after documenting the current SHEIN conditions.
+  if (process.env.SHEIN_WELCOME_VERIFIED !== "true") return null;
   const { data, error } = await supabase.from("welcome_shein_offer")
     .select("*").eq("id", "homepage").eq("enabled", true).maybeSingle();
   if (error) {

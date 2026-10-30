@@ -71,6 +71,11 @@ export default function WelcomeSheinOfferCard({
             {copied ? "Skopiowano ✓" : "Kopiuj kod"}
           </button>
         </div>
+        <p className="mt-4 text-left text-xs leading-5 text-stone-700">
+          <strong>Reklama · link afiliacyjny SHEIN.</strong> Za kwalifikujący się zakup
+          po przejściu przez link możemy otrzymać prowizję. Rabat nie jest gwarantowany;
+          warunki i dostępność sprawdź w SHEIN.
+        </p>
         {preview ? (
           <div className={"mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-base font-black text-white " + palette.button}>
             {settings.ctaLabel} <span aria-hidden="true">↗</span>

@@ -20,12 +20,11 @@ test("the home page renders the offer only when publicly enabled, not on other r
 });
 
 test("offer stays delayed and dismissible, and visit version changes only on explicit reset", () => {
-  assert.match(welcome, /LEGACY_VISIT_KEY = "trendzamniej:shein-welcome-sbnsl5d:v1"/);
-  assert.match(welcome, /campaignVersion === 1/);
-  assert.match(welcome, /window\.localStorage\.getItem\(VISIT_KEY\)/);
-  assert.match(welcome, /window\.localStorage\.setItem\(VISIT_KEY, "seen"\)/);
+  assert.doesNotMatch(welcome, /localStorage|sessionStorage/);
+  assert.match(welcome, /shownInThisTab/);
   assert.match(welcome, /window\.setTimeout\(\(\) => \{/);
   assert.match(welcome, /SHOW_AFTER_MS = settings\.delaySeconds \* 1000/);
+  assert.match(publicSettings, /SHEIN_WELCOME_VERIFIED/);
   assert.match(welcome, /window\.clearTimeout\(timer\)/);
   assert.match(welcome, /aria-modal="false"/);
   assert.match(welcome, /max-h-\[min\(80dvh,680px\)\]/);

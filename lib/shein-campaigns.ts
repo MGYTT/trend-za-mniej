@@ -50,7 +50,15 @@ export async function getPublishedSheinCampaigns(): Promise<{
   const today = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit",
   }).format(new Date());
-  const current = rows.filter((row) => !row.valid_until || row.valid_until >= today);
+  // Stale or never-reviewed campaigns must not be advertised automatically.
+  // The admin must re-check each published offer at least every 14 days.
+  const reviewCutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  const current = rows.filter((row) =>
+    (!row.valid_until || row.valid_until >= today) &&
+    row.last_reviewed_at !== null &&
+    Number.isFinite(Date.parse(row.last_reviewed_at)) &&
+    Date.parse(row.last_reviewed_at) >= reviewCutoff
+  );
   const latest = current.reduce((last, row) => (
     Date.parse(row.updated_at) > Date.parse(last) ? row.updated_at : last
   ), SHEIN_PROMOTIONS_UPDATED_AT);

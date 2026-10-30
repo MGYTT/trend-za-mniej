@@ -4,37 +4,23 @@ import { useEffect, useState } from "react";
 import WelcomeSheinOfferCard from "@/components/WelcomeSheinOfferCard";
 import type { WelcomeSheinSettings } from "@/lib/welcome-shein-settings";
 
-/** Legacy visit key is retained so existing visitors don't get the same popup twice. */
-const LEGACY_VISIT_KEY = "trendzamniej:shein-welcome-sbnsl5d:v1";
+/** Popup frequency is limited in memory, without non-essential browser storage. */
 let shownInThisTab = false;
 
 export default function WelcomeSheinOffer({ settings }: { settings: WelcomeSheinSettings }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const VISIT_KEY = settings.campaignVersion === 1 ? LEGACY_VISIT_KEY
-    : "trendzamniej:shein-welcome:v" + settings.campaignVersion;
   const SHOW_AFTER_MS = settings.delaySeconds * 1000;
 
   useEffect(() => {
     if (!settings.enabled || shownInThisTab) return;
-    try {
-      if (window.localStorage.getItem(VISIT_KEY)) return;
-    } catch {
-      // Blocked browser storage: fall back to the current tab only.
-    }
     const timer = window.setTimeout(() => {
       if (shownInThisTab) return;
-      try {
-        if (window.localStorage.getItem(VISIT_KEY)) return;
-        window.localStorage.setItem(VISIT_KEY, "seen");
-      } catch {
-        // No identifiers or server-side tracking.
-      }
       shownInThisTab = true;
       setOpen(true);
     }, SHOW_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [settings.enabled, VISIT_KEY, SHOW_AFTER_MS]);
+  }, [settings.enabled, SHOW_AFTER_MS]);
 
   useEffect(() => {
     if (!open) return;

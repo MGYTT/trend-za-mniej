@@ -23,10 +23,10 @@ export type WelcomeSheinSettings = {
 };
 
 export const DEFAULT_WELCOME_SHEIN: WelcomeSheinSettings = {
-  enabled: true,
+  enabled: false,
   eyebrow: "🎁 Oferta powitalna SHEIN",
-  greeting: "Gratulacje! 🎉",
-  headline: "Ekskluzywna oferta dla Ciebie! 🎁",
+  greeting: "Sprawdź warunki oferty",
+  headline: "Oferta powitalna dla uprawnionych osób",
   discountPercent: 60,
   discountPrefix: "Do",
   discountSuffix: "zniżki",
@@ -44,7 +44,8 @@ export const DEFAULT_WELCOME_SHEIN: WelcomeSheinSettings = {
 };
 
 export const WELCOME_AFFILIATE_DISCLOSURE =
-  "Link afiliacyjny. Kod do wyszukania oferty nie gwarantuje rabatu w koszyku. " +
+  "Reklama · link afiliacyjny SHEIN. Możemy otrzymać prowizję za kwalifikujący się zakup. " +
+  "Kod do wyszukania oferty nie gwarantuje rabatu w koszyku. " +
   "Wysokość zniżki, kwalifikacja konta i pozostałe warunki zależą od SHEIN.";
 
 const VALID_CODES = /^[A-Z0-9]{4,14}$/;
