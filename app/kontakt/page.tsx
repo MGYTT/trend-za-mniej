@@ -13,6 +13,7 @@ import {
   getSiteUrl,
   SITE_LANGUAGE,
   SITE_NAME,
+  SITE_OWNER_NAME,
 } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -96,6 +97,13 @@ export default function ContactPage() {
         structuredData
       }
     >
+      <div className="mb-6 rounded-[22px] border border-stone-200 bg-white p-5 text-sm leading-7 text-stone-700 sm:p-6">
+        <h2 className="font-black text-stone-900">Właściciel i kontakt</h2>
+        <p className="mt-2">
+          Właścicielem serwisu trendzamniej.pl jest <strong>{SITE_OWNER_NAME}</strong>.
+          Kontakt: <a className="font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
+        </p>
+      </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <section>
           <div className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">

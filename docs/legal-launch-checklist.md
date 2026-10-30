@@ -2,11 +2,11 @@
 
 Stan zmian: 30.10.2026. To lista czynności dla operatora serwisu, **nie certyfikat zgodności prawnej**.
 
-## Kontakt wyłącznie przez e-mail — decyzja operatora
+## Dane właściciela i kontakt
 
-Na publicznych podstronach **Kontakt**, **Regulamin** i **Polityka prywatności** pokazujemy tylko `trendzamniej@gmail.com`, bez imienia, nazwiska i adresu prywatnego. Skrzynkę należy potwierdzić jako działającą.
+Na podstronach **Kontakt**, **Regulamin**, **Polityka prywatności** oraz w stopce wskazujemy prawdziwego właściciela: **Maksymilian Bieniek**, e-mail `trendzamniej@gmail.com`. W polityce prywatności ta sama osoba jest identyfikowana jako administrator danych osobowych. Skrzynkę należy potwierdzić jako działającą. Nie publikujemy adresu prywatnego ani fikcyjnych danych firmy czy NIP-u.
 
-**Znana luka zgodności:** Art. 5 ust. 2 ustawy o świadczeniu usług drogą elektroniczną co do zasady nakazuje osobie fizycznej świadczącej zarobkową usługę internetową udostępnić także imię, nazwisko, miejsce zamieszkania i adres. Serwis z linkami afiliacyjnymi, które mogą przynosić prowizję, może podlegać temu obowiązkowi mimo braku sklepu czy działalności zarejestrowanej. **Sam e-mail nie spełnia w pełni tego wymogu.** Zmiana została dokonana zgodnie z wyraźną decyzją operatora i nie usuwa ryzyka prawnego. Nie wprowadzamy fikcyjnej firmy, NIP-u ani adresu.
+**Znana luka zgodności:** Art. 5 ust. 2 ustawy o świadczeniu usług drogą elektroniczną co do zasady wymaga od osoby fizycznej świadczącej zarobkową usługę internetową podania także miejsca zamieszkania i adresu. Serwis z linkami afiliacyjnymi, które mogą przynosić prowizję, może podlegać temu obowiązkowi mimo braku sklepu czy działalności zarejestrowanej. **Samo imię i nazwisko z adresem e-mail nie zapewnia pełnej zgodności z tym wymogiem.** Operator świadomie nie udostępnia adresu mieszkania; pozostaje ryzyko prawne do indywidualnej oceny.
 
 Przed uznaniem strony za zgodną z prawem uzyskaj niezależną poradę prawną w zakresie art. 5 i identyfikacji administratora danych na gruncie art. 13 RODO. Szczegóły ustawy: https://eli.gov.pl/api/acts/DU/2024/1513/text.html.
 
@@ -31,7 +31,7 @@ Przychód z afiliacji może oznaczać zorganizowaną działalność zarobkową, 
 
 ## Kontrola przed publikacją
 
-1. Potwierdź realny e-mail i rozstrzygnij z prawnikiem nierozwiązany obowiązek podania danych operatora — e-mail bez danych identyfikacyjnych nie zapewnia pełnej zgodności.
+1. Potwierdź realny e-mail i rozstrzygnij z prawnikiem nierozwiązany obowiązek podania adresu operatora — dane właściciela i e-mail nie zapewniają same pełnej zgodności.
 2. Sprawdź ręcznie stronę główną i wszystkie miejsca z linkami afiliacyjnymi (desktop i telefon), w tym stały przycisk produktu.
 3. Potwierdź zgodność opisów cen i promocji z aktualnymi danymi sprzedawcy.
 4. Zweryfikuj narzędzia cookies, pliki i transfery danych.

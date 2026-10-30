@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InfoPageLayout, { InfoNotice, InfoSection } from "@/components/InfoPageLayout";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_OWNER_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Polityka prywatności – Trend za Mniej",
@@ -24,9 +24,12 @@ export default function PrivacyPage() {
         <article>
           <InfoSection title="1. Administrator danych i kontakt">
             <p>
-              Trend za Mniej jest prowadzony przez osobę fizyczną jako serwis
-              informacyjno-afiliacyjny. W sprawach dotyczących przetwarzania danych
-              i korzystania z przysługujących praw skontaktuj się przez e-mail:
+              Administratorem danych osobowych przetwarzanych w związku z prowadzeniem
+              serwisu trendzamniej.pl jest <strong>{SITE_OWNER_NAME}</strong>,
+              właściciel serwisu jako osoba fizyczna. Dotyczy to m.in. danych technicznych
+              (takich jak adresy IP), danych związanych z cookies oraz wiadomości e-mail.
+              W sprawach dotyczących danych i korzystania z praw wynikających z RODO
+              skontaktuj się przez e-mail:
               <a className="ml-1 font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
             </p>
           </InfoSection>

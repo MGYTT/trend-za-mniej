@@ -4,6 +4,9 @@ export const CONTACT_EMAIL =
 export const SITE_NAME =
   "Trend za Mniej";
 
+export const SITE_OWNER_NAME =
+  "Maksymilian Bieniek";
+
 export const SITE_DEFAULT_TITLE =
   "Stylizacje damskie i poradniki modowe | Trend za Mniej";
 
