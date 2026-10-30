@@ -19,6 +19,7 @@ const discoveryLinks = [
 const informationLinks = [
   { label: "O Trend za Mniej", href: "/o-nas" },
   { label: "Afiliacja", href: "/afiliacja" },
+  { label: "Regulamin", href: "/regulamin" },
   { label: "Prywatność", href: "/polityka-prywatnosci" },
   { label: "Kontakt", href: "/kontakt" },
 ];
@@ -49,7 +50,7 @@ export default function SiteFooter() {
                 </span>
 
                 <p className="text-xs leading-6 text-stone-500">
-                  Część linków ma
+                  Reklama · część linków ma
                   charakter
                   afiliacyjny.
                   Możemy otrzymać

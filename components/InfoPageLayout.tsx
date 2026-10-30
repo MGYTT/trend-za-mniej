@@ -14,6 +14,7 @@ type InfoPageLayoutProps = {
   activePath:
     | "/o-nas"
     | "/afiliacja"
+    | "/regulamin"
     | "/polityka-prywatnosci"
     | "/kontakt";
   children: ReactNode;
@@ -31,6 +32,10 @@ const INFO_NAVIGATION = [
   {
     label: "Afiliacja",
     href: "/afiliacja",
+  },
+  {
+    label: "Regulamin",
+    href: "/regulamin",
   },
   {
     label: "Prywatność",

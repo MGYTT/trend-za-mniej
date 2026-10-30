@@ -4,6 +4,12 @@ import type {
 
 import Link from "next/link";
 
+import {
+  LEGAL_OPERATOR_NAME,
+  LEGAL_OPERATOR_ADDRESS,
+  LEGAL_IDENTITY_COMPLETE,
+} from "@/lib/legal-operator";
+
 import InfoPageLayout, {
   InfoNotice,
 } from "@/components/InfoPageLayout";
@@ -96,6 +102,20 @@ export default function ContactPage() {
         structuredData
       }
     >
+      <div className="mb-6 rounded-[22px] border border-stone-200 bg-white p-5 text-sm leading-7 text-stone-700 sm:p-6">
+        <h2 className="text-lg font-black text-stone-900">Dane operatora serwisu</h2>
+        {LEGAL_IDENTITY_COMPLETE ? (
+          <p className="mt-2">
+            Operator (osoba fizyczna): <strong>{LEGAL_OPERATOR_NAME}</strong>.
+            <span className="block">Miejsce zamieszkania i adres: {LEGAL_OPERATOR_ADDRESS}</span>
+          </p>
+        ) : (
+          <p className="mt-2 font-semibold text-amber-800">
+            Dane identyfikacyjne operatora nie zostały jeszcze uzupełnione.
+            Przed udostępnieniem serwisu należy podać prawdziwe imię i nazwisko oraz miejsce zamieszkania i adres.
+          </p>
+        )}
+      </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <section>
           <div className="rounded-[24px] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
@@ -232,6 +252,13 @@ export default function ContactPage() {
               >
                 Informacja
                 o afiliacji →
+              </Link>
+
+              <Link
+                href="/regulamin"
+                className="font-bold text-rose-600 hover:text-rose-700"
+              >
+                Regulamin serwisu →
               </Link>
 
               <Link
