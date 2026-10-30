@@ -14,6 +14,8 @@ import {
   SITE_LANGUAGE,
   SITE_NAME,
   SITE_OWNER_NAME,
+  SITE_OWNER_RESIDENCE_PLACE,
+  SITE_OWNER_POSTAL_ADDRESS,
 } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -103,6 +105,9 @@ export default function ContactPage() {
           Właścicielem serwisu trendzamniej.pl jest <strong>{SITE_OWNER_NAME}</strong>.
           Kontakt: <a className="font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
         </p>
+        {SITE_OWNER_RESIDENCE_PLACE && SITE_OWNER_POSTAL_ADDRESS ? (
+          <p className="mt-2">Miejsce zamieszkania operatora: {SITE_OWNER_RESIDENCE_PLACE}. Adres operatora: {SITE_OWNER_POSTAL_ADDRESS}.</p>
+        ) : null}
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <section>
