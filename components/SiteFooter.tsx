@@ -5,7 +5,7 @@ import type {
 import Link from "next/link";
 
 import BrandLogo from "@/components/BrandLogo";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_OWNER_NAME } from "@/lib/site";
 
 const discoveryLinks = [
   { label: "Stylizacje", href: "/stylizacje" },
@@ -119,10 +119,12 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-9 flex flex-col gap-3 border-t border-stone-100 pt-6 text-xs leading-5 text-stone-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {year} Trend za
-            Mniej
-          </p>
+          <div>
+            <p>© {year} Trend za Mniej</p>
+            <p className="mt-1 text-stone-500">
+              Właścicielem serwisu trendzamniej.pl jest {SITE_OWNER_NAME}.
+            </p>
+          </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             <a href={"mailto:" + CONTACT_EMAIL} className="underline underline-offset-2 hover:text-rose-600">

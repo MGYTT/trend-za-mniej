@@ -17,6 +17,7 @@ const styles = read("../app/stylizacje/[slug]/page.tsx");
 const offers = read("../components/SheinPromotionsExplorer.tsx");
 const coupons = read("../components/CouponCatalog.tsx");
 const shops = read("../lib/stores.ts");
+const site = read("../lib/site.ts");
 
 test("uncertain old price and calculated percent are not shown as discounts", () => {
   assert.doesNotMatch(productCard, /oldPrice|percent >= 1|line-through/);
@@ -43,7 +44,20 @@ test("SHEIN promotions require documented operator action or fresh manual review
   assert.match(shops, /reviewCutoff/);
 });
 
-test("public legal pages contain email-only contact, without disclosing residential details", () => {
+test("public legal pages identify the real owner and GDPR controller without inventing a business", () => {
+  assert.match(site, /SITE_OWNER_NAME/);
+  assert.match(site, /Maksymilian Bieniek/);
+  assert.match(contact, /Właścicielem serwisu trendzamniej\.pl jest/);
+  assert.match(contact, /SITE_OWNER_NAME/);
+  assert.match(terms, /Właścicielem serwisu trendzamniej\.pl jest/);
+  assert.match(terms, /SITE_OWNER_NAME/);
+  assert.match(privacy, /Administratorem danych osobowych/);
+  assert.match(privacy, /SITE_OWNER_NAME/);
+  assert.match(footer, /SITE_OWNER_NAME/);
+  assert.match(terms, /realizację zamówienia/);
+  assert.match(terms, /dostawę, zwroty oraz reklamacje/);
+  assert.match(privacy, /Cookies, localStorage i statystyki/);
+  assert.match(privacy, /Prawa osób, których dane dotyczą/);
   assert.match(terms, /CONTACT_EMAIL/);
   assert.match(contact, /CONTACT_EMAIL/);
   assert.match(privacy, /CONTACT_EMAIL/);

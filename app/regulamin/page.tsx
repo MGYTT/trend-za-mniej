@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InfoPageLayout, { InfoNotice, InfoSection } from "@/components/InfoPageLayout";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_OWNER_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Regulamin korzystania z serwisu – Trend za Mniej",
@@ -23,7 +23,8 @@ export default function TermsPage() {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         <article>
           <InfoSection title="1. Serwis i kontakt">
-            <p>Trend za Mniej to serwis informacyjno-afiliacyjny prowadzony przez osobę fizyczną. Nie jest sklepem internetowym i nie sprzedaje prezentowanych produktów.</p>
+            <p>Właścicielem serwisu trendzamniej.pl jest <strong>{SITE_OWNER_NAME}</strong>.</p>
+            <p>Trend za Mniej jest informacyjnym i katalogowym serwisem afiliacyjnym (agregatorem okazji i ofert). Nie jest sklepem internetowym, nie sprzedaje prezentowanych towarów ani odpłatnych usług.</p>
             <p>Kontakt w sprawach serwisu, zgłoszeń i reklamacji:
               <a className="ml-1 font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
             </p>
@@ -31,7 +32,7 @@ export default function TermsPage() {
           <InfoSection title="2. Charakter i zakres usługi">
             <p>Trend za Mniej jest serwisem informacyjno-afiliacyjnym udostępniającym bezpłatnie opisy produktów, stylizacje, poradniki, kody i odnośniki do sklepów zewnętrznych.</p>
             <p>Korzystanie z publicznych stron nie wymaga rejestracji. Serwis nie zawiera umów sprzedaży w imieniu własnym, nie pobiera zapłaty za towary i nie obsługuje płatności, dostaw, zwrotów ani reklamacji produktów.</p>
-            <p>Umowa zakupu może zostać zawarta wyłącznie na warunkach określonych przez sprzedawcę zewnętrznego. Niniejszy regulamin nie ogranicza praw konsumenta wobec takiego sprzedawcy.</p>
+            <p>Za przyjęcie i realizację zamówienia, płatności, dostawę, zwroty oraz reklamacje zakupionych produktów odpowiada sklep zewnętrzny, z którym klient zawiera umowę sprzedaży. W sprawach zakupów należy kontaktować się bezpośrednio z tym sklepem. Niniejszy regulamin nie ogranicza praw konsumenta wobec sprzedawcy.</p>
           </InfoSection>
           <InfoSection title="3. Informacje o cenach i ofertach">
             <p>Ceny widoczne przy produktach są informacjami zapisanymi podczas dodawania lub aktualizacji wpisu. Nie stanowią oferty sprzedaży ani gwarancji aktualnej ceny, rabatu, dostępności wariantu czy czasu trwania kampanii.</p>
