@@ -134,3 +134,12 @@ test("Search Console queries map to truthful SHEIN search landing content", () =
   assert.match(listing, /Kod kampanii nie musi obniżać ceny zamówienia/);
   assert.doesNotMatch(listing, /najlepszy kod rabatowy|gwarantowany kupon|100% działające kody/i);
 });
+
+test("unreviewed published SHEIN campaigns retain their codes with a visible warning", () => {
+  const loader = load("../lib/shein-campaigns.ts");
+  assert.match(loader, /const current = rows\.filter\(\(row\) => !row\.valid_until \|\| row\.valid_until >= today\)/);
+  assert.match(loader, /reviewedRecently:/);
+  assert.match(explorer, /promotion\.reviewedRecently === false/);
+  assert.match(explorer, /Aktualność kodu i warunków nie została potwierdzona/);
+  assert.match(explorer, /Kod może być nieaktywny/);
+});
