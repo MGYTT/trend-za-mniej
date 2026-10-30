@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InfoPageLayout, { InfoNotice, InfoSection } from "@/components/InfoPageLayout";
-import { CONTACT_EMAIL, SITE_OWNER_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_OWNER_NAME, SITE_OWNER_RESIDENCE_PLACE, SITE_OWNER_POSTAL_ADDRESS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Regulamin korzystania z serwisu – Trend za Mniej",
@@ -23,7 +23,10 @@ export default function TermsPage() {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         <article>
           <InfoSection title="1. Serwis i kontakt">
-            <p>Właścicielem serwisu trendzamniej.pl jest <strong>{SITE_OWNER_NAME}</strong>.</p>
+            <p>Właścicielem serwisu trendzamniej.pl jest <strong>{SITE_OWNER_NAME}</strong>, osoba fizyczna prowadząca serwis w ramach działalności nierejestrowanej (bez wpisu do CEIDG).</p>
+            {SITE_OWNER_RESIDENCE_PLACE && SITE_OWNER_POSTAL_ADDRESS ? (
+              <p>Miejsce zamieszkania operatora: {SITE_OWNER_RESIDENCE_PLACE}. Adres operatora: {SITE_OWNER_POSTAL_ADDRESS}.</p>
+            ) : null}
             <p>Trend za Mniej jest informacyjnym i katalogowym serwisem afiliacyjnym (agregatorem okazji i ofert). Nie jest sklepem internetowym, nie sprzedaje prezentowanych towarów ani odpłatnych usług.</p>
             <p>Kontakt w sprawach serwisu, zgłoszeń i reklamacji:
               <a className="ml-1 font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
