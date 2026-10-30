@@ -161,7 +161,7 @@ export default async function SheinPromotionsPage() {
               </h2>
             </div>
             <p className="text-xs leading-6 text-stone-500">
-              Wpisy zaktualizowano <time dateTime={updatedAt}>{updatedAtLabel}</time>
+              Wpisy zaktualizowano <time dateTime={updatedAt}>{updatedAtLabel}</time>. To data edycji katalogu, nie potwierdzenie ważności kodów.
             </p>
           </div>
           {unavailable && (

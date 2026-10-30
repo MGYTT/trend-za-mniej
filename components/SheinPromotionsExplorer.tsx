@@ -465,6 +465,8 @@ function PromotionCard({
 }) {
   const isNewUserCoupon = promotion.id === "kupon-60-nowi-uzytkownicy";
   const isCoupon = promotion.codeKind === "coupon";
+  const unverified = promotion.reviewedRecently === false;
+  const categoryLabel = CATEGORIES.find(({ id }) => id === promotion.category)?.label || "oferta";
 
   return (
     <article id={promotion.id}
@@ -472,14 +474,14 @@ function PromotionCard({
       <div className="flex h-full min-w-0 flex-col p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700">
-            {promotion.badge}
+            {unverified ? "Niepotwierdzona kampania" : promotion.badge}
           </span>
           <span className="text-[11px] font-bold text-stone-500">
-            {isCoupon ? "Kupon według opisu" : isNewUserCoupon ? "Oferta dla nowych" : "Kod kampanii"}
+            {unverified ? "Status: niezweryfikowana" : isCoupon ? "Kupon według opisu" : isNewUserCoupon ? "Oferta dla nowych" : "Kod kampanii"}
           </span>
         </div>
         <h4 className="mt-4 text-pretty text-xl font-black leading-snug tracking-[-0.035em] text-stone-950 sm:text-[22px]">
-          {promotion.title}
+          {unverified ? `Kampania SHEIN — ${categoryLabel}` : promotion.title}
         </h4>
         {promotion.reviewedRecently === false && (
           <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold leading-5 text-amber-950">
@@ -530,6 +532,7 @@ function PromotionCard({
               <span aria-hidden="true" className="text-lg text-rose-600 transition group-open:rotate-45">+</span>
             </summary>
             <div className="border-t border-stone-100 px-3.5 pb-4 pt-3 text-xs leading-6 text-stone-600">
+              {unverified && <p className="mb-2 font-bold text-amber-900">Historyczny tytuł wpisu (niepotwierdzony): {promotion.title}. Opis i podane rabaty mogą być nieaktualne.</p>}
               <p>{promotion.description}</p>
               <p className="mt-2 font-semibold">{promotion.note}</p>
             </div>
@@ -543,7 +546,7 @@ function PromotionCard({
             rel="sponsored nofollow noopener noreferrer"
             className="mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-center text-sm font-black leading-6 text-white shadow-[0_8px_20px_rgba(225,29,72,0.16)] transition hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-rose-400"
           >
-            {promotion.ctaLabel} <ExternalIcon />
+            {unverified ? "Sprawdź ofertę w SHEIN" : promotion.ctaLabel} <ExternalIcon />
           </a>
           <p className="mt-2 text-center text-[11px] leading-5 text-stone-500">
             Link afiliacyjny · nowa karta · warunki w SHEIN

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InfoPageLayout, { InfoNotice, InfoSection } from "@/components/InfoPageLayout";
-import { CONTACT_EMAIL, SITE_OWNER_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_OWNER_NAME, SITE_OWNER_RESIDENCE_PLACE, SITE_OWNER_POSTAL_ADDRESS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Polityka prywatności – Trend za Mniej",
@@ -32,6 +32,9 @@ export default function PrivacyPage() {
               skontaktuj się przez e-mail:
               <a className="ml-1 font-bold text-rose-700 underline" href={"mailto:" + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>.
             </p>
+            {SITE_OWNER_RESIDENCE_PLACE && SITE_OWNER_POSTAL_ADDRESS ? (
+              <p>Miejsce zamieszkania administratora: {SITE_OWNER_RESIDENCE_PLACE}. Adres administratora: {SITE_OWNER_POSTAL_ADDRESS}.</p>
+            ) : null}
           </InfoSection>
           <InfoSection title="2. Jakie informacje mogą być przetwarzane">
             <p>Podczas otwierania stron dostawca hostingu może otrzymywać dane techniczne zapytań sieciowych, takie jak adres IP, czas żądania, adres strony, typ przeglądarki i dane potrzebne do zapewnienia bezpieczeństwa oraz obsługi błędów.</p>

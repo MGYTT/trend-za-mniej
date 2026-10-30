@@ -71,3 +71,20 @@ test("public legal pages identify the real owner and GDPR controller without inv
     assert.doesNotMatch(page, /NIP|REGON|spółka z ograniczoną/i);
   }
 });
+
+test("operator identity is explicit and postal details can be set without placing an address in source", () => {
+  assert.match(site, /SITE_OWNER_RESIDENCE_PLACE/);
+  assert.match(site, /SITE_OWNER_POSTAL_ADDRESS/);
+  assert.match(terms, /działalności nierejestrowanej/);
+  for (const page of [contact, terms, privacy]) {
+    assert.match(page, /SITE_OWNER_RESIDENCE_PLACE/);
+    assert.match(page, /SITE_OWNER_POSTAL_ADDRESS/);
+  }
+});
+
+test("unreviewed campaigns receive neutral public headlines and CTAs", () => {
+  assert.match(offers, /unverified \? "Niepotwierdzona kampania"/);
+  assert.match(offers, /unverified \? `Kampania SHEIN/);
+  assert.match(offers, /unverified \? "Sprawdź ofertę w SHEIN"/);
+  assert.match(offers, /Historyczny tytuł wpisu \(niepotwierdzony\)/);
+});
