@@ -481,6 +481,12 @@ function PromotionCard({
         <h4 className="mt-4 text-pretty text-xl font-black leading-snug tracking-[-0.035em] text-stone-950 sm:text-[22px]">
           {promotion.title}
         </h4>
+        {promotion.reviewedRecently === false && (
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold leading-5 text-amber-950">
+            Aktualność kodu i warunków nie została potwierdzona w ostatnich 14 dniach.
+            Kod może być nieaktywny — sprawdź zasady i ewentualny rabat bezpośrednio w SHEIN.
+          </p>
+        )}
         <p className="mt-2 text-xs leading-6 text-stone-600">
           {isCoupon
             ? "Kupon może zadziałać po spełnieniu warunków SHEIN. Nie weryfikujemy go na żywo."

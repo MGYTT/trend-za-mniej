@@ -50,17 +50,22 @@ export async function getPublishedSheinCampaigns(): Promise<{
   const today = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit",
   }).format(new Date());
-  // Stale or never-reviewed campaigns must not be advertised automatically.
-  // The admin must re-check each published offer at least every 14 days.
+  // Publication and expiration determine visibility. A missing review timestamp
+  // is NOT an automatic deletion: legacy published campaigns may not have one.
+  // Preserve them and explicitly disclose their verification status in the UI.
   const reviewCutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
-  const current = rows.filter((row) =>
-    (!row.valid_until || row.valid_until >= today) &&
-    row.last_reviewed_at !== null &&
-    Number.isFinite(Date.parse(row.last_reviewed_at)) &&
-    Date.parse(row.last_reviewed_at) >= reviewCutoff
-  );
+  const current = rows.filter((row) => !row.valid_until || row.valid_until >= today);
   const latest = current.reduce((last, row) => (
     Date.parse(row.updated_at) > Date.parse(last) ? row.updated_at : last
   ), SHEIN_PROMOTIONS_UPDATED_AT);
-  return { promotions: current.map(campaignToPromotion), updatedAt: latest, unavailable: false };
+  return {
+    promotions: current.map((row) => ({
+      ...campaignToPromotion(row),
+      reviewedRecently: row.last_reviewed_at !== null &&
+        Number.isFinite(Date.parse(row.last_reviewed_at)) &&
+        Date.parse(row.last_reviewed_at) >= reviewCutoff,
+    })),
+    updatedAt: latest,
+    unavailable: false,
+  };
 }

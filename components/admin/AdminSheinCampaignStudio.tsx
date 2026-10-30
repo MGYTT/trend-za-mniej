@@ -69,8 +69,11 @@ export default function AdminSheinCampaignStudio({
     Date.parse(row.last_reviewed_at) >= reviewCutoff
   );
   const isVisible = (row: SheinCampaignRow) =>
-    row.published && !expired(row) && reviewedRecently(row);
+    row.published && !expired(row);
   const publishedCount = initialCampaigns.filter(isVisible).length;
+  const needsReviewCount = initialCampaigns.filter((row) =>
+    isVisible(row) && !reviewedRecently(row)
+  ).length;
   const expiredCount = initialCampaigns.filter((row) => expired(row)).length;
   const drafts = initialCampaigns.filter((row) => !row.published).length;
 
@@ -270,7 +273,15 @@ export default function AdminSheinCampaignStudio({
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-stone-500">{expiredCount} kampanii po dacie ważności (ukrytych na stronie).</p>
+        <p className="mt-3 text-xs text-stone-500">
+          {expiredCount} kampanii po dacie ważności (ukrytych na stronie).
+          {needsReviewCount > 0 && (
+            <span className="block font-semibold text-amber-800">
+              {needsReviewCount} opublikowanych kampanii wymaga aktualnego sprawdzenia.
+              Są widoczne z ostrzeżeniem, nie jako zweryfikowane kupony.
+            </span>
+          )}
+        </p>
         <label className="mt-5 block text-xs font-black text-stone-700" htmlFor="admin-shein-search">
           Szukaj kampanii
         </label>
@@ -308,8 +319,8 @@ export default function AdminSheinCampaignStudio({
                     </p>
                   )}
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${expired(row) ? "bg-stone-100 text-stone-600" : isVisible(row) ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
-                  {expired(row) ? "Wygasła" : isVisible(row) ? "Widoczna" : row.published ? "Do ponownego sprawdzenia" : "Szkic"}
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${expired(row) ? "bg-stone-100 text-stone-600" : isVisible(row) && reviewedRecently(row) ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
+                  {expired(row) ? "Wygasła" : isVisible(row) ? (reviewedRecently(row) ? "Widoczna" : "Widoczna · do sprawdzenia") : "Szkic"}
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">

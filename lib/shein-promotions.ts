@@ -17,6 +17,8 @@ export type SheinPromotion = {
   category?: "new-users" | "fashion" | "beauty" | "accessories" | "home" | "kids" | "sale";
   codeKind?: "campaign" | "coupon";
   sortOrder?: number;
+  /** A stale or absent review does not hide a published code, but must be disclosed. */
+  reviewedRecently?: boolean;
 };
 
 export const SHEIN_PROMOTIONS_UPDATED_AT =

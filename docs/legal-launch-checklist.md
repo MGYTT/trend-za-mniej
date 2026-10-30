@@ -13,7 +13,7 @@ Przed uznaniem strony za zgodną z prawem uzyskaj niezależną poradę prawną w
 ## Przegląd promocji SHEIN
 
 - Baner powitalny 60% jest domyślnie wyłączony i dodatkowo wymaga serwerowej zmiennej `SHEIN_WELCOME_VERIFIED=true`. Przed ustawieniem flagi sprawdź i zachowaj warunki kampanii, źródło, datę przeglądu, ograniczenia dla nowych użytkowników oraz datę końcową `valid_until` w panelu administracyjnym. Nie włączaj flagi bez dokumentacji. Nie jest to automatyczna weryfikacja kuponu.
-- Reklamowane kampanie z tabeli `shein_campaigns` wymagają `last_reviewed_at` nie starszego niż 14 dni i nieprzekroczonego `valid_until` (jeśli istnieje). Zachowaj dowody sprawdzenia warunków i uzupełniaj `last_reviewed_at` tylko po realnej weryfikacji, nie automatycznie.
+- Opublikowane kampanie SHEIN z tabeli `shein_campaigns`, które nie są przeterminowane, pozostają widoczne nawet bez daty `last_reviewed_at`. Jeśli ostatnie potwierdzenie jest starsze niż 14 dni lub go brakuje, karta pokazuje wyraźne ostrzeżenie o niepotwierdzonej aktualności. To celowe: nie ukrywamy całego katalogu z powodu pustego pola. Nie prezentuj takich kodów jako gwarantowanych rabatów. Zachowaj dowody sprawdzenia warunków i aktualizuj `last_reviewed_at` tylko po realnej weryfikacji.
 - Zrezygnowano z automatycznie wyliczanego procentu rabatu i przekreślonych cen produktów: pole `oldPrice` nie potwierdza ceny najniższej z 30 dni. Jeśli ma wrócić reklama obniżek, wdroż i udokumentuj prawidłowe dane referencyjne oraz sposób ich komunikacji.
 - Oferty z katalogu zewnętrznych sklepów także wymagają `last_verified_at` z ostatnich 14 dni. Zweryfikuj ceny od/do, hasła o ilościach produktów i sezonowości.
 

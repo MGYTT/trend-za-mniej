@@ -36,6 +36,9 @@ test("SHEIN promotions require documented operator action or fresh manual review
   assert.match(popupSettings, /settings\.validUntil/);
   assert.match(promotions, /last_reviewed_at/);
   assert.match(promotions, /reviewCutoff/);
+  // A missing review timestamp must NOT empty the public SHEIN catalog.
+  assert.match(promotions, /const current = rows\.filter\(\(row\) => !row\.valid_until \|\| row\.valid_until >= today\)/);
+  assert.match(promotions, /reviewedRecently:/);
   assert.match(shops, /last_verified_at/);
   assert.match(shops, /reviewCutoff/);
 });
