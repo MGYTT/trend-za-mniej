@@ -7,6 +7,13 @@ export const SITE_NAME =
 export const SITE_OWNER_NAME =
   "Maksymilian Bieniek";
 
+// Optional public disclosures. Set both in Vercel only after the owner approves
+// publishing the correct personal contact details; never put a home address in Git.
+export const SITE_OWNER_RESIDENCE_PLACE =
+  process.env.SITE_OWNER_RESIDENCE_PLACE?.trim() || "";
+export const SITE_OWNER_POSTAL_ADDRESS =
+  process.env.SITE_OWNER_POSTAL_ADDRESS?.trim() || "";
+
 export const SITE_DEFAULT_TITLE =
   "Stylizacje damskie i poradniki modowe | Trend za Mniej";
 
