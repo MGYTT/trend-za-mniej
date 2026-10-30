@@ -141,6 +141,6 @@ test("modified JSX has no unterminated class attributes", () => {
 test("owner explicitly confirms fresh manual checks before publishing SHEIN campaigns", () => {
   assert.match(api, /verifiedNow !== true/);
   assert.match(api, /last_reviewed_at: new Date\(\)\.toISOString\(\)/);
-  assert.match(editor, /verifiedNow/);
-  assert.match(editor, /Potwierdzam, że/);
+  assert.match(studio, /verifiedNow/);
+  assert.match(studio, /Potwierdzam, że/);
 });
